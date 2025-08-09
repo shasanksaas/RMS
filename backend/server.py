@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, Header
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, Header, Query
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -15,6 +15,10 @@ import uuid
 from datetime import datetime, timedelta
 from enum import Enum
 import json
+
+# Import new utilities
+from src.utils.state_machine import ReturnStateMachine, ReturnResolutionHandler, ReturnResolutionType
+from src.utils.rules_engine import RulesEngine
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
