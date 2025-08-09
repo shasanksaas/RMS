@@ -284,46 +284,28 @@ const App = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <Package className="h-8 w-8 text-blue-600" />
-              <h1 className="text-2xl font-bold text-gray-900">Returns Manager</h1>
-            </div>
-            <nav className="flex space-x-6">
-              <Button
-                variant={currentView === 'dashboard' ? 'default' : 'ghost'}
-                onClick={() => setCurrentView('dashboard')}
-                className="flex items-center space-x-2"
-              >
-                <BarChart3 className="h-4 w-4" />
-                <span>Dashboard</span>
-              </Button>
-              <Button
-                variant={currentView === 'returns' ? 'default' : 'ghost'}
-                onClick={() => setCurrentView('returns')}
-                className="flex items-center space-x-2"
-              >
-                <RefreshCw className="h-4 w-4" />
-                <span>Returns</span>
-              </Button>
-              <Button
-                variant={currentView === 'settings' ? 'default' : 'ghost'}
-                onClick={() => setCurrentView('settings')}
-                className="flex items-center space-x-2"
-              >
-                <Settings className="h-4 w-4" />
-                <span>Settings</span>
-              </Button>
-            </nav>
-          </div>
-        </div>
-      </header>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/customer" element={<CustomerPortal />} />
+        <Route path="/*" element={<MerchantDashboard />} />
+      </Routes>
+    </BrowserRouter>
+  );
+};
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+const MerchantDashboard = () => {
+  const [currentView, setCurrentView] = useState('dashboard');
+  const [returns, setReturns] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [analytics, setAnalytics] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  
+  // Load initial data
+  useEffect(() => {
+    loadInitialData();
+  }, []);
         {currentView === 'dashboard' && (
           <DashboardView 
             analytics={analytics} 
