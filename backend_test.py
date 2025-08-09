@@ -334,23 +334,23 @@ class ReturnsAPITester:
             return False
             
         # Update return status (follow proper state machine flow)
-        # First move to received, then resolved
-        status_update_received = {
-            "status": "received",
-            "notes": "Return received at warehouse",
-            "tracking_number": "TRACK123456"
-        }
+        # approved -> label_issued -> in_transit -> received -> resolved
         
+        # Move to label_issued
         success, _ = self.make_request('PUT', f'returns/{return_id}/status', 
-                                     status_update_received, headers)
+                                     {"status": "label_issued", "notes": "Label issued"}, headers)
         
-        status_update_resolved = {
-            "status": "resolved",
-            "notes": "Return resolved successfully"
-        }
+        # Move to in_transit  
+        success, _ = self.make_request('PUT', f'returns/{return_id}/status', 
+                                     {"status": "in_transit", "notes": "Package in transit"}, headers)
         
+        # Move to received
+        success, _ = self.make_request('PUT', f'returns/{return_id}/status', 
+                                     {"status": "received", "notes": "Return received", "tracking_number": "TRACK123456"}, headers)
+        
+        # Finally move to resolved
         success, updated_return = self.make_request('PUT', f'returns/{return_id}/status', 
-                                                  status_update_resolved, headers)
+                                                  {"status": "resolved", "notes": "Return resolved successfully"}, headers)
         if success and updated_return.get('status') == 'resolved':
             self.log_test("Update return status", True)
         else:
