@@ -506,8 +506,8 @@ async def update_return_status(return_id: str, status_update: ReturnStatusUpdate
     current_status = return_req["status"]
     new_status = status_update.status.value
     
-    # Validate state transition
-    if not ReturnStateMachine.can_transition(current_status, new_status):
+    # Validate state transition (allow idempotent updates)
+    if current_status != new_status and not ReturnStateMachine.can_transition(current_status, new_status):
         valid_transitions = ReturnStateMachine.get_valid_transitions(current_status)
         raise HTTPException(
             status_code=400, 
