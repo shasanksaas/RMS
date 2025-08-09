@@ -101,12 +101,41 @@ const General = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">General Settings</h1>
+          <p className="text-gray-500">Configure your basic store and return policy settings</p>
+        </div>
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">General Settings</h1>
         <p className="text-gray-500">Configure your basic store and return policy settings</p>
       </div>
+
+      {message.text && (
+        <Alert className={`border ${message.type === 'success' ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
+          <div className="flex items-center">
+            {message.type === 'success' ? (
+              <CheckCircle className="h-4 w-4 text-green-600" />
+            ) : (
+              <XCircle className="h-4 w-4 text-red-600" />
+            )}
+            <AlertDescription className={`ml-2 ${message.type === 'success' ? 'text-green-800' : 'text-red-800'}`}>
+              {message.text}
+            </AlertDescription>
+          </div>
+        </Alert>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
