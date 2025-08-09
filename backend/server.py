@@ -9,7 +9,6 @@ from pathlib import Path
 # Import new controllers
 from src.controllers.shopify_controller import router as shopify_router
 from src.controllers.enhanced_features_controller import router as enhanced_router
-from src.controllers.tenant_controller import router as tenant_router
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 import uuid
