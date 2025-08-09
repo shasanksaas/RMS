@@ -154,7 +154,15 @@ class RulesEngine:
         
         # Check return window first (highest priority)
         if 'max_days_since_order' in conditions:
-            days_since_order = (datetime.utcnow() - datetime.fromisoformat(order['order_date'].replace('Z', '+00:00'))).days
+            order_date_str = order['order_date']
+            if isinstance(order_date_str, str):
+                # Handle ISO format string
+                order_date = datetime.fromisoformat(order_date_str.replace('Z', '+00:00'))
+            else:
+                # Handle datetime object
+                order_date = order_date_str
+            
+            days_since_order = (datetime.utcnow() - order_date).days
             if days_since_order > conditions['max_days_since_order']:
                 return ReturnStatus.DENIED, f"Return window expired ({days_since_order} days > {conditions['max_days_since_order']} days)"
         
