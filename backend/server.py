@@ -278,6 +278,35 @@ async def get_return_rules(tenant_id: str = Depends(get_tenant_id)):
     rules = await db.return_rules.find({"tenant_id": tenant_id, "is_active": True}).sort("priority", 1).to_list(100)
     return [ReturnRule(**rule) for rule in rules]
 
+@api_router.post("/return-rules/simulate")
+async def simulate_return_rules(
+    simulation_request: RuleSimulationRequest, 
+    tenant_id: str = Depends(get_tenant_id)
+):
+    """Simulate rules application and return step-by-step explanation"""
+    
+    # Get rules for tenant
+    rules = await db.return_rules.find({"tenant_id": tenant_id, "is_active": True}).sort("priority", 1).to_list(100)
+    
+    if not rules:
+        return {
+            "steps": [],
+            "final_status": "requested",
+            "final_notes": "No rules configured",
+            "rule_applied": None,
+            "total_rules_evaluated": 0,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+    
+    # Simulate rules application
+    simulation_result = RulesEngine.simulate_rules_application(
+        return_request=simulation_request.return_data,
+        order=simulation_request.order_data,
+        rules=rules
+    )
+    
+    return simulation_result
+
 # Returns Management
 @api_router.post("/returns", response_model=ReturnRequest)
 async def create_return_request(return_data: ReturnRequestCreate, tenant_id: str = Depends(get_tenant_id)):
