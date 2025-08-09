@@ -10,6 +10,8 @@ import { Badge } from '../../../components/ui/badge';
 const AllReturns = () => {
   const [returns, setReturns] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [pagination, setPagination] = useState({});
+  const [error, setError] = useState('');
   const [filters, setFilters] = useState({
     search: '',
     status: 'all',
@@ -19,43 +21,73 @@ const AllReturns = () => {
     limit: 20
   });
 
-  // Mock data
+  // Get backend URL and tenant from environment
+  const backendUrl = import.meta.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+  const tenantId = 'tenant-fashion-store'; // TODO: Get from auth context
+
+  // Load returns from backend
   useEffect(() => {
-    const mockReturns = [
-      {
-        id: 'RET-001',
-        orderNumber: 'ORD-12345',
-        customer: { name: 'Sarah Johnson', email: 'sarah@example.com' },
-        status: 'requested',
-        reason: 'wrong_size',
-        refundAmount: 49.99,
-        createdAt: '2024-01-15T10:30:00Z',
-        items: [{ productName: 'Blue Cotton T-Shirt', quantity: 1 }]
-      },
-      {
-        id: 'RET-002',
-        orderNumber: 'ORD-12346',
-        customer: { name: 'Mike Chen', email: 'mike@example.com' },
-        status: 'approved',
-        reason: 'defective',
-        refundAmount: 199.99,
-        createdAt: '2024-01-14T15:45:00Z',
-        items: [{ productName: 'Wireless Headphones', quantity: 1 }]
-      },
-      {
-        id: 'RET-003',
-        orderNumber: 'ORD-12347',
-        customer: { name: 'Emma Davis', email: 'emma@example.com' },
-        status: 'resolved',
-        reason: 'not_as_described',
-        refundAmount: 79.99,
-        createdAt: '2024-01-13T09:15:00Z',
-        items: [{ productName: 'Summer Dress', quantity: 1 }]
+    loadReturns();
+  }, [filters]);
+
+  const loadReturns = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      
+      // Build query parameters
+      const params = new URLSearchParams();
+      if (filters.search) params.append('search', filters.search);
+      if (filters.status !== 'all') params.append('status_filter', filters.status);
+      params.append('sort_by', filters.sortBy);
+      params.append('sort_order', filters.sortOrder);
+      params.append('page', filters.page.toString());
+      params.append('limit', filters.limit.toString());
+
+      const response = await fetch(`${backendUrl}/api/returns?${params.toString()}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Tenant-Id': tenantId
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setReturns(data.items || []);
+        setPagination(data.pagination || {});
+      } else {
+        setError('Failed to load returns');
+        console.error('Failed to load returns:', response.status);
       }
-    ];
-    setReturns(mockReturns);
-    setLoading(false);
-  }, []);
+    } catch (err) {
+      console.error('Error loading returns:', err);
+      setError('Error loading returns');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStatusUpdate = async (returnId, newStatus) => {
+    try {
+      const response = await fetch(`${backendUrl}/api/returns/${returnId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Tenant-Id': tenantId
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      if (response.ok) {
+        // Refresh the returns list
+        loadReturns();
+      } else {
+        console.error('Failed to update status:', response.status);
+      }
+    } catch (err) {
+      console.error('Error updating status:', err);
+    }
+  };
 
   const getStatusBadge = (status) => {
     const config = {
