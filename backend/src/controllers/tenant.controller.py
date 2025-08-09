@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from typing import List
 
 from ..models import Tenant, TenantCreate, TenantUpdate, TenantSettings
-from ..services.tenant.service import TenantService
+from ..services.tenant_service import TenantService
 from ..utils.dependencies import get_tenant_service
 
 router = APIRouter(prefix="/tenants", tags=["tenants"])
