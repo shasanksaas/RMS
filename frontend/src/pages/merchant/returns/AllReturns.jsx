@@ -118,12 +118,20 @@ const AllReturns = () => {
 
   const exportReturns = () => {
     console.log('Exporting returns...');
-    // Implementation for CSV export
+    // TODO: Implement CSV export
   };
 
   const bulkApprove = () => {
     console.log('Bulk approve...');
-    // Implementation for bulk actions
+    // TODO: Implement bulk actions
+  };
+
+  const handleFilterChange = (key, value) => {
+    setFilters({ ...filters, [key]: value, page: 1 }); // Reset to page 1 when filtering
+  };
+
+  const handlePageChange = (newPage) => {
+    setFilters({ ...filters, page: newPage });
   };
 
   if (loading) {
@@ -131,6 +139,25 @@ const AllReturns = () => {
       <div className="space-y-4">
         <div className="h-8 bg-gray-200 rounded animate-pulse" />
         <div className="h-96 bg-gray-200 rounded animate-pulse" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Returns</h1>
+          <p className="text-gray-500">Manage return requests and track their progress</p>
+        </div>
+        <Card>
+          <CardContent className="p-6 text-center">
+            <p className="text-red-600">{error}</p>
+            <Button onClick={loadReturns} className="mt-4">
+              Try Again
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
