@@ -179,6 +179,24 @@ class ReturnStatusUpdate(BaseModel):
     notes: Optional[str] = None
     tracking_number: Optional[str] = None
 
+class ReturnResolution(BaseModel):
+    resolution_type: str  # refund, exchange, store_credit
+    notes: Optional[str] = None
+    refund_method: Optional[str] = "original_payment"  # stripe, manual, original_payment
+    exchange_items: Optional[List[Dict[str, Any]]] = None
+    
+class RuleSimulationRequest(BaseModel):
+    order_data: Dict[str, Any]
+    return_data: Dict[str, Any]
+    
+class PaginationParams(BaseModel):
+    page: int = 1
+    limit: int = 20
+    search: Optional[str] = None
+    status_filter: Optional[str] = "all"
+    sort_by: str = "created_at"
+    sort_order: str = "desc"
+
 # Middleware for tenant context
 async def get_tenant_id(x_tenant_id: str = Header(None)) -> str:
     if not x_tenant_id:
