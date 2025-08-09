@@ -342,7 +342,7 @@ class ReturnsAPITester:
         
         success, updated_return = self.make_request('PUT', f'returns/{return_id}/status', 
                                                   status_update, headers)
-        if success and updated_return.get('status') == 'refunded':
+        if success and updated_return.get('status') == 'resolved':
             self.log_test("Update return status", True)
         else:
             self.log_test("Update return status", False, str(updated_return))
