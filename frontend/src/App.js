@@ -1094,12 +1094,76 @@ const CreateReturnDialog = ({ orders, onCreateReturn, open, setOpen }) => {
 };
 
 const SettingsView = () => {
+  const [settings, setSettings] = useState({
+    return_window_days: 30,
+    auto_approve_exchanges: true,
+    require_photos: false,
+    brand_color: "#3b82f6",
+    custom_message: "We're here to help with your return!",
+    restocking_fee_percent: 0,
+    store_credit_bonus_percent: 10,
+    logo_url: ""
+  });
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+
+  // Load current settings on mount
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const loadSettings = async () => {
+    if (!DEMO_TENANT_ID) return;
+    
+    try {
+      const response = await axios.get(`${API}/tenants/${DEMO_TENANT_ID}/settings`, {
+        headers: { 'X-Tenant-Id': DEMO_TENANT_ID }
+      });
+      setSettings({ ...settings, ...response.data.settings });
+    } catch (error) {
+      console.error('Error loading settings:', error);
+    }
+  };
+
+  const saveSettings = async () => {
+    if (!DEMO_TENANT_ID) return;
+    
+    setLoading(true);
+    setMessage('');
+
+    try {
+      const response = await axios.put(`${API}/tenants/${DEMO_TENANT_ID}/settings`, settings, {
+        headers: { 'X-Tenant-Id': DEMO_TENANT_ID }
+      });
+      
+      setMessage('Settings saved successfully!');
+      setTimeout(() => setMessage(''), 3000);
+    } catch (error) {
+      setMessage('Error saving settings. Please try again.');
+      console.error('Error saving settings:', error);
+    }
+    
+    setLoading(false);
+  };
+
+  const handleInputChange = (key, value) => {
+    setSettings({ ...settings, [key]: value });
+  };
+
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-gray-900">Settings</h2>
         <p className="text-sm text-gray-500">Configure your return policies and preferences</p>
       </div>
+
+      {message && (
+        <Alert className={message.includes('Error') ? 'border-red-200 bg-red-50' : 'border-green-200 bg-green-50'}>
+          <AlertDescription className={message.includes('Error') ? 'text-red-800' : 'text-green-800'}>
+            {message}
+          </AlertDescription>
+        </Alert>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
@@ -1110,14 +1174,58 @@ const SettingsView = () => {
           <CardContent className="space-y-4">
             <div>
               <Label htmlFor="return-window">Return Window (Days)</Label>
-              <Input id="return-window" type="number" defaultValue="30" />
+              <Input 
+                id="return-window" 
+                type="number" 
+                value={settings.return_window_days}
+                onChange={(e) => handleInputChange('return_window_days', parseInt(e.target.value) || 30)}
+                min="1"
+                max="365"
+              />
+            </div>
+            <div>
+              <Label htmlFor="restocking-fee">Restocking Fee (%)</Label>
+              <Input 
+                id="restocking-fee" 
+                type="number" 
+                value={settings.restocking_fee_percent}
+                onChange={(e) => handleInputChange('restocking_fee_percent', parseFloat(e.target.value) || 0)}
+                min="0"
+                max="50"
+                step="0.1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="credit-bonus">Store Credit Bonus (%)</Label>
+              <Input 
+                id="credit-bonus" 
+                type="number" 
+                value={settings.store_credit_bonus_percent}
+                onChange={(e) => handleInputChange('store_credit_bonus_percent', parseFloat(e.target.value) || 0)}
+                min="0"
+                max="50"
+                step="0.1"
+              />
+              <p className="text-xs text-gray-500 mt-1">Extra credit given when customer chooses store credit over refund</p>
             </div>
             <div className="flex items-center space-x-2">
-              <input type="checkbox" id="auto-approve" defaultChecked className="rounded" />
+              <input 
+                type="checkbox" 
+                id="auto-approve" 
+                checked={settings.auto_approve_exchanges}
+                onChange={(e) => handleInputChange('auto_approve_exchanges', e.target.checked)}
+                className="rounded" 
+              />
               <Label htmlFor="auto-approve">Auto-approve exchange requests</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <input type="checkbox" id="require-photos" className="rounded" />
+              <input 
+                type="checkbox" 
+                id="require-photos" 
+                checked={settings.require_photos}
+                onChange={(e) => handleInputChange('require_photos', e.target.checked)}
+                className="rounded" 
+              />
               <Label htmlFor="require-photos">Require photos for return requests</Label>
             </div>
           </CardContent>
@@ -1131,18 +1239,55 @@ const SettingsView = () => {
           <CardContent className="space-y-4">
             <div>
               <Label htmlFor="brand-color">Brand Color</Label>
-              <Input id="brand-color" type="color" defaultValue="#3b82f6" />
+              <div className="flex items-center space-x-2">
+                <Input 
+                  id="brand-color" 
+                  type="color" 
+                  value={settings.brand_color}
+                  onChange={(e) => handleInputChange('brand_color', e.target.value)}
+                  className="w-20 h-10"
+                />
+                <Input 
+                  type="text" 
+                  value={settings.brand_color}
+                  onChange={(e) => handleInputChange('brand_color', e.target.value)}
+                  placeholder="#3b82f6"
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="logo-url">Logo URL</Label>
+              <Input 
+                id="logo-url" 
+                type="url" 
+                value={settings.logo_url}
+                onChange={(e) => handleInputChange('logo_url', e.target.value)}
+                placeholder="https://example.com/logo.png"
+              />
             </div>
             <div>
               <Label htmlFor="custom-message">Welcome Message</Label>
               <Textarea
                 id="custom-message"
-                defaultValue="We're here to help with your return!"
+                value={settings.custom_message}
+                onChange={(e) => handleInputChange('custom_message', e.target.value)}
                 placeholder="Enter a custom welcome message..."
+                rows={3}
               />
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      <div className="flex justify-end">
+        <Button 
+          onClick={saveSettings}
+          disabled={loading}
+          className="flex items-center space-x-2"
+        >
+          {loading ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Settings className="h-4 w-4" />}
+          <span>{loading ? 'Saving...' : 'Save Settings'}</span>
+        </Button>
       </div>
     </div>
   );
