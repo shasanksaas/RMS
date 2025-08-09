@@ -23,7 +23,7 @@ const CustomerStart = () => {
 
     try {
       // Get backend URL from environment
-      const backendUrl = import.meta.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+      const backendUrl = process.env.REACT_APP_BACKEND_URL;
       
       // For development, use different URLs
       let apiUrl = backendUrl;
