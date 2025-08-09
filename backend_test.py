@@ -549,6 +549,14 @@ class ReturnsAPITester:
             print("❌ Cannot connect to API, stopping tests")
             return False
             
+        # Test enhanced features status first
+        self.test_enhanced_features_status()
+        self.test_email_settings()
+        
+        # Test Shopify OAuth endpoints
+        self.test_shopify_oauth_install()
+        self.test_shopify_connection_status()
+        
         # Tenant management
         tenant_id = self.test_create_tenant()
         if not tenant_id:
@@ -566,6 +574,15 @@ class ReturnsAPITester:
         self.test_returns_workflow(tenant_id)
         self.test_analytics(tenant_id)
         self.test_shopify_webhook(tenant_id)
+        
+        # Enhanced features testing
+        self.test_ai_suggestions(tenant_id)
+        self.test_ai_upsell_generation(tenant_id)
+        self.test_ai_pattern_analysis(tenant_id)
+        self.test_email_test_send(tenant_id)
+        self.test_export_csv(tenant_id)
+        self.test_export_pdf(tenant_id)
+        self.test_export_excel(tenant_id)
         
         # Print summary
         print("\n" + "=" * 60)
