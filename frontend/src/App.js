@@ -600,16 +600,43 @@ const MerchantDashboard = ({ isOnline }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <Package className="h-8 w-8 text-blue-600 mr-3" />
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Returns Dashboard</h1>
-                <p className="text-sm text-gray-500">Manage your product returns efficiently</p>
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-3">
+                <Package className="h-8 w-8 text-blue-600" />
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">Returns Dashboard</h1>
+                  <p className="text-sm text-gray-500">Manage your return requests</p>
+                </div>
+              </div>
+              
+              {/* Online/Offline Indicator */}
+              <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm ${
+                isOnline ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+              }`}>
+                {isOnline ? (
+                  <>
+                    <Wifi className="h-4 w-4" />
+                    <span>Online</span>
+                  </>
+                ) : (
+                  <>
+                    <WifiOff className="h-4 w-4" />
+                    <span>Offline</span>
+                  </>
+                )}
               </div>
             </div>
+            
+            {!isOnline && lastDataUpdate && (
+              <div className="text-sm text-gray-500">
+                Last updated: {lastDataUpdate.toLocaleTimeString()}
+              </div>
+            )}
+            
             <div className="flex items-center space-x-4">
               <Button
                 variant={currentView === 'dashboard' ? 'default' : 'outline'}
@@ -637,6 +664,15 @@ const MerchantDashboard = ({ isOnline }) => {
               </Button>
             </div>
           </div>
+          
+          {!isOnline && (
+            <Alert className="mt-4 border-yellow-200 bg-yellow-50">
+              <WifiOff className="h-4 w-4" />
+              <AlertDescription className="text-yellow-800">
+                You're currently offline. Data may be outdated. Changes won't be saved until you're back online.
+              </AlertDescription>
+            </Alert>
+          )}
         </div>
       </div>
 
