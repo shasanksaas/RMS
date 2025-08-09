@@ -34,16 +34,15 @@ app = FastAPI(title="Returns Management SaaS API", version="1.0.0")
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
-# Enums
+# Enums - Updated with proper state machine statuses
 class ReturnStatus(str, Enum):
     REQUESTED = "requested"
     APPROVED = "approved"
     DENIED = "denied"
+    LABEL_ISSUED = "label_issued" 
     IN_TRANSIT = "in_transit"
     RECEIVED = "received"
-    PROCESSED = "processed"
-    REFUNDED = "refunded"
-    EXCHANGED = "exchanged"
+    RESOLVED = "resolved"
 
 class ReturnReason(str, Enum):
     DEFECTIVE = "defective"
