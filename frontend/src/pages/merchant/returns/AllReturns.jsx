@@ -345,17 +345,28 @@ const AllReturns = () => {
       </Card>
 
       {/* Pagination */}
-      {returns.length > 0 && (
+      {pagination.total_pages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-gray-700">
-            Showing <span className="font-medium">1</span> to <span className="font-medium">{returns.length}</span> of{' '}
-            <span className="font-medium">{returns.length}</span> results
+            Showing <span className="font-medium">{((pagination.current_page - 1) * pagination.per_page) + 1}</span> to{' '}
+            <span className="font-medium">{Math.min(pagination.current_page * pagination.per_page, pagination.total_items)}</span> of{' '}
+            <span className="font-medium">{pagination.total_items}</span> results
           </p>
           <div className="flex items-center space-x-2">
-            <Button variant="outline" size="sm" disabled>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              disabled={pagination.current_page <= 1}
+              onClick={() => handlePageChange(pagination.current_page - 1)}
+            >
               Previous
             </Button>
-            <Button variant="outline" size="sm" disabled>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              disabled={pagination.current_page >= pagination.total_pages}
+              onClick={() => handlePageChange(pagination.current_page + 1)}
+            >
               Next
             </Button>
           </div>
