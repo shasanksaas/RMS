@@ -595,6 +595,24 @@ async def resolve_return(
         "resolution_type": resolution.resolution_type
     }
 
+@api_router.get("/returns/{return_id}/audit-log")
+async def get_return_audit_log(return_id: str, tenant_id: str = Depends(get_tenant_id)):
+    """Get audit log/timeline for a return request"""
+    
+    # Verify return exists
+    return_req = await db.return_requests.find_one({"id": return_id, "tenant_id": tenant_id})
+    if not return_req:
+        raise HTTPException(status_code=404, detail="Return request not found")
+    
+    # Get audit log entries
+    audit_logs = await db.audit_logs.find({"return_id": return_id}).sort("timestamp", 1).to_list(100)
+    
+    return {
+        "return_id": return_id,
+        "timeline": audit_logs,
+        "current_status": return_req["status"]
+    }
+
 # Analytics
 @api_router.get("/analytics", response_model=Analytics)
 async def get_analytics(tenant_id: str = Depends(get_tenant_id), days: int = 30):
