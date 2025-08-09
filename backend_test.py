@@ -333,15 +333,24 @@ class ReturnsAPITester:
             self.log_test("Get single return", False, str(single_return))
             return False
             
-        # Update return status
-        status_update = {
-            "status": "resolved",
-            "notes": "Return resolved successfully",
+        # Update return status (follow proper state machine flow)
+        # First move to received, then resolved
+        status_update_received = {
+            "status": "received",
+            "notes": "Return received at warehouse",
             "tracking_number": "TRACK123456"
         }
         
+        success, _ = self.make_request('PUT', f'returns/{return_id}/status', 
+                                     status_update_received, headers)
+        
+        status_update_resolved = {
+            "status": "resolved",
+            "notes": "Return resolved successfully"
+        }
+        
         success, updated_return = self.make_request('PUT', f'returns/{return_id}/status', 
-                                                  status_update, headers)
+                                                  status_update_resolved, headers)
         if success and updated_return.get('status') == 'resolved':
             self.log_test("Update return status", True)
         else:
