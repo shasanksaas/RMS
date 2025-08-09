@@ -141,7 +141,10 @@ const App = () => {
       setReturns(response.data);
     } catch (error) {
       console.error('Error loading returns:', error);
-      setReturns([]);
+      // Don't set empty array immediately, let the user see there might be an issue
+      if (error.response?.status !== 404) {
+        setReturns([]);
+      }
     }
   };
 
@@ -153,7 +156,9 @@ const App = () => {
       setOrders(response.data);
     } catch (error) {
       console.error('Error loading orders:', error);
-      setOrders([]);
+      if (error.response?.status !== 404) {
+        setOrders([]);
+      }
     }
   };
 
