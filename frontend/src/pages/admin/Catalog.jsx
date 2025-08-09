@@ -77,7 +77,7 @@ const AdminCatalog = () => {
         </CardHeader>
         <CardContent>
           <div className="text-center py-12">
-            <FileTemplate className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <Settings className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">Template Catalog</h3>
             <p className="text-gray-600">
               Template management features are currently in development.
