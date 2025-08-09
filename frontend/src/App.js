@@ -383,24 +383,6 @@ const MerchantDashboard = ({ isOnline }) => {
     }
   };
 
-  const loadInitialData = async () => {
-    setLoading(true);
-    try {
-      // Create demo tenant if it doesn't exist
-      await createDemoTenantAndData();
-      
-      // Load data
-      await Promise.all([
-        loadReturns(),
-        loadOrders(),
-        loadAnalytics()
-      ]);
-    } catch (error) {
-      console.error('Error loading data:', error);
-    }
-    setLoading(false);
-  };
-
   const createDemoTenantAndData = async () => {
     try {
       // Create tenant first
