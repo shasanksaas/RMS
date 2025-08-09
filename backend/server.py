@@ -39,8 +39,54 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
+# Initialize repositories and middleware
+repository_factory = None
+security_middleware = SecurityMiddleware()
+rate_limiting_middleware = RateLimitingMiddleware()  
+audit_middleware = AuditMiddleware()
+
 # Create the main app without a prefix
 app = FastAPI(title="Returns Management SaaS API", version="1.0.0")
+
+@app.on_event("startup")
+async def startup_db_client():
+    global repository_factory
+    repository_factory = RepositoryFactory(db)
+    print("✅ Database connected and repository factory initialized")
+
+# Add security middleware
+@app.middleware("http")
+async def security_and_audit_middleware(request: Request, call_next):
+    start_time = time.time()
+    
+    # Skip middleware for health checks and static files
+    if request.url.path in ["/health", "/", "/docs", "/redoc", "/openapi.json"] or request.url.path.startswith("/static"):
+        response = await call_next(request)
+        return response
+    
+    try:
+        # Validate tenant access for API endpoints
+        if request.url.path.startswith("/api"):
+            tenant_id = await security_middleware.validate_tenant_access(request)
+            
+            # Check rate limits
+            await rate_limiting_middleware.check_rate_limit(tenant_id, request.url.path)
+        
+        # Process request
+        response = await call_next(request)
+        
+        # Log audit trail
+        duration_ms = (time.time() - start_time) * 1000
+        await audit_middleware.log_request(request, response.status_code, duration_ms)
+        
+        return response
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        logger.error(f"Security middleware error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal security error")
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
