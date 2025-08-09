@@ -289,17 +289,35 @@ const App = () => {
     );
   }
 
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [lastDataUpdate, setLastDataUpdate] = useState(null);
+  
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/customer" element={<CustomerPortal />} />
-        <Route path="*" element={<MerchantDashboard />} />
-      </Routes>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/customer" element={<CustomerPortal />} />
+          <Route path="*" element={<MerchantDashboard isOnline={isOnline} />} />
+        </Routes>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 };
 
-const MerchantDashboard = () => {
+const MerchantDashboard = ({ isOnline }) => {
   const [currentView, setCurrentView] = useState('dashboard');
   const [returns, setReturns] = useState([]);
   const [orders, setOrders] = useState([]);
