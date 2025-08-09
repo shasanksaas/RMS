@@ -486,7 +486,13 @@ const MerchantDashboard = ({ isOnline }) => {
       const response = await axios.get(`${API}/returns`, {
         headers: { 'X-Tenant-Id': DEMO_TENANT_ID }
       });
-      setReturns(response.data);
+      // Handle paginated response structure
+      if (response.data && response.data.items) {
+        setReturns(response.data.items);
+      } else {
+        // Fallback for old structure
+        setReturns(response.data || []);
+      }
     } catch (error) {
       console.error('Error loading returns:', error);
       // Don't set empty array immediately, let the user see there might be an issue
