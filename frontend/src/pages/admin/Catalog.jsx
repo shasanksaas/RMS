@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, FileTemplate, Mail, Workflow } from 'lucide-react';
+import { BookOpen, Settings, Mail, Workflow } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 
