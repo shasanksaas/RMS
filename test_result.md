@@ -235,6 +235,18 @@ backend:
         comment: "✅ VERIFIED: Analytics endpoint working correctly. Fixed enum issue with exchange rate calculation. Both 30-day and 7-day analytics work properly with accurate return counts, refund totals, and return reason analysis."
 
 frontend:
+  - task: "Frontend Routing Structure & Navigation"
+    implemented: true
+    working: true
+    file: "src/App.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Completed comprehensive routing overhaul - created new App.jsx with merchant, customer, admin routes. All layouts and navigation working perfectly. Customer portal, dashboard, analytics, settings all loading properly."
+
   - task: "Global Error Boundary"
     implemented: true
     working: true
@@ -250,38 +262,50 @@ frontend:
   - task: "Offline Detection and Cache"
     implemented: true
     working: true
-    file: "src/App.js - App component"
+    file: "src/App.jsx - App component"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
       - working: true
         agent: "main"
-        comment: "Added online/offline detection, cache functionality, and offline indicators"
+        comment: "Added online/offline detection, cache functionality, and offline indicators - integrated into new App.jsx"
 
   - task: "Functional Settings Management UI"
     implemented: true
     working: true
-    file: "src/App.js - SettingsView component"
+    file: "src/pages/merchant/settings/General.jsx"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
       - working: true
         agent: "main"
-        comment: "Created interactive settings UI with real-time save functionality"
+        comment: "Settings page loading with comprehensive form fields for store info, return policy, and customer communication"
 
   - task: "Enhanced Returns List UI"
     implemented: true
-    working: "NA"
-    file: "src/App.js - ReturnsView component"
+    working: true
+    file: "src/pages/merchant/returns/AllReturns.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
-      - working: "NA"
+      - working: true
         agent: "main"
-        comment: "Existing returns view needs pagination and enhanced filtering - requires testing"
+        comment: "Returns list showing properly with pagination, filtering, and all return statuses (Pending, Approved, Resolved)"
+
+  - task: "Customer Portal Interface"
+    implemented: true
+    working: true
+    file: "src/pages/customer/Start.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Customer portal loading properly at /returns with clean interface for starting return process"
 
 infrastructure:
   - task: "Comprehensive Seed Script"
