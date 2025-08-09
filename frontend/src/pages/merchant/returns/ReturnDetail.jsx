@@ -17,7 +17,7 @@ const ReturnDetail = () => {
   const [error, setError] = useState('');
 
   // Get backend URL and tenant from environment
-  const backendUrl = import.meta.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+  const backendUrl = process.env.REACT_APP_BACKEND_URL;
   const tenantId = 'tenant-fashion-store'; // TODO: Get from auth context
 
   const getApiUrl = () => {
