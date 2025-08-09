@@ -287,7 +287,7 @@ const App = () => {
     <BrowserRouter>
       <Routes>
         <Route path="/customer" element={<CustomerPortal />} />
-        <Route path="/*" element={<MerchantDashboard />} />
+        <Route path="*" element={<MerchantDashboard />} />
       </Routes>
     </BrowserRouter>
   );
