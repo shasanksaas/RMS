@@ -50,6 +50,8 @@ const App = () => {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [lastDataUpdate, setLastDataUpdate] = useState(null);
   
   // Load initial data
   useEffect(() => {
