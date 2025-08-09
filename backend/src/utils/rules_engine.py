@@ -4,7 +4,7 @@ Enhanced rules engine with simulation and step-by-step explanation
 from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime, timedelta
 from dataclasses import dataclass
-from ..utils.state_machine import ReturnStatus
+from .state_machine import ReturnStatus
 
 @dataclass
 class RuleStep:
