@@ -191,7 +191,7 @@ const AllReturns = () => {
               <Input
                 placeholder="Search customers, orders..."
                 value={filters.search}
-                onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                onChange={(e) => handleFilterChange('search', e.target.value)}
                 className="pl-10"
               />
             </div>
