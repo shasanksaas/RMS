@@ -368,7 +368,7 @@ const ReturnDetail = () => {
           </Link>
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Return {returnRequest.id}</h1>
-            <p className="text-gray-500">Order {returnRequest.orderNumber}</p>
+            <p className="text-gray-500">Order {returnRequest.order_number}</p>
           </div>
         </div>
         <Badge className={getStatusColor(returnRequest.status)}>
@@ -391,19 +391,19 @@ const ReturnDetail = () => {
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="font-medium">Name</span>
-                  <span>{returnRequest.customer.name}</span>
+                  <span>{returnRequest.customer_name}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="font-medium">Email</span>
-                  <span>{returnRequest.customer.email}</span>
+                  <span>{returnRequest.customer_email}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="font-medium">Order Number</span>
-                  <span className="font-mono">{returnRequest.orderNumber}</span>
+                  <span className="font-mono">{returnRequest.order_number}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="font-medium">Request Date</span>
-                  <span>{new Date(returnRequest.createdAt).toLocaleString()}</span>
+                  <span>{new Date(returnRequest.created_at).toLocaleString()}</span>
                 </div>
               </div>
             </CardContent>
@@ -425,8 +425,8 @@ const ReturnDetail = () => {
                       <Package className="h-6 w-6 text-gray-400" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-medium">{item.productName}</h4>
-                      <p className="text-sm text-gray-500">SKU: {item.productSku}</p>
+                      <h4 className="font-medium">{item.product_name}</h4>
+                      <p className="text-sm text-gray-500">SKU: {item.product_sku}</p>
                       <p className="text-sm text-gray-500">Reason: {item.reason}</p>
                     </div>
                     <div className="text-right">
@@ -438,7 +438,7 @@ const ReturnDetail = () => {
                 <div className="border-t pt-4">
                   <div className="flex justify-between text-lg font-bold">
                     <span>Total Refund Amount</span>
-                    <span>${returnRequest.refundAmount}</span>
+                    <span>${returnRequest.refund_amount}</span>
                   </div>
                 </div>
               </div>
@@ -446,38 +446,40 @@ const ReturnDetail = () => {
           </Card>
 
           {/* Rule Explanation */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Rule Evaluation</CardTitle>
-              <CardDescription>
-                Automated rule processing and recommendation
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {returnRequest.ruleExplanation.steps.map((step, index) => (
-                  <div key={index} className="flex items-start space-x-3 p-3 border rounded-lg">
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                      step.result === 'PASS' ? 'bg-green-100 text-green-800' :
-                      step.result === 'FAIL' ? 'bg-red-100 text-red-800' :
-                      'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {step.result === 'PASS' ? '✓' : step.result === 'FAIL' ? '✗' : '?'}
+          {returnRequest.rule_explanation && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Rule Evaluation</CardTitle>
+                <CardDescription>
+                  Automated rule processing and recommendation
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {returnRequest.rule_explanation.steps.map((step, index) => (
+                    <div key={index} className="flex items-start space-x-3 p-3 border rounded-lg">
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                        step.result === 'PASS' ? 'bg-green-100 text-green-800' :
+                        step.result === 'FAIL' ? 'bg-red-100 text-red-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {step.result === 'PASS' ? '✓' : step.result === 'FAIL' ? '✗' : '?'}
+                      </div>
+                      <div>
+                        <h4 className="font-medium">{step.rule}</h4>
+                        <p className="text-sm text-gray-600">{step.explanation}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-medium">{step.rule}</h4>
-                      <p className="text-sm text-gray-600">{step.explanation}</p>
-                    </div>
-                  </div>
-                ))}
-                <Alert>
-                  <AlertDescription>
-                    <strong>Recommendation:</strong> {returnRequest.ruleExplanation.recommendation}
-                  </AlertDescription>
-                </Alert>
-              </div>
-            </CardContent>
-          </Card>
+                  ))}
+                  <Alert>
+                    <AlertDescription>
+                      <strong>Recommendation:</strong> {returnRequest.rule_explanation.recommendation}
+                    </AlertDescription>
+                  </Alert>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Customer Notes */}
           {returnRequest.notes && (
