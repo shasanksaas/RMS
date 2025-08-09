@@ -1,0 +1,336 @@
+name: Returns Management SaaS - CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      mongodb:
+        image: mongo:5.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd mongo
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.11
+    
+    - name: Install dependencies
+      run: |
+        cd backend
+        pip install -r requirements.txt
+    
+    - name: Run security scan
+      run: |
+        cd backend
+        bandit -r src/ -f json -o bandit-report.json || true
+        bandit -r src/ -ll
+    
+    - name: Run unit tests with coverage
+      run: |
+        cd backend
+        python -m pytest tests/ -v --cov=src --cov-report=xml --cov-report=html
+      env:
+        MONGO_URL: mongodb://localhost:27017
+        DB_NAME: test_returns_ci
+    
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./backend/coverage.xml
+        fail_ci_if_error: true
+
+  integration-tests:
+    runs-on: ubuntu-latest
+    needs: test
+    
+    services:
+      mongodb:
+        image: mongo:5.0
+        ports:
+          - 27017:27017
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.11
+        
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
+        
+    - name: Install backend dependencies
+      run: |
+        cd backend
+        pip install -r requirements.txt
+        
+    - name: Install frontend dependencies  
+      run: |
+        cd frontend
+        npm install
+        
+    - name: Build frontend
+      run: |
+        cd frontend
+        npm run build
+        
+    - name: Start backend server
+      run: |
+        cd backend
+        python server.py &
+        sleep 10
+      env:
+        MONGO_URL: mongodb://localhost:27017
+        DB_NAME: test_returns_integration
+        
+    - name: Run integration tests
+      run: |
+        cd backend
+        python -m pytest tests/ -v -k "integration"
+      env:
+        MONGO_URL: mongodb://localhost:27017
+        DB_NAME: test_returns_integration
+
+  e2e-tests:
+    runs-on: ubuntu-latest
+    needs: integration-tests
+    
+    services:
+      mongodb:
+        image: mongo:5.0
+        ports:
+          - 27017:27017
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
+        
+    - name: Install Playwright
+      run: |
+        npm install -g playwright
+        playwright install chromium
+        
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.11
+        
+    - name: Install backend dependencies
+      run: |
+        cd backend
+        pip install -r requirements.txt
+        
+    - name: Install frontend dependencies
+      run: |
+        cd frontend
+        npm install
+        
+    - name: Seed test data
+      run: |
+        cd backend
+        python -c "
+        import asyncio
+        import sys
+        import os
+        sys.path.append('.')
+        os.environ['MONGO_URL'] = 'mongodb://localhost:27017'
+        os.environ['DB_NAME'] = 'test_returns_e2e'
+        
+        # Import and run minimal seed
+        from motor.motor_asyncio import AsyncIOMotorClient
+        
+        async def seed_e2e_data():
+            client = AsyncIOMotorClient('mongodb://localhost:27017')
+            db = client['test_returns_e2e']
+            
+            # Create minimal test data
+            await db.tenants.insert_one({
+                'id': 'e2e-test-tenant',
+                'name': 'E2E Test Store',
+                'domain': 'e2e-test.com',
+                'is_active': True,
+                'settings': {'return_window_days': 30}
+            })
+            
+            await db.orders.insert_one({
+                'id': 'e2e-test-order',
+                'tenant_id': 'e2e-test-tenant',
+                'order_number': 'E2E-001',
+                'customer_email': 'test@e2e.com',
+                'customer_name': 'E2E Test Customer',
+                'items': [{'product_name': 'Test Product', 'quantity': 1, 'price': 50.0}],
+                'total_amount': 50.0,
+                'order_date': '2024-01-01T00:00:00Z'
+            })
+            
+            client.close()
+            print('E2E test data seeded')
+        
+        asyncio.run(seed_e2e_data())
+        "
+        
+    - name: Start servers
+      run: |
+        # Start backend
+        cd backend
+        python server.py &
+        BACKEND_PID=$!
+        
+        # Start frontend
+        cd ../frontend
+        npm start &
+        FRONTEND_PID=$!
+        
+        # Wait for servers to start
+        sleep 15
+        
+        echo "Backend PID: $BACKEND_PID"
+        echo "Frontend PID: $FRONTEND_PID"
+        
+        # Save PIDs for cleanup
+        echo $BACKEND_PID > backend.pid
+        echo $FRONTEND_PID > frontend.pid
+        
+        # Test server connectivity
+        curl -f http://localhost:8000/health || exit 1
+        curl -f http://localhost:3000 || exit 1
+        
+      env:
+        MONGO_URL: mongodb://localhost:27017
+        DB_NAME: test_returns_e2e
+        
+    - name: Run E2E tests
+      run: |
+        # Create basic Playwright test
+        cat > e2e_test.js << 'EOF'
+        const { test, expect } = require('@playwright/test');
+        
+        test('customer return flow', async ({ page }) => {
+          // Go to customer portal
+          await page.goto('http://localhost:3000/customer');
+          
+          // Fill in order lookup
+          await page.fill('input[placeholder*="order"]', 'E2E-001');
+          await page.fill('input[placeholder*="email"]', 'test@e2e.com');
+          
+          // Submit lookup
+          await page.click('text=Look up order');
+          
+          // Wait for order to load
+          await expect(page.locator('text=Test Product')).toBeVisible({ timeout: 10000 });
+          
+          console.log('✅ Customer return flow basic test passed');
+        });
+        
+        test('merchant dashboard loads', async ({ page }) => {
+          await page.goto('http://localhost:3000');
+          
+          // Should show dashboard
+          await expect(page.locator('text=Returns Dashboard')).toBeVisible({ timeout: 10000 });
+          
+          console.log('✅ Merchant dashboard loads test passed');
+        });
+        EOF
+        
+        # Run the test
+        npx playwright test e2e_test.js --reporter=line
+        
+    - name: Cleanup
+      if: always()
+      run: |
+        # Kill servers
+        if [ -f backend.pid ]; then
+          kill $(cat backend.pid) || true
+        fi
+        if [ -f frontend.pid ]; then
+          kill $(cat frontend.pid) || true
+        fi
+
+  load-test:
+    runs-on: ubuntu-latest
+    needs: e2e-tests
+    if: github.ref == 'refs/heads/main'
+    
+    services:
+      mongodb:
+        image: mongo:5.0
+        ports:
+          - 27017:27017
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.11
+        
+    - name: Install dependencies
+      run: |
+        cd backend  
+        pip install -r requirements.txt
+        
+    - name: Start backend server
+      run: |
+        cd backend
+        python server.py &
+        sleep 10
+      env:
+        MONGO_URL: mongodb://localhost:27017
+        DB_NAME: test_returns_load
+        
+    - name: Run load test
+      run: |
+        cd backend
+        cat > locustfile.py << 'EOF'
+        from locust import HttpUser, task, between
+        
+        class ReturnsUser(HttpUser):
+            wait_time = between(0.1, 0.5)
+            
+            def on_start(self):
+                self.headers = {"X-Tenant-Id": "load-test-tenant"}
+            
+            @task(3)
+            def get_returns(self):
+                self.client.get("/api/returns", headers=self.headers)
+            
+            @task(1)
+            def get_analytics(self):
+                self.client.get("/api/analytics", headers=self.headers)
+                
+            @task(1)
+            def health_check(self):
+                self.client.get("/health")
+        EOF
+        
+        # Run load test: 100 RPS for 2 minutes
+        locust -f locustfile.py --host=http://localhost:8000 --headless -u 100 -r 10 -t 2m --html=load-test-report.html
+        
+    - name: Upload load test report
+      uses: actions/upload-artifact@v3
+      with:
+        name: load-test-report
+        path: backend/load-test-report.html
