@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import CustomerPortal from './CustomerPortal';
 import ShopifyIntegration from './components/ShopifyIntegration';
 import EnhancedFeatures from './components/EnhancedFeatures';
+import ErrorBoundary from './components/ErrorBoundary';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './components/ui/card';
 import { Button } from './components/ui/button';
 import { Input } from './components/ui/input';
@@ -15,6 +16,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from './components/ui/textarea';
 import { Separator } from './components/ui/separator';
 import { Progress } from './components/ui/progress';
+import { Alert, AlertDescription } from './components/ui/alert';
 import { 
   ArrowUpCircle, 
   ArrowDownCircle, 
@@ -28,7 +30,9 @@ import {
   Plus,
   Calendar,
   BarChart3,
-  Settings
+  Settings,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
 import './App.css';
 
