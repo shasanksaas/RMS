@@ -302,10 +302,20 @@ const AllReturns = () => {
                         </Button>
                         {returnRequest.status === 'requested' && (
                           <>
-                            <Button variant="ghost" size="sm" className="text-green-600">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="text-green-600 hover:text-green-700"
+                              onClick={() => handleStatusUpdate(returnRequest.id, 'approved')}
+                            >
                               <CheckCircle className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="sm" className="text-red-600">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="text-red-600 hover:text-red-700"
+                              onClick={() => handleStatusUpdate(returnRequest.id, 'denied')}
+                            >
                               <XCircle className="h-4 w-4" />
                             </Button>
                           </>
