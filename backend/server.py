@@ -235,6 +235,74 @@ async def get_tenant(tenant_id: str):
         raise HTTPException(status_code=404, detail="Tenant not found")
     return Tenant(**tenant)
 
+@api_router.put("/tenants/{tenant_id}/settings")
+async def update_tenant_settings(
+    tenant_id: str, 
+    settings: Dict[str, Any],
+    current_tenant: str = Depends(get_tenant_id)
+):
+    """Update tenant settings"""
+    
+    # Verify tenant access
+    if tenant_id != current_tenant:
+        raise HTTPException(status_code=403, detail="Access denied to tenant settings")
+    
+    # Validate settings
+    valid_settings = {
+        "return_window_days", "auto_approve_exchanges", "require_photos",
+        "brand_color", "custom_message", "restocking_fee_percent",
+        "store_credit_bonus_percent", "logo_url"
+    }
+    
+    filtered_settings = {k: v for k, v in settings.items() if k in valid_settings}
+    
+    if not filtered_settings:
+        raise HTTPException(status_code=400, detail="No valid settings provided")
+    
+    # Update settings atomically
+    result = await db.tenants.update_one(
+        {"id": tenant_id, "is_active": True},
+        {
+            "$set": {
+                "settings": filtered_settings,
+                "updated_at": datetime.utcnow()
+            }
+        }
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Tenant not found")
+    
+    # Get updated tenant
+    updated_tenant = await db.tenants.find_one({"id": tenant_id})
+    
+    return {
+        "success": True,
+        "message": "Settings updated successfully",
+        "settings": updated_tenant["settings"]
+    }
+
+@api_router.get("/tenants/{tenant_id}/settings")
+async def get_tenant_settings(
+    tenant_id: str,
+    current_tenant: str = Depends(get_tenant_id)
+):
+    """Get tenant settings"""
+    
+    if tenant_id != current_tenant:
+        raise HTTPException(status_code=403, detail="Access denied to tenant settings")
+    
+    tenant = await db.tenants.find_one({"id": tenant_id, "is_active": True})
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant not found")
+    
+    return {
+        "tenant_id": tenant_id,
+        "settings": tenant.get("settings", {}),
+        "name": tenant.get("name"),
+        "domain": tenant.get("domain")
+    }
+
 # Products Management
 @api_router.post("/products", response_model=Product)
 async def create_product(product_data: ProductCreate, tenant_id: str = Depends(get_tenant_id)):
