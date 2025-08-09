@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Filter, Download, MoreHorizontal, Eye, CheckCircle, XCircle } from 'lucide-react';
+import { Search, Filter, Download, MoreHorizontal, Eye, CheckCircle, XCircle, Package } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
