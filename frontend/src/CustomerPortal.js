@@ -289,41 +289,58 @@ const OrderLookupStep = ({ customerInfo, setCustomerInfo, onSubmit, loading, err
 );
 
 // Order Selection Step Component
-const OrderSelectionStep = ({ orders, onSelectOrder }) => (
-  <Card>
-    <CardHeader>
-      <CardTitle>Select an Order</CardTitle>
-      <CardDescription>
-        Choose the order you'd like to return items from
-      </CardDescription>
-    </CardHeader>
-    <CardContent>
-      <div className="space-y-4">
-        {orders.map((order) => (
-          <Card 
-            key={order.id} 
-            className="cursor-pointer hover:bg-blue-50 border-2 hover:border-blue-200 transition-all"
-            onClick={() => onSelectOrder(order)}
-          >
-            <CardContent className="p-4">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="font-semibold">Order #{order.order_number}</p>
-                  <p className="text-sm text-gray-600">{formatDate(order.order_date)}</p>
-                  <p className="text-sm text-gray-600">{order.items.length} item(s)</p>
+const OrderSelectionStep = ({ orders, onSelectOrder }) => {
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount);
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Select an Order</CardTitle>
+        <CardDescription>
+          Choose the order you'd like to return items from
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {orders.map((order) => (
+            <Card 
+              key={order.id} 
+              className="cursor-pointer hover:bg-blue-50 border-2 hover:border-blue-200 transition-all"
+              onClick={() => onSelectOrder(order)}
+            >
+              <CardContent className="p-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="font-semibold">Order #{order.order_number}</p>
+                    <p className="text-sm text-gray-600">{formatDate(order.order_date)}</p>
+                    <p className="text-sm text-gray-600">{order.items.length} item(s)</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold">{formatCurrency(order.total_amount)}</p>
+                    <Button size="sm" className="mt-2">Select</Button>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-semibold">{formatCurrency(order.total_amount)}</p>
-                  <Button size="sm" className="mt-2">Select</Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </CardContent>
-  </Card>
-);
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 // Return Form Step Component
 const ReturnFormStep = ({ order, onSubmit, loading, error }) => {
