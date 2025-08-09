@@ -67,16 +67,20 @@ const App = () => {
   };
 
   const createDemoTenantAndData = async () => {
-    const headers = { 'X-Tenant-Id': DEMO_TENANT_ID };
-    
     try {
-      // Create tenant
-      await axios.post(`${API}/tenants`, {
+      // Create tenant first
+      const tenantResponse = await axios.post(`${API}/tenants`, {
         name: "Demo Store",
         domain: "demo-store.com",
         shopify_store_url: "demo-store.myshopify.com"
       });
+      
+      // Set the tenant ID for subsequent requests
+      DEMO_TENANT_ID = tenantResponse.data.id;
+      console.log('Created demo tenant:', DEMO_TENANT_ID);
 
+      const headers = { 'X-Tenant-Id': DEMO_TENANT_ID };
+      
       // Create demo products
       const demoProducts = [
         { name: "Premium T-Shirt", price: 29.99, category: "Clothing", sku: "TSH-001" },
@@ -127,9 +131,30 @@ const App = () => {
         priority: 1
       }, { headers });
 
+      // Create a demo return request
+      const orders = await axios.get(`${API}/orders`, { headers });
+      if (orders.data.length > 0) {
+        const firstOrder = orders.data[0];
+        await axios.post(`${API}/returns`, {
+          order_id: firstOrder.id,
+          reason: "defective",
+          items_to_return: firstOrder.items.slice(0, 1), // Return first item
+          notes: "Product arrived with a defect"
+        }, { headers });
+      }
+
     } catch (error) {
-      // Tenant might already exist, that's okay
-      console.log('Demo data setup completed or already exists');
+      console.error('Demo data setup error:', error);
+      // If tenant creation fails, try to find an existing tenant
+      try {
+        const existingTenants = await axios.get(`${API}/tenants`);
+        if (existingTenants.data.length > 0) {
+          DEMO_TENANT_ID = existingTenants.data[0].id;
+          console.log('Using existing tenant:', DEMO_TENANT_ID);
+        }
+      } catch (e) {
+        console.error('Could not find existing tenants');
+      }
     }
   };
 
