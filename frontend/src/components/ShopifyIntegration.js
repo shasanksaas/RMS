@@ -173,7 +173,7 @@ const ShopifyIntegration = ({ tenantId }) => {
               disabled={syncing}
               className="flex items-center space-x-2"
             >
-              <Sync className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
               <span>{syncing ? 'Syncing...' : 'Sync Data'}</span>
             </Button>
           )}
