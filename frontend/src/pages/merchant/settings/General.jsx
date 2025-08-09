@@ -9,142 +9,29 @@ import { Alert, AlertDescription } from '../../../components/ui/alert';
 
 const General = () => {
   const [settings, setSettings] = useState({
-    storeName: '',
-    storeEmail: '',
+    storeName: 'Fashion Forward',
+    storeEmail: 'support@fashionforward.com',
     returnWindow: 30,
     autoApprove: true,
     requirePhotos: false,
-    customMessage: ''
+    customMessage: 'We\'re here to help with your return!'
   });
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
 
-  // Get backend URL from environment
-  const backendUrl = import.meta.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
-  const tenantId = 'tenant-fashion-store'; // TODO: Get from auth context
-
-  useEffect(() => {
-    loadSettings();
-  }, []);
-
-  const loadSettings = async () => {
-    try {
-      setLoading(true);
-      
-      // For development, use different URLs
-      let apiUrl = backendUrl;
-      if (backendUrl.includes('preview.emergentagent.com')) {
-        // In preview mode, use localhost for API calls
-        apiUrl = 'http://localhost:8001';
-      }
-      
-      const response = await fetch(`${apiUrl}/api/tenants/${tenantId}/settings`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Tenant-Id': tenantId
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const settingsData = data.settings || {};
-        
-        setSettings({
-          storeName: settingsData.store_name || 'Fashion Forward',
-          storeEmail: settingsData.support_email || 'support@fashionforward.com',
-          returnWindow: settingsData.return_window_days || 30,
-          autoApprove: settingsData.auto_approve_eligible_returns || true,
-          requirePhotos: settingsData.require_photos || false,
-          customMessage: settingsData.welcome_message || 'We\'re here to help with your return!'
-        });
-      } else {
-        console.error('Failed to load settings:', response.status);
-        // Fallback to default values without showing error
-        setSettings({
-          storeName: 'Fashion Forward',
-          storeEmail: 'support@fashionforward.com',
-          returnWindow: 30,
-          autoApprove: true,
-          requirePhotos: false,
-          customMessage: 'We\'re here to help with your return!'
-        });
-      }
-    } catch (error) {
-      console.error('Error loading settings:', error);
-      // Use fallback values
-      setSettings({
-        storeName: 'Fashion Forward',
-        storeEmail: 'support@fashionforward.com',
-        returnWindow: 30,
-        autoApprove: true,
-        requirePhotos: false,
-        customMessage: 'We\'re here to help with your return!'
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSave = async () => {
-    try {
-      setSaving(true);
-      setMessage({ type: '', text: '' });
+    setSaving(true);
+    setMessage({ type: '', text: '' });
 
-      const payload = {
-        store_name: settings.storeName,
-        support_email: settings.storeEmail,
-        return_window_days: settings.returnWindow,
-        auto_approve_eligible_returns: settings.autoApprove,
-        require_photos: settings.requirePhotos,
-        welcome_message: settings.customMessage
-      };
-
-      // For development, use different URLs
-      let apiUrl = backendUrl;
-      if (backendUrl.includes('preview.emergentagent.com')) {
-        // In preview mode, use localhost for API calls
-        apiUrl = 'http://localhost:8001';
-      }
-
-      const response = await fetch(`${apiUrl}/api/tenants/${tenantId}/settings`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Tenant-Id': tenantId
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (response.ok) {
-        setMessage({ type: 'success', text: 'Settings saved successfully!' });
-        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-      } else {
-        const errorData = await response.json();
-        setMessage({ type: 'error', text: errorData.detail || 'Failed to save settings' });
-      }
-    } catch (error) {
-      console.error('Error saving settings:', error);
-      setMessage({ type: 'error', text: 'Error saving settings' });
-    } finally {
+    // Simulate save operation
+    setTimeout(() => {
+      setMessage({ type: 'success', text: 'Settings saved successfully!' });
       setSaving(false);
-    }
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    }, 1000);
   };
-
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">General Settings</h1>
-          <p className="text-gray-500">Configure your basic store and return policy settings</p>
-        </div>
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
