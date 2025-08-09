@@ -232,7 +232,7 @@ const AllReturns = () => {
       {/* Returns Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Return Requests ({returns.length})</CardTitle>
+          <CardTitle>Return Requests ({pagination.total_items || returns.length})</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
