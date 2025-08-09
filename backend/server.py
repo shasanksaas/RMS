@@ -329,14 +329,33 @@ async def create_return_request(return_data: ReturnRequestCreate, tenant_id: str
         refund_amount=refund_amount
     )
     
-    # Apply rules engine (simplified)
+    # Apply rules engine (enhanced)
     rules = await db.return_rules.find({"tenant_id": tenant_id, "is_active": True}).sort("priority", 1).to_list(100)
-    for rule_data in rules:
-        rule = ReturnRule(**rule_data)
-        if await apply_return_rule(rule, return_request, order_obj):
-            break
+    if rules:
+        # Use enhanced rules engine for consistent processing
+        simulation_result = RulesEngine.simulate_rules_application(
+            return_request=return_request.dict(),
+            order=order_obj.dict(),
+            rules=rules
+        )
+        
+        # Apply the final status from rules simulation
+        return_request.status = ReturnStatus(simulation_result["final_status"])
+        if simulation_result["final_notes"]:
+            return_request.notes = simulation_result["final_notes"]
     
     await db.return_requests.insert_one(return_request.dict())
+    
+    # Create initial audit log entry
+    audit_entry = ReturnStateMachine.create_audit_log_entry(
+        return_id=return_request.id,
+        from_status="new",
+        to_status=return_request.status.value,
+        notes=f"Return request created. {return_request.notes or ''}".strip(),
+        user_id="customer"
+    )
+    await db.audit_logs.insert_one(audit_entry)
+    
     return return_request
 
 async def apply_return_rule(rule: ReturnRule, return_request: ReturnRequest, order: Order) -> bool:
