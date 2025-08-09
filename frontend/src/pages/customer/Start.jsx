@@ -199,8 +199,8 @@ const CustomerStart = () => {
       <Alert>
         <AlertCircle className="h-4 w-4" />
         <AlertDescription>
-          <strong>Demo Mode:</strong> Try using order number "ORD-12345" with any valid email address, 
-          or use "ORD-404" to see error handling in action.
+          <strong>Demo Mode:</strong> Try using order number "ORD-12345" with email "sarah.johnson@example.com", 
+          or order number "ORD-12346" with email "mike.chen@example.com" to test with real seeded data.
         </AlertDescription>
       </Alert>
     </div>
