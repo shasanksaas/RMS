@@ -111,11 +111,14 @@ backend:
     file: "src/modules/auth/shopify_oauth.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Fixed import path from '..config.database' to '...config.database' and verified backend restarts successfully"
+      - working: true
+        agent: "testing"
+        comment: "Verified fix is working correctly. Import path issue resolved and backend starts without errors."
 
   - task: "Complete Shopify OAuth Integration"
     implemented: true
