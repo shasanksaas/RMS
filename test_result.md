@@ -328,9 +328,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Enhanced Returns List UI"
-    - "End-to-End Customer Return Initiation Flow"
-    - "Mobile Responsiveness Testing"
+    - "Make Frontend Forms and Buttons Functional"
+    - "Connect Frontend to Backend APIs"
+    - "Customer Return Initiation Flow"
+    - "Settings Save Functionality"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
