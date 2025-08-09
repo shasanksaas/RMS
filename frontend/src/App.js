@@ -31,8 +31,8 @@ import './App.css';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-// Mock tenant ID for demo - in real app, this would come from auth
-const DEMO_TENANT_ID = 'demo-tenant-123';
+// Demo tenant ID - will be created automatically
+let DEMO_TENANT_ID = null;
 
 const App = () => {
   const [currentView, setCurrentView] = useState('dashboard');
