@@ -137,15 +137,18 @@ backend:
 
   - task: "AI Suggestions Service (Mock Implementation)"
     implemented: true
-    working: "NA"
+    working: true
     file: "src/services/ai_service.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Service exists but needs verification of mock functionality and integration"
+      - working: true
+        agent: "testing"
+        comment: "✅ FULLY WORKING - AI service provides intelligent return reason suggestions using local rule-based engine. Fixed timezone issue in datetime handling. Tested suggest-reasons, generate-upsell, and analyze-patterns endpoints. All working with realistic mock data."
 
   - task: "Email Notifications Service (Mock Implementation)"
     implemented: true
