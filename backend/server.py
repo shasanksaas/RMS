@@ -358,31 +358,6 @@ async def create_return_request(return_data: ReturnRequestCreate, tenant_id: str
     
     return return_request
 
-async def apply_return_rule(rule: ReturnRule, return_request: ReturnRequest, order: Order) -> bool:
-    """Apply a return rule to a return request"""
-    conditions = rule.conditions
-    
-    # Example rule conditions
-    if "max_days_since_order" in conditions:
-        days_since_order = (datetime.utcnow() - order.order_date).days
-        if days_since_order > conditions["max_days_since_order"]:
-            return_request.status = ReturnStatus.DENIED
-            return_request.notes = f"Return window expired ({days_since_order} days > {conditions['max_days_since_order']} days)"
-            return True
-    
-    if "auto_approve_reasons" in conditions:
-        if return_request.reason in conditions["auto_approve_reasons"]:
-            return_request.status = ReturnStatus.APPROVED
-            return_request.notes = "Auto-approved based on return reason"
-            return True
-    
-    if "require_manual_review_reasons" in conditions:
-        if return_request.reason in conditions["require_manual_review_reasons"]:
-            return_request.status = ReturnStatus.REQUESTED
-            return_request.notes = "Requires manual review"
-            return True
-    
-    return False
 
 @api_router.get("/returns", response_model=Dict[str, Any])
 async def get_return_requests(
