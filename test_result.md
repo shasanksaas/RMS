@@ -227,12 +227,7 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus:
-    - "Complete Shopify OAuth Integration"
-    - "AI Suggestions Service (Mock Implementation)"
-    - "Email Notifications Service (Mock Implementation)"
-    - "Label Issuing Service (Mock Implementation)"
-    - "Enhanced Features Controller"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
