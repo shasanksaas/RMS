@@ -412,8 +412,7 @@ async def root():
 # Include new routers
 app.include_router(api_router)
 app.include_router(shopify_router)
-app.include_router(enhanced_router) 
-app.include_router(tenant_router)
+app.include_router(enhanced_router)
 
 app.add_middleware(
     CORSMiddleware,
