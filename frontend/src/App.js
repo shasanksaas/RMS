@@ -611,7 +611,11 @@ const MerchantDashboard = () => {
         )}
 
         {currentView === 'settings' && (
-          <SettingsView />
+          <div className="space-y-6">
+            <SettingsView />
+            <ShopifyIntegration tenantId={DEMO_TENANT_ID} />
+            <EnhancedFeatures tenantId={DEMO_TENANT_ID} />
+          </div>
         )}
       </div>
     </div>
