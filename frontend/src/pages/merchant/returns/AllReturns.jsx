@@ -196,7 +196,7 @@ const AllReturns = () => {
               />
             </div>
             
-            <Select value={filters.status} onValueChange={(value) => setFilters({ ...filters, status: value })}>
+            <Select value={filters.status} onValueChange={(value) => handleFilterChange('status', value)}>
               <SelectTrigger>
                 <SelectValue placeholder="All statuses" />
               </SelectTrigger>
@@ -209,7 +209,7 @@ const AllReturns = () => {
               </SelectContent>
             </Select>
 
-            <Select value={filters.sortBy} onValueChange={(value) => setFilters({ ...filters, sortBy: value })}>
+            <Select value={filters.sortBy} onValueChange={(value) => handleFilterChange('sortBy', value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
