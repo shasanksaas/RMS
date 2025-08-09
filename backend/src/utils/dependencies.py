@@ -7,6 +7,7 @@ from ..services.tenant_service import TenantService
 from ..services.rules_service import RulesService
 from ..services.returns_service import ReturnsService
 from ..services.analytics_service import AnalyticsService
+from ..services.shopify_service import ShopifyService
 
 
 async def get_tenant_id(x_tenant_id: str = Header(None)) -> str:
