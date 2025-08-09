@@ -696,8 +696,8 @@ async def get_analytics(tenant_id: str = Depends(get_tenant_id), days: int = 30)
     total_returns = len(returns)
     total_refunds = sum(ret.get("refund_amount", 0) for ret in returns)
     
-    # Calculate exchange rate
-    exchanges = [ret for ret in returns if ret.get("status") == ReturnStatus.EXCHANGED]
+    # Calculate exchange rate (using resolved returns with exchange resolution)
+    exchanges = [ret for ret in returns if ret.get("status") == ReturnStatus.RESOLVED and ret.get("resolution_type") == "exchange"]
     exchange_rate = (len(exchanges) / total_returns * 100) if total_returns > 0 else 0
     
     # Top return reasons
