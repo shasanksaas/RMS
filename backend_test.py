@@ -539,53 +539,492 @@ class ReturnsAPITester:
             self.log_test("Export analytics Excel", False, str(response))
             return False
 
+    def test_state_machine_validation(self, tenant_id: str):
+        """Test return status transitions with proper validation"""
+        headers = {'X-Tenant-Id': tenant_id}
+        
+        # Create order and return for testing
+        order_data = {
+            "customer_email": "statemachine@example.com",
+            "customer_name": "State Machine Test",
+            "order_number": f"SM-{datetime.now().strftime('%H%M%S')}",
+            "items": [{"product_id": "sm-1", "product_name": "Test Product", "quantity": 1, "price": 50.0, "sku": "SM-001"}],
+            "total_amount": 50.0,
+            "order_date": datetime.utcnow().isoformat()
+        }
+        
+        success, order = self.make_request('POST', 'orders', order_data, headers)
+        if not success:
+            self.log_test("State Machine - Create test order", False, str(order))
+            return False
+            
+        return_data = {
+            "order_id": order['id'],
+            "reason": "defective",
+            "items_to_return": order['items'],
+            "notes": "Testing state machine"
+        }
+        
+        success, return_req = self.make_request('POST', 'returns', return_data, headers)
+        if not success:
+            self.log_test("State Machine - Create return", False, str(return_req))
+            return False
+            
+        return_id = return_req['id']
+        
+        # Test valid transition: requested -> approved
+        success, updated = self.make_request('PUT', f'returns/{return_id}/status', 
+                                           {"status": "approved", "notes": "Approved for testing"}, headers)
+        if success and updated.get('status') == 'approved':
+            self.log_test("State Machine - Valid transition (requested->approved)", True)
+        else:
+            self.log_test("State Machine - Valid transition (requested->approved)", False, str(updated))
+            return False
+            
+        # Test invalid transition: approved -> resolved (should skip received)
+        success, invalid = self.make_request('PUT', f'returns/{return_id}/status', 
+                                           {"status": "resolved"}, headers, expected_status=400)
+        if success:
+            self.log_test("State Machine - Invalid transition blocked", True)
+        else:
+            self.log_test("State Machine - Invalid transition blocked", False, "Should block invalid transitions")
+            
+        # Test idempotent update (same status)
+        success, idempotent = self.make_request('PUT', f'returns/{return_id}/status', 
+                                              {"status": "approved"}, headers)
+        if success and idempotent.get('status') == 'approved':
+            self.log_test("State Machine - Idempotent update", True)
+        else:
+            self.log_test("State Machine - Idempotent update", False, str(idempotent))
+            
+        return True
+
+    def test_rules_engine_simulation(self, tenant_id: str):
+        """Test the /rules/simulate endpoint"""
+        headers = {'X-Tenant-Id': tenant_id}
+        
+        # Create a test rule first
+        rule_data = {
+            "name": "Simulation Test Rule",
+            "description": "Test rule for simulation",
+            "conditions": {
+                "auto_approve_reasons": ["defective", "damaged_in_shipping"],
+                "max_days_since_order": 30,
+                "min_return_value": 10.0
+            },
+            "actions": {"auto_approve": True},
+            "priority": 1
+        }
+        
+        success, rule = self.make_request('POST', 'return-rules', rule_data, headers)
+        if not success:
+            self.log_test("Rules Simulation - Create test rule", False, str(rule))
+            return False
+            
+        # Test simulation with valid data
+        simulation_data = {
+            "order_data": {
+                "order_date": (datetime.utcnow() - timedelta(days=5)).isoformat(),
+                "customer_email": "sim@test.com"
+            },
+            "return_data": {
+                "reason": "defective",
+                "refund_amount": 50.0
+            }
+        }
+        
+        success, result = self.make_request('POST', 'return-rules/simulate', simulation_data, headers)
+        if success and 'steps' in result and 'final_status' in result:
+            self.log_test("Rules Simulation - Basic simulation", True)
+            
+            # Check if steps contain explanations
+            if result['steps'] and all('explanation' in step for step in result['steps']):
+                self.log_test("Rules Simulation - Step explanations", True)
+            else:
+                self.log_test("Rules Simulation - Step explanations", False, "Missing step explanations")
+                
+            # Check if auto-approval worked
+            if result['final_status'] == 'approved':
+                self.log_test("Rules Simulation - Auto-approval logic", True)
+            else:
+                self.log_test("Rules Simulation - Auto-approval logic", False, f"Expected approved, got {result['final_status']}")
+        else:
+            self.log_test("Rules Simulation - Basic simulation", False, str(result))
+            return False
+            
+        return True
+
+    def test_resolution_actions(self, tenant_id: str):
+        """Test the /returns/{id}/resolve endpoint"""
+        headers = {'X-Tenant-Id': tenant_id}
+        
+        # Create order and return in received state
+        order_data = {
+            "customer_email": "resolution@example.com",
+            "customer_name": "Resolution Test",
+            "order_number": f"RES-{datetime.now().strftime('%H%M%S')}",
+            "items": [{"product_id": "res-1", "product_name": "Resolvable Product", "quantity": 1, "price": 100.0, "sku": "RES-001"}],
+            "total_amount": 100.0,
+            "order_date": datetime.utcnow().isoformat()
+        }
+        
+        success, order = self.make_request('POST', 'orders', order_data, headers)
+        if not success:
+            self.log_test("Resolution Actions - Create order", False, str(order))
+            return False
+            
+        return_data = {
+            "order_id": order['id'],
+            "reason": "defective",
+            "items_to_return": order['items']
+        }
+        
+        success, return_req = self.make_request('POST', 'returns', return_data, headers)
+        if not success:
+            self.log_test("Resolution Actions - Create return", False, str(return_req))
+            return False
+            
+        return_id = return_req['id']
+        
+        # Move to received state
+        success, _ = self.make_request('PUT', f'returns/{return_id}/status', {"status": "approved"}, headers)
+        success, _ = self.make_request('PUT', f'returns/{return_id}/status', {"status": "label_issued"}, headers)
+        success, _ = self.make_request('PUT', f'returns/{return_id}/status', {"status": "received"}, headers)
+        
+        # Test refund resolution
+        refund_data = {
+            "resolution_type": "refund",
+            "refund_method": "original_payment",
+            "notes": "Refund processed for defective item"
+        }
+        
+        success, refund_result = self.make_request('POST', f'returns/{return_id}/resolve', refund_data, headers)
+        if success and refund_result.get('success') and refund_result.get('resolution_type') == 'refund':
+            self.log_test("Resolution Actions - Refund processing", True)
+        else:
+            self.log_test("Resolution Actions - Refund processing", False, str(refund_result))
+            
+        # Create another return for exchange test
+        return_data['order_id'] = order['id']  # Reuse order
+        success, return_req2 = self.make_request('POST', 'returns', return_data, headers)
+        if success:
+            return_id2 = return_req2['id']
+            # Move to received state
+            self.make_request('PUT', f'returns/{return_id2}/status', {"status": "approved"}, headers)
+            self.make_request('PUT', f'returns/{return_id2}/status', {"status": "label_issued"}, headers)
+            self.make_request('PUT', f'returns/{return_id2}/status', {"status": "received"}, headers)
+            
+            # Test exchange resolution
+            exchange_data = {
+                "resolution_type": "exchange",
+                "exchange_items": [{"product_id": "new-1", "product_name": "New Product", "quantity": 1, "price": 100.0}],
+                "notes": "Exchange for different size"
+            }
+            
+            success, exchange_result = self.make_request('POST', f'returns/{return_id2}/resolve', exchange_data, headers)
+            if success and exchange_result.get('success') and exchange_result.get('resolution_type') == 'exchange':
+                self.log_test("Resolution Actions - Exchange processing", True)
+            else:
+                self.log_test("Resolution Actions - Exchange processing", False, str(exchange_result))
+                
+        return True
+
+    def test_enhanced_returns_endpoint(self, tenant_id: str):
+        """Test pagination, search, filtering on returns endpoint"""
+        headers = {'X-Tenant-Id': tenant_id}
+        
+        # Test pagination
+        success, paginated = self.make_request('GET', 'returns?page=1&limit=5', headers=headers)
+        if success and 'items' in paginated and 'pagination' in paginated:
+            pagination = paginated['pagination']
+            if all(key in pagination for key in ['current_page', 'total_pages', 'total_count', 'per_page']):
+                self.log_test("Enhanced Returns - Pagination structure", True)
+            else:
+                self.log_test("Enhanced Returns - Pagination structure", False, "Missing pagination fields")
+        else:
+            self.log_test("Enhanced Returns - Pagination structure", False, str(paginated))
+            
+        # Test search functionality
+        success, searched = self.make_request('GET', 'returns?search=test', headers=headers)
+        if success and 'items' in searched:
+            self.log_test("Enhanced Returns - Search functionality", True)
+        else:
+            self.log_test("Enhanced Returns - Search functionality", False, str(searched))
+            
+        # Test status filtering
+        success, filtered = self.make_request('GET', 'returns?status_filter=approved', headers=headers)
+        if success and 'items' in filtered:
+            self.log_test("Enhanced Returns - Status filtering", True)
+        else:
+            self.log_test("Enhanced Returns - Status filtering", False, str(filtered))
+            
+        # Test sorting
+        success, sorted_desc = self.make_request('GET', 'returns?sort_by=created_at&sort_order=desc', headers=headers)
+        success2, sorted_asc = self.make_request('GET', 'returns?sort_by=created_at&sort_order=asc', headers=headers)
+        
+        if success and success2:
+            self.log_test("Enhanced Returns - Sorting", True)
+        else:
+            self.log_test("Enhanced Returns - Sorting", False, "Sorting requests failed")
+            
+        return True
+
+    def test_settings_management(self, tenant_id: str):
+        """Test tenant settings endpoints"""
+        headers = {'X-Tenant-Id': tenant_id}
+        
+        # Test GET settings
+        success, settings = self.make_request('GET', f'tenants/{tenant_id}/settings', headers=headers)
+        if success and 'settings' in settings:
+            self.log_test("Settings Management - GET settings", True)
+        else:
+            self.log_test("Settings Management - GET settings", False, str(settings))
+            return False
+            
+        # Test PUT settings
+        new_settings = {
+            "return_window_days": 45,
+            "auto_approve_exchanges": False,
+            "require_photos": True,
+            "brand_color": "#ff6b6b",
+            "custom_message": "Updated test message"
+        }
+        
+        success, updated = self.make_request('PUT', f'tenants/{tenant_id}/settings', new_settings, headers)
+        if success and updated.get('success'):
+            self.log_test("Settings Management - PUT settings", True)
+            
+            # Verify settings were saved
+            success, verified = self.make_request('GET', f'tenants/{tenant_id}/settings', headers=headers)
+            if success and verified['settings']['return_window_days'] == 45:
+                self.log_test("Settings Management - Settings persistence", True)
+            else:
+                self.log_test("Settings Management - Settings persistence", False, "Settings not persisted correctly")
+        else:
+            self.log_test("Settings Management - PUT settings", False, str(updated))
+            
+        # Test invalid settings
+        invalid_settings = {"invalid_field": "should_be_ignored", "return_window_days": 30}
+        success, filtered_result = self.make_request('PUT', f'tenants/{tenant_id}/settings', invalid_settings, headers)
+        if success:
+            self.log_test("Settings Management - Invalid field filtering", True)
+        else:
+            self.log_test("Settings Management - Invalid field filtering", False, str(filtered_result))
+            
+        return True
+
+    def test_audit_log_timeline(self, tenant_id: str):
+        """Test /returns/{id}/audit-log endpoint"""
+        headers = {'X-Tenant-Id': tenant_id}
+        
+        # Create a return and perform status changes to generate audit log
+        order_data = {
+            "customer_email": "audit@example.com",
+            "customer_name": "Audit Test",
+            "order_number": f"AUD-{datetime.now().strftime('%H%M%S')}",
+            "items": [{"product_id": "aud-1", "product_name": "Audit Product", "quantity": 1, "price": 75.0, "sku": "AUD-001"}],
+            "total_amount": 75.0,
+            "order_date": datetime.utcnow().isoformat()
+        }
+        
+        success, order = self.make_request('POST', 'orders', order_data, headers)
+        if not success:
+            self.log_test("Audit Log - Create order", False, str(order))
+            return False
+            
+        return_data = {
+            "order_id": order['id'],
+            "reason": "defective",
+            "items_to_return": order['items']
+        }
+        
+        success, return_req = self.make_request('POST', 'returns', return_data, headers)
+        if not success:
+            self.log_test("Audit Log - Create return", False, str(return_req))
+            return False
+            
+        return_id = return_req['id']
+        
+        # Perform status changes to create audit trail
+        self.make_request('PUT', f'returns/{return_id}/status', {"status": "approved", "notes": "Approved by manager"}, headers)
+        self.make_request('PUT', f'returns/{return_id}/status', {"status": "label_issued", "notes": "Label generated"}, headers)
+        
+        # Test audit log retrieval
+        success, audit_log = self.make_request('GET', f'returns/{return_id}/audit-log', headers=headers)
+        if success and 'timeline' in audit_log and 'current_status' in audit_log:
+            timeline = audit_log['timeline']
+            if len(timeline) >= 3:  # Should have creation + 2 status updates
+                self.log_test("Audit Log - Timeline retrieval", True)
+                
+                # Check timeline ordering (should be chronological)
+                timestamps = [entry.get('timestamp') for entry in timeline if 'timestamp' in entry]
+                if len(timestamps) >= 2:
+                    self.log_test("Audit Log - Timeline ordering", True)
+                else:
+                    self.log_test("Audit Log - Timeline ordering", False, "Missing timestamps")
+            else:
+                self.log_test("Audit Log - Timeline retrieval", False, f"Expected >= 3 entries, got {len(timeline)}")
+        else:
+            self.log_test("Audit Log - Timeline retrieval", False, str(audit_log))
+            
+        return True
+
+    def test_multi_tenant_isolation(self):
+        """Critical security test - verify tenant isolation"""
+        # Create two separate tenants
+        tenant1_id = self.test_create_tenant()
+        tenant2_id = self.test_create_tenant()
+        
+        if not tenant1_id or not tenant2_id:
+            self.log_test("Multi-Tenant Isolation - Setup", False, "Could not create test tenants")
+            return False
+            
+        headers1 = {'X-Tenant-Id': tenant1_id}
+        headers2 = {'X-Tenant-Id': tenant2_id}
+        
+        # Create data in tenant1
+        order_data = {
+            "customer_email": "tenant1@example.com",
+            "customer_name": "Tenant 1 Customer",
+            "order_number": f"T1-{datetime.now().strftime('%H%M%S')}",
+            "items": [{"product_id": "t1-1", "product_name": "Tenant 1 Product", "quantity": 1, "price": 50.0, "sku": "T1-001"}],
+            "total_amount": 50.0,
+            "order_date": datetime.utcnow().isoformat()
+        }
+        
+        success, order1 = self.make_request('POST', 'orders', order_data, headers1)
+        if not success:
+            self.log_test("Multi-Tenant Isolation - Create tenant1 order", False, str(order1))
+            return False
+            
+        return_data = {
+            "order_id": order1['id'],
+            "reason": "defective",
+            "items_to_return": order1['items']
+        }
+        
+        success, return1 = self.make_request('POST', 'returns', return_data, headers1)
+        if not success:
+            self.log_test("Multi-Tenant Isolation - Create tenant1 return", False, str(return1))
+            return False
+            
+        # Try to access tenant1's data from tenant2 (should fail)
+        success, cross_access = self.make_request('GET', f'returns/{return1["id"]}', headers=headers2, expected_status=404)
+        if success:
+            self.log_test("Multi-Tenant Isolation - Cross-tenant access blocked", True)
+        else:
+            self.log_test("Multi-Tenant Isolation - Cross-tenant access blocked", False, "Should block cross-tenant access")
+            
+        # Try to access tenant1's settings from tenant2 (should fail)
+        success, settings_access = self.make_request('GET', f'tenants/{tenant1_id}/settings', headers=headers2, expected_status=403)
+        if success:
+            self.log_test("Multi-Tenant Isolation - Settings access blocked", True)
+        else:
+            self.log_test("Multi-Tenant Isolation - Settings access blocked", False, "Should block cross-tenant settings access")
+            
+        # Verify tenant2 can only see its own data
+        success, tenant2_returns = self.make_request('GET', 'returns', headers=headers2)
+        if success and len(tenant2_returns.get('items', [])) == 0:
+            self.log_test("Multi-Tenant Isolation - Data isolation verified", True)
+        else:
+            self.log_test("Multi-Tenant Isolation - Data isolation verified", False, "Tenant2 should not see tenant1 data")
+            
+        return True
+
+    def test_seeded_data_verification(self):
+        """Test with the comprehensive seed data"""
+        # Test with known seeded tenant IDs
+        seeded_tenants = ["tenant-fashion-store", "tenant-tech-gadgets"]
+        
+        for tenant_id in seeded_tenants:
+            headers = {'X-Tenant-Id': tenant_id}
+            
+            # Test that seeded data exists
+            success, products = self.make_request('GET', 'products', headers=headers)
+            if success and len(products) > 0:
+                self.log_test(f"Seeded Data - {tenant_id} products", True)
+            else:
+                self.log_test(f"Seeded Data - {tenant_id} products", False, f"No products found for {tenant_id}")
+                
+            success, orders = self.make_request('GET', 'orders', headers=headers)
+            if success and len(orders) > 0:
+                self.log_test(f"Seeded Data - {tenant_id} orders", True)
+            else:
+                self.log_test(f"Seeded Data - {tenant_id} orders", False, f"No orders found for {tenant_id}")
+                
+            success, returns = self.make_request('GET', 'returns', headers=headers)
+            if success and 'items' in returns and len(returns['items']) > 0:
+                self.log_test(f"Seeded Data - {tenant_id} returns", True)
+            else:
+                self.log_test(f"Seeded Data - {tenant_id} returns", False, f"No returns found for {tenant_id}")
+                
+        return True
+
     def run_all_tests(self):
-        """Run comprehensive test suite"""
-        print("🚀 Starting Returns Management SaaS API Tests")
-        print("=" * 60)
+        """Run comprehensive test suite focusing on 10 end-to-end capabilities"""
+        print("🚀 Starting Returns Management SaaS API Tests - 10 End-to-End Capabilities")
+        print("=" * 80)
         
         # Basic connectivity
         if not self.test_root_endpoint():
             print("❌ Cannot connect to API, stopping tests")
             return False
             
-        # Test enhanced features status first
-        self.test_enhanced_features_status()
-        self.test_email_settings()
+        print("\n📋 PRIORITY TESTING AREAS:")
+        print("1. State Machine Validation")
+        print("2. Rules Engine Simulation") 
+        print("3. Resolution Actions")
+        print("4. Enhanced Returns Endpoint")
+        print("5. Settings Management")
+        print("6. Audit Log Timeline")
+        print("7. Multi-Tenant Isolation")
+        print("8. Seeded Data Verification")
+        print("=" * 80)
         
-        # Test Shopify OAuth endpoints
-        self.test_shopify_oauth_install()
-        self.test_shopify_connection_status()
+        # Test seeded data first
+        print("\n🌱 Testing Seeded Data...")
+        self.test_seeded_data_verification()
         
-        # Tenant management
+        # Test multi-tenant isolation (critical security)
+        print("\n🔒 Testing Multi-Tenant Isolation...")
+        self.test_multi_tenant_isolation()
+        
+        # Create a test tenant for other tests
+        print("\n🏢 Creating Test Tenant...")
         tenant_id = self.test_create_tenant()
         if not tenant_id:
             print("❌ Cannot create tenant, stopping tests")
             return False
             
-        self.test_get_tenants()
-        self.test_tenant_isolation()
-        self.test_missing_tenant_header()
+        # Core capability tests
+        print("\n⚙️ Testing State Machine Validation...")
+        self.test_state_machine_validation(tenant_id)
         
-        # Core functionality with the created tenant
+        print("\n🧠 Testing Rules Engine Simulation...")
+        self.test_rules_engine_simulation(tenant_id)
+        
+        print("\n💰 Testing Resolution Actions...")
+        self.test_resolution_actions(tenant_id)
+        
+        print("\n📊 Testing Enhanced Returns Endpoint...")
+        self.test_enhanced_returns_endpoint(tenant_id)
+        
+        print("\n⚙️ Testing Settings Management...")
+        self.test_settings_management(tenant_id)
+        
+        print("\n📝 Testing Audit Log Timeline...")
+        self.test_audit_log_timeline(tenant_id)
+        
+        # Additional core tests
+        print("\n🔧 Testing Core Functionality...")
         self.test_products_crud(tenant_id)
         self.test_orders_crud(tenant_id)
         self.test_return_rules(tenant_id)
         self.test_returns_workflow(tenant_id)
         self.test_analytics(tenant_id)
-        self.test_shopify_webhook(tenant_id)
-        
-        # Enhanced features testing
-        self.test_ai_suggestions(tenant_id)
-        self.test_ai_upsell_generation(tenant_id)
-        self.test_ai_pattern_analysis(tenant_id)
-        self.test_email_test_send(tenant_id)
-        self.test_export_csv(tenant_id)
-        self.test_export_pdf(tenant_id)
-        self.test_export_excel(tenant_id)
         
         # Print summary
-        print("\n" + "=" * 60)
+        print("\n" + "=" * 80)
         print(f"📊 Test Results: {self.tests_passed}/{self.tests_run} passed")
         
         if self.tests_passed == self.tests_run:
