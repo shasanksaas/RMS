@@ -101,7 +101,14 @@ const General = () => {
         welcome_message: settings.customMessage
       };
 
-      const response = await fetch(`${backendUrl}/api/tenants/${tenantId}/settings`, {
+      // For development, use different URLs
+      let apiUrl = backendUrl;
+      if (backendUrl.includes('preview.emergentagent.com')) {
+        // In preview mode, use localhost for API calls
+        apiUrl = 'http://localhost:8001';
+      }
+
+      const response = await fetch(`${apiUrl}/api/tenants/${tenantId}/settings`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
