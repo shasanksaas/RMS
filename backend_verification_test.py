@@ -208,8 +208,8 @@ class BackendVerificationTester:
         tenant_id = TENANT_IDS[0]  # Use first tenant
         headers = {'X-Tenant-Id': tenant_id}
         
-        # Test tenants endpoint
-        success, tenants = self.make_request('GET', 'tenants')
+        # Test tenants endpoint (requires tenant header due to middleware)
+        success, tenants = self.make_request('GET', 'tenants', headers=headers)
         if success and isinstance(tenants, list) and len(tenants) >= 2:
             self.log_test("Core - Tenants Endpoint", True)
         else:
