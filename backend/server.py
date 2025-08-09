@@ -1,10 +1,11 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, Header, Query
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, Header, Query, Request
+from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 from pathlib import Path
+import time
 
 # Import new controllers
 from src.controllers.shopify_controller import router as shopify_router
@@ -19,6 +20,16 @@ import json
 # Import new utilities
 from src.utils.state_machine import ReturnStateMachine, ReturnResolutionHandler, ReturnResolutionType
 from src.utils.rules_engine import RulesEngine
+
+# Import repository layer and security
+from src.repositories import RepositoryFactory
+from src.middleware.security import (
+    SecurityMiddleware, 
+    RateLimitingMiddleware, 
+    AuditMiddleware,
+    tenant_context,
+    get_current_tenant_id
+)
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
