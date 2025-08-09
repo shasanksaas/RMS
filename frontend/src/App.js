@@ -325,11 +325,63 @@ const MerchantDashboard = ({ isOnline }) => {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [lastDataUpdate, setLastDataUpdate] = useState(null);
   
   // Load initial data
   useEffect(() => {
     loadInitialData();
   }, []);
+
+  const loadInitialData = async () => {
+    setLoading(true);
+    try {
+      // Create demo tenant if it doesn't exist
+      await createDemoTenantAndData();
+      
+      // Load data
+      await Promise.all([
+        loadReturns(),
+        loadOrders(),
+        loadAnalytics()
+      ]);
+      
+      // Update timestamp when data loads successfully
+      if (isOnline) {
+        setLastDataUpdate(new Date());
+        // Cache data in localStorage
+        const cacheData = {
+          returns,
+          orders,
+          analytics,
+          timestamp: new Date().toISOString()
+        };
+        localStorage.setItem('returns_app_cache', JSON.stringify(cacheData));
+      }
+    } catch (error) {
+      console.error('Error loading data:', error);
+      
+      // Try to load from cache if offline
+      if (!isOnline) {
+        loadFromCache();
+      }
+    }
+    setLoading(false);
+  };
+
+  const loadFromCache = () => {
+    try {
+      const cached = localStorage.getItem('returns_app_cache');
+      if (cached) {
+        const cacheData = JSON.parse(cached);
+        setReturns(cacheData.returns || []);
+        setOrders(cacheData.orders || []);
+        setAnalytics(cacheData.analytics || null);
+        setLastDataUpdate(new Date(cacheData.timestamp));
+      }
+    } catch (error) {
+      console.error('Error loading cache:', error);
+    }
+  };
 
   const loadInitialData = async () => {
     setLoading(true);
