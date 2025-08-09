@@ -306,6 +306,283 @@ const MerchantDashboard = () => {
   useEffect(() => {
     loadInitialData();
   }, []);
+
+  const loadInitialData = async () => {
+    setLoading(true);
+    try {
+      // Create demo tenant if it doesn't exist
+      await createDemoTenantAndData();
+      
+      // Load data
+      await Promise.all([
+        loadReturns(),
+        loadOrders(),
+        loadAnalytics()
+      ]);
+    } catch (error) {
+      console.error('Error loading data:', error);
+    }
+    setLoading(false);
+  };
+
+  const createDemoTenantAndData = async () => {
+    try {
+      // Create tenant first
+      const tenantResponse = await axios.post(`${API}/tenants`, {
+        name: "Demo Store",
+        domain: "demo-store.com",
+        shopify_store_url: "demo-store.myshopify.com"
+      });
+      
+      // Set the tenant ID for subsequent requests
+      DEMO_TENANT_ID = tenantResponse.data.id;
+      console.log('Created demo tenant:', DEMO_TENANT_ID);
+
+      const headers = { 'X-Tenant-Id': DEMO_TENANT_ID };
+      
+      // Create demo products
+      const demoProducts = [
+        { name: "Premium T-Shirt", price: 29.99, category: "Clothing", sku: "TSH-001" },
+        { name: "Wireless Headphones", price: 199.99, category: "Electronics", sku: "HEAD-002" },
+        { name: "Running Shoes", price: 89.99, category: "Footwear", sku: "SHOE-003" }
+      ];
+
+      for (const product of demoProducts) {
+        await axios.post(`${API}/products`, product, { headers });
+      }
+
+      // Create demo orders
+      const demoOrders = [
+        {
+          customer_email: "john@example.com",
+          customer_name: "John Smith",
+          order_number: "ORD-001",
+          items: [{ product_id: "1", product_name: "Premium T-Shirt", quantity: 2, price: 29.99, sku: "TSH-001" }],
+          total_amount: 59.98,
+          order_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
+        },
+        {
+          customer_email: "jane@example.com",
+          customer_name: "Jane Doe",
+          order_number: "ORD-002",
+          items: [{ product_id: "2", product_name: "Wireless Headphones", quantity: 1, price: 199.99, sku: "HEAD-002" }],
+          total_amount: 199.99,
+          order_date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
+        }
+      ];
+
+      for (const order of demoOrders) {
+        await axios.post(`${API}/orders`, order, { headers });
+      }
+
+      // Create demo return rules
+      await axios.post(`${API}/return-rules`, {
+        name: "Auto-approve defective items",
+        description: "Automatically approve returns for defective products",
+        conditions: {
+          auto_approve_reasons: ["defective", "damaged_in_shipping"],
+          max_days_since_order: 30
+        },
+        actions: {
+          auto_approve: true,
+          generate_label: true
+        },
+        priority: 1
+      }, { headers });
+
+      // Create a demo return request
+      const orders = await axios.get(`${API}/orders`, { headers });
+      if (orders.data.length > 0) {
+        const firstOrder = orders.data[0];
+        await axios.post(`${API}/returns`, {
+          order_id: firstOrder.id,
+          reason: "defective",
+          items_to_return: firstOrder.items.slice(0, 1), // Return first item
+          notes: "Product arrived with a defect"
+        }, { headers });
+      }
+
+    } catch (error) {
+      console.error('Demo data setup error:', error);
+      // If tenant creation fails, try to find an existing tenant
+      try {
+        const existingTenants = await axios.get(`${API}/tenants`);
+        if (existingTenants.data.length > 0) {
+          DEMO_TENANT_ID = existingTenants.data[0].id;
+          console.log('Using existing tenant:', DEMO_TENANT_ID);
+        }
+      } catch (e) {
+        console.error('Could not find existing tenants');
+      }
+    }
+  };
+
+  const loadReturns = async () => {
+    try {
+      const response = await axios.get(`${API}/returns`, {
+        headers: { 'X-Tenant-Id': DEMO_TENANT_ID }
+      });
+      setReturns(response.data);
+    } catch (error) {
+      console.error('Error loading returns:', error);
+      // Don't set empty array immediately, let the user see there might be an issue
+      if (error.response?.status !== 404) {
+        setReturns([]);
+      }
+    }
+  };
+
+  const loadOrders = async () => {
+    try {
+      const response = await axios.get(`${API}/orders`, {
+        headers: { 'X-Tenant-Id': DEMO_TENANT_ID }
+      });
+      setOrders(response.data);
+    } catch (error) {
+      console.error('Error loading orders:', error);
+      if (error.response?.status !== 404) {
+        setOrders([]);
+      }
+    }
+  };
+
+  const loadAnalytics = async () => {
+    try {
+      const response = await axios.get(`${API}/analytics?days=30`, {
+        headers: { 'X-Tenant-Id': DEMO_TENANT_ID }
+      });
+      setAnalytics(response.data);
+    } catch (error) {
+      console.error('Error loading analytics:', error);
+      setAnalytics({
+        total_returns: 0,
+        total_refunds: 0,
+        exchange_rate: 0,
+        top_return_reasons: []
+      });
+    }
+  };
+
+  const handleCreateReturn = async (returnData) => {
+    try {
+      await axios.post(`${API}/returns`, returnData, {
+        headers: { 'X-Tenant-Id': DEMO_TENANT_ID }
+      });
+      await loadReturns();
+      await loadAnalytics();
+    } catch (error) {
+      console.error('Error creating return:', error);
+    }
+  };
+
+  const handleUpdateReturnStatus = async (returnId, status, notes = '') => {
+    try {
+      await axios.put(`${API}/returns/${returnId}/status`, {
+        status,
+        notes
+      }, {
+        headers: { 'X-Tenant-Id': DEMO_TENANT_ID }
+      });
+      await loadReturns();
+      await loadAnalytics();
+    } catch (error) {
+      console.error('Error updating return status:', error);
+    }
+  };
+
+  const filteredReturns = useMemo(() => {
+    return returns.filter(ret => {
+      const matchesSearch = ret.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          ret.customer_email.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = statusFilter === 'all' || ret.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [returns, searchTerm, statusFilter]);
+
+  const getStatusColor = (status) => {
+    const colors = {
+      'requested': 'bg-yellow-100 text-yellow-800',
+      'approved': 'bg-green-100 text-green-800',
+      'denied': 'bg-red-100 text-red-800',
+      'in_transit': 'bg-blue-100 text-blue-800',
+      'received': 'bg-purple-100 text-purple-800',
+      'processed': 'bg-gray-100 text-gray-800',
+      'refunded': 'bg-green-100 text-green-800',
+      'exchanged': 'bg-indigo-100 text-indigo-800'
+    };
+    return colors[status] || 'bg-gray-100 text-gray-800';
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount);
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <RefreshCw className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
+          <p className="text-lg font-medium text-gray-900">Loading your returns dashboard...</p>
+          <p className="text-sm text-gray-500 mt-2">Setting up demo data for first time use</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="bg-white shadow">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-6">
+            <div className="flex items-center">
+              <Package className="h-8 w-8 text-blue-600 mr-3" />
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Returns Dashboard</h1>
+                <p className="text-sm text-gray-500">Manage your product returns efficiently</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Button
+                variant={currentView === 'dashboard' ? 'default' : 'outline'}
+                onClick={() => setCurrentView('dashboard')}
+                className="flex items-center space-x-2"
+              >
+                <BarChart3 className="h-4 w-4" />
+                <span>Dashboard</span>
+              </Button>
+              <Button
+                variant={currentView === 'returns' ? 'default' : 'outline'}
+                onClick={() => setCurrentView('returns')}
+                className="flex items-center space-x-2"
+              >
+                <RefreshCw className="h-4 w-4" />
+                <span>Returns</span>
+              </Button>
+              <Button
+                variant={currentView === 'settings' ? 'default' : 'outline'}
+                onClick={() => setCurrentView('settings')}
+                className="flex items-center space-x-2"
+              >
+                <Settings className="h-4 w-4" />
+                <span>Settings</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8";
         {currentView === 'dashboard' && (
           <DashboardView 
             analytics={analytics} 
