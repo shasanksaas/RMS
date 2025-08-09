@@ -319,7 +319,7 @@ class ReturnsAPITester:
             
         # Get returns
         success, returns = self.make_request('GET', 'returns', headers=headers)
-        if success and isinstance(returns, list):
+        if success and 'items' in returns and isinstance(returns['items'], list):
             self.log_test("Get returns", True)
         else:
             self.log_test("Get returns", False, str(returns))
