@@ -293,7 +293,7 @@ const AllReturns = () => {
                     </td>
                     <td className="py-4 px-4">
                       <span className="text-sm text-gray-500">
-                        {new Date(returnRequest.createdAt).toLocaleDateString()}
+                        {new Date(returnRequest.created_at || returnRequest.createdAt).toLocaleDateString()}
                       </span>
                     </td>
                     <td className="py-4 px-4">
