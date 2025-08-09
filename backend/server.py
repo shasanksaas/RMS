@@ -354,9 +354,20 @@ async def update_return_status(return_id: str, status_update: ReturnStatusUpdate
     if not return_req:
         raise HTTPException(status_code=404, detail="Return request not found")
     
-    # Update the return request
+    current_status = return_req["status"]
+    new_status = status_update.status.value
+    
+    # Validate state transition
+    if not ReturnStateMachine.can_transition(current_status, new_status):
+        valid_transitions = ReturnStateMachine.get_valid_transitions(current_status)
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Invalid transition from {current_status} to {new_status}. Valid transitions: {valid_transitions}"
+        )
+    
+    # Update the return request (idempotent)
     update_data = {
-        "status": status_update.status,
+        "status": new_status,
         "updated_at": datetime.utcnow()
     }
     
@@ -365,10 +376,30 @@ async def update_return_status(return_id: str, status_update: ReturnStatusUpdate
     if status_update.tracking_number:
         update_data["tracking_number"] = status_update.tracking_number
     
-    await db.return_requests.update_one(
-        {"id": return_id, "tenant_id": tenant_id},
+    # Perform atomic update
+    result = await db.return_requests.update_one(
+        {"id": return_id, "tenant_id": tenant_id, "status": current_status},  # Include current status for concurrency
         {"$set": update_data}
     )
+    
+    if result.modified_count == 0:
+        # Either return was already updated or not found - check which
+        current_return = await db.return_requests.find_one({"id": return_id, "tenant_id": tenant_id})
+        if current_return and current_return["status"] == new_status:
+            # Already updated - idempotent operation
+            return ReturnRequest(**current_return)
+        else:
+            raise HTTPException(status_code=409, detail="Return status was modified by another request")
+    
+    # Create audit log entry
+    audit_entry = ReturnStateMachine.create_audit_log_entry(
+        return_id=return_id,
+        from_status=current_status,
+        to_status=new_status,
+        notes=status_update.notes,
+        user_id="system"  # In real app, get from authentication
+    )
+    await db.audit_logs.insert_one(audit_entry)
     
     updated_return = await db.return_requests.find_one({"id": return_id, "tenant_id": tenant_id})
     return ReturnRequest(**updated_return)
