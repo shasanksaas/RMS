@@ -62,12 +62,22 @@ class BackendVerificationTester:
 
     def test_health_check(self):
         """Test /health endpoint"""
-        success, data = self.make_request('GET', '', endpoint='health')
-        if success and data.get('status') == 'healthy':
-            self.log_test("Health Check", True)
-            return True
-        else:
-            self.log_test("Health Check", False, str(data))
+        url = f"{BACKEND_URL}/health"
+        try:
+            response = requests.get(url)
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('status') == 'healthy':
+                    self.log_test("Health Check", True)
+                    return True
+                else:
+                    self.log_test("Health Check", False, f"Unhealthy status: {data}")
+                    return False
+            else:
+                self.log_test("Health Check", False, f"Status {response.status_code}")
+                return False
+        except Exception as e:
+            self.log_test("Health Check", False, f"Request failed: {str(e)}")
             return False
 
     def test_returns_api_with_pagination(self, tenant_id: str):
