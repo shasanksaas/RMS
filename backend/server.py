@@ -408,10 +408,12 @@ async def shopify_order_webhook(order_data: Dict[str, Any], x_tenant_id: str = H
 async def root():
     return {"message": "Returns Management SaaS API", "version": "1.0.0"}
 
-# Include new routers with /api prefix
-app.include_router(api_router)
+# Include routers in the api_router first
 api_router.include_router(shopify_router)
 api_router.include_router(enhanced_router)
+
+# Then include the api_router in the main app
+app.include_router(api_router)
 
 app.add_middleware(
     CORSMiddleware,
