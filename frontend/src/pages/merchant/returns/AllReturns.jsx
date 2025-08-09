@@ -35,6 +35,13 @@ const AllReturns = () => {
       setLoading(true);
       setError('');
       
+      // For development, use different URLs
+      let apiUrl = backendUrl;
+      if (backendUrl.includes('preview.emergentagent.com')) {
+        // In preview mode, use localhost for API calls
+        apiUrl = 'http://localhost:8001';
+      }
+      
       // Build query parameters
       const params = new URLSearchParams();
       if (filters.search) params.append('search', filters.search);
@@ -44,7 +51,7 @@ const AllReturns = () => {
       params.append('page', filters.page.toString());
       params.append('limit', filters.limit.toString());
 
-      const response = await fetch(`${backendUrl}/api/returns?${params.toString()}`, {
+      const response = await fetch(`${apiUrl}/api/returns?${params.toString()}`, {
         headers: {
           'Content-Type': 'application/json',
           'X-Tenant-Id': tenantId
