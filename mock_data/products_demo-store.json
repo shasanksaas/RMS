@@ -1,0 +1,129 @@
+{
+  "products": [
+    {
+      "id": "prod_001",
+      "title": "Premium Wireless Headphones",
+      "handle": "premium-wireless-headphones",
+      "product_type": "Electronics",
+      "vendor": "Demo Store",
+      "created_at": "2025-01-01T00:00:00Z",
+      "body_html": "<p>High-quality wireless headphones with noise cancellation and premium sound quality.</p>",
+      "variants": [
+        {
+          "id": "var_001",
+          "product_id": "prod_001",
+          "title": "Black",
+          "price": "79.99",
+          "sku": "WH-PREM-001",
+          "inventory_quantity": 50
+        }
+      ],
+      "images": [
+        {
+          "id": "img_001",
+          "src": "https://via.placeholder.com/300x300?text=Headphones"
+        }
+      ]
+    },
+    {
+      "id": "prod_002",
+      "title": "Smart Fitness Watch",
+      "handle": "smart-fitness-watch",
+      "product_type": "Electronics",
+      "vendor": "Demo Store",
+      "created_at": "2025-01-02T00:00:00Z",
+      "body_html": "<p>Advanced fitness tracking watch with heart rate monitor, GPS, and smartphone connectivity.</p>",
+      "variants": [
+        {
+          "id": "var_002",
+          "product_id": "prod_002",
+          "title": "Silver",
+          "price": "149.98",
+          "sku": "FW-SMART-002",
+          "inventory_quantity": 30
+        }
+      ],
+      "images": [
+        {
+          "id": "img_002",
+          "src": "https://via.placeholder.com/300x300?text=Smart+Watch"
+        }
+      ]
+    },
+    {
+      "id": "prod_003",
+      "title": "Organic Cotton T-Shirt",
+      "handle": "organic-cotton-t-shirt",
+      "product_type": "Clothing",
+      "vendor": "Demo Store",
+      "created_at": "2025-01-03T00:00:00Z",
+      "body_html": "<p>Comfortable and sustainable organic cotton t-shirt in various colors and sizes.</p>",
+      "variants": [
+        {
+          "id": "var_003",
+          "product_id": "prod_003",
+          "title": "Medium / Blue",
+          "price": "24.99",
+          "sku": "TSHIRT-ORG-003",
+          "inventory_quantity": 100
+        }
+      ],
+      "images": [
+        {
+          "id": "img_003",
+          "src": "https://via.placeholder.com/300x300?text=T-Shirt"
+        }
+      ]
+    },
+    {
+      "id": "prod_004",
+      "title": "Leather Wallet",
+      "handle": "leather-wallet",
+      "product_type": "Accessories",
+      "vendor": "Demo Store",
+      "created_at": "2025-01-04T00:00:00Z",
+      "body_html": "<p>Genuine leather wallet with multiple card slots and cash compartment.</p>",
+      "variants": [
+        {
+          "id": "var_004",
+          "product_id": "prod_004",
+          "title": "Brown",
+          "price": "39.99",
+          "sku": "WALLET-LEATH-004",
+          "inventory_quantity": 75
+        }
+      ],
+      "images": [
+        {
+          "id": "img_004",
+          "src": "https://via.placeholder.com/300x300?text=Wallet"
+        }
+      ]
+    },
+    {
+      "id": "prod_005",
+      "title": "Stainless Steel Water Bottle",
+      "handle": "stainless-steel-water-bottle",
+      "product_type": "Home & Kitchen",
+      "vendor": "Demo Store",
+      "created_at": "2025-01-05T00:00:00Z",
+      "body_html": "<p>Insulated stainless steel water bottle that keeps drinks hot or cold for hours.</p>",
+      "variants": [
+        {
+          "id": "var_005",
+          "product_id": "prod_005",
+          "title": "32oz / Silver",
+          "price": "29.99",
+          "sku": "WB-STEEL-005",
+          "inventory_quantity": 60
+        }
+      ],
+      "images": [
+        {
+          "id": "img_005",
+          "src": "https://via.placeholder.com/300x300?text=Water+Bottle"
+        }
+      ]
+    }
+  ]
+}
