@@ -76,7 +76,14 @@ const AllReturns = () => {
 
   const handleStatusUpdate = async (returnId, newStatus) => {
     try {
-      const response = await fetch(`${backendUrl}/api/returns/${returnId}/status`, {
+      // For development, use different URLs
+      let apiUrl = backendUrl;
+      if (backendUrl.includes('preview.emergentagent.com')) {
+        // In preview mode, use localhost for API calls
+        apiUrl = 'http://localhost:8001';
+      }
+      
+      const response = await fetch(`${apiUrl}/api/returns/${returnId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
