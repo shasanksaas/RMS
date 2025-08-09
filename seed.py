@@ -508,7 +508,7 @@ class SeedData:
         print(f"  • Resolution records for completed returns")
         print("\n🚀 Your Returns Management SaaS is ready to test!")
         
-        await self.client.close()
+        self.client.close()
 
 async def main():
     seed = SeedData()
