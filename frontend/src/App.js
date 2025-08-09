@@ -2,6 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import CustomerPortal from './CustomerPortal';
+import ShopifyIntegration from './components/ShopifyIntegration';
+import EnhancedFeatures from './components/EnhancedFeatures';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './components/ui/card';
 import { Button } from './components/ui/button';
 import { Input } from './components/ui/input';
