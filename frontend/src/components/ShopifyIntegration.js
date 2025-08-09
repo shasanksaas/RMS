@@ -12,7 +12,7 @@ import {
   Link as LinkIcon, 
   CheckCircle, 
   AlertCircle, 
-  Sync,
+  RefreshCw,
   Globe,
   Wifi,
   WifiOff
