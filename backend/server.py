@@ -433,6 +433,116 @@ async def update_return_status(return_id: str, status_update: ReturnStatusUpdate
     updated_return = await db.return_requests.find_one({"id": return_id, "tenant_id": tenant_id})
     return ReturnRequest(**updated_return)
 
+@api_router.post("/returns/{return_id}/resolve")
+async def resolve_return(
+    return_id: str, 
+    resolution: ReturnResolution, 
+    tenant_id: str = Depends(get_tenant_id)
+):
+    """Process return resolution (refund/exchange/store credit)"""
+    
+    # Validate return exists and is in correct state
+    return_req = await db.return_requests.find_one({"id": return_id, "tenant_id": tenant_id})
+    if not return_req:
+        raise HTTPException(status_code=404, detail="Return request not found")
+    
+    if return_req["status"] not in ["received", "approved"]:
+        raise HTTPException(status_code=400, detail="Return must be received or approved before resolution")
+    
+    resolution_record = None
+    
+    # Process based on resolution type
+    if resolution.resolution_type == "refund":
+        resolution_record = ReturnResolutionHandler.create_refund_record(
+            return_request_id=return_id,
+            amount=return_req["refund_amount"],
+            method=resolution.refund_method,
+            notes=resolution.notes
+        )
+        
+        # Store resolution record
+        await db.resolutions.insert_one(resolution_record)
+        
+        # Update return status to resolved
+        await db.return_requests.update_one(
+            {"id": return_id, "tenant_id": tenant_id},
+            {"$set": {
+                "status": "resolved",
+                "updated_at": datetime.utcnow(),
+                "resolution_type": "refund",
+                "resolution_id": resolution_record["id"]
+            }}
+        )
+        
+        message = f"{'Refund processed' if resolution.refund_method != 'manual' else 'Manual refund recorded'}"
+        
+    elif resolution.resolution_type == "exchange":
+        if not resolution.exchange_items:
+            raise HTTPException(status_code=400, detail="Exchange items required for exchange resolution")
+            
+        resolution_record = ReturnResolutionHandler.create_exchange_record(
+            return_request_id=return_id,
+            original_items=return_req["items_to_return"],
+            new_items=resolution.exchange_items,
+            notes=resolution.notes
+        )
+        
+        await db.resolutions.insert_one(resolution_record)
+        
+        await db.return_requests.update_one(
+            {"id": return_id, "tenant_id": tenant_id},
+            {"$set": {
+                "status": "resolved",
+                "updated_at": datetime.utcnow(),
+                "resolution_type": "exchange",
+                "resolution_id": resolution_record["id"]
+            }}
+        )
+        
+        message = f"Exchange processed - Outbound order: {resolution_record['outbound_order_id']}"
+        
+    elif resolution.resolution_type == "store_credit":
+        resolution_record = ReturnResolutionHandler.create_store_credit_record(
+            return_request_id=return_id,
+            customer_email=return_req["customer_email"],
+            amount=return_req["refund_amount"],
+            notes=resolution.notes
+        )
+        
+        await db.resolutions.insert_one(resolution_record)
+        
+        await db.return_requests.update_one(
+            {"id": return_id, "tenant_id": tenant_id},
+            {"$set": {
+                "status": "resolved", 
+                "updated_at": datetime.utcnow(),
+                "resolution_type": "store_credit",
+                "resolution_id": resolution_record["id"]
+            }}
+        )
+        
+        message = "Store credit issued"
+        
+    else:
+        raise HTTPException(status_code=400, detail="Invalid resolution type")
+    
+    # Create audit log
+    audit_entry = ReturnStateMachine.create_audit_log_entry(
+        return_id=return_id,
+        from_status=return_req["status"],
+        to_status="resolved",
+        notes=f"{resolution.resolution_type.title()} resolution: {message}",
+        user_id="system"
+    )
+    await db.audit_logs.insert_one(audit_entry)
+    
+    return {
+        "success": True,
+        "message": message,
+        "resolution_id": resolution_record["id"],
+        "resolution_type": resolution.resolution_type
+    }
+
 # Analytics
 @api_router.get("/analytics", response_model=Analytics)
 async def get_analytics(tenant_id: str = Depends(get_tenant_id), days: int = 30):
