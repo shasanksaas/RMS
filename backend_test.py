@@ -335,8 +335,8 @@ class ReturnsAPITester:
             
         # Update return status
         status_update = {
-            "status": "refunded",
-            "notes": "Refund processed successfully",
+            "status": "resolved",
+            "notes": "Return resolved successfully",
             "tracking_number": "TRACK123456"
         }
         
