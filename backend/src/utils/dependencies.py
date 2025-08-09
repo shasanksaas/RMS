@@ -41,3 +41,8 @@ def get_returns_service() -> ReturnsService:
 def get_analytics_service() -> AnalyticsService:
     """Get analytics service instance"""
     return AnalyticsService()
+
+
+def get_shopify_service() -> ShopifyService:
+    """Get Shopify service instance"""
+    return ShopifyService()
