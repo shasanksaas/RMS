@@ -91,6 +91,25 @@ async def security_and_audit_middleware(request: Request, call_next):
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
+# Secure dependency injection
+def get_repository_factory() -> RepositoryFactory:
+    """Get repository factory instance"""
+    if not repository_factory:
+        raise HTTPException(status_code=500, detail="Repository factory not initialized")
+    return repository_factory
+
+async def get_secure_tenant_id(request: Request) -> str:
+    """Secure tenant ID extraction with validation"""
+    if hasattr(tenant_context, 'tenant_id') and tenant_context.tenant_id:
+        return tenant_context.tenant_id
+    
+    # Fallback for non-middleware requests
+    tenant_id = request.headers.get("X-Tenant-Id")
+    if not tenant_id:
+        raise HTTPException(status_code=400, detail="Tenant ID is required")
+    
+    return tenant_id
+
 # Enums - Updated with proper state machine statuses
 class ReturnStatus(str, Enum):
     REQUESTED = "requested"
