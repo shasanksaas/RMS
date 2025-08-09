@@ -2,7 +2,7 @@
 Return rule model definitions and schemas
 """
 from pydantic import BaseModel, Field
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from datetime import datetime
 import uuid
 
