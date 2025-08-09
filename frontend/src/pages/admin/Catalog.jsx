@@ -51,7 +51,7 @@ const AdminCatalog = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
-              <FileTemplate className="h-5 w-5" />
+              <Settings className="h-5 w-5" />
               <span>Rule Presets</span>
             </CardTitle>
             <CardDescription>Common return rule configurations</CardDescription>
