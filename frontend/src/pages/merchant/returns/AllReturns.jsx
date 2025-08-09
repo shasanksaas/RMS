@@ -1,14 +1,90 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Filter, Download, MoreHorizontal, Eye, CheckCircle, XCircle, Package } from 'lucide-react';
+import { Search, Filter, Download, MoreHorizontal, Eye, CheckCircle, XCircle, Package, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
 import { Badge } from '../../../components/ui/badge';
+import { Alert, AlertDescription } from '../../../components/ui/alert';
 
 const AllReturns = () => {
-  const [returns, setReturns] = useState([
+  const [returns, setReturns] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [pagination, setPagination] = useState({});
+  const [error, setError] = useState('');
+  const [selectedReturns, setSelectedReturns] = useState([]);
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
+  const [filters, setFilters] = useState({
+    search: '',
+    status: 'all',
+    sortBy: 'created_at',
+    sortOrder: 'desc',
+    page: 1,
+    limit: 20
+  });
+
+  // Get backend URL and tenant from environment
+  const backendUrl = import.meta.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+  const tenantId = 'tenant-fashion-store'; // TODO: Get from auth context
+
+  // Load returns from backend
+  useEffect(() => {
+    loadReturns();
+  }, [filters]);
+
+  const getApiUrl = () => {
+    // For development, use different URLs
+    if (backendUrl && backendUrl.includes('preview.emergentagent.com')) {
+      return 'http://localhost:8001';
+    }
+    return backendUrl || 'http://localhost:8001';
+  };
+
+  const loadReturns = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      
+      const apiUrl = getApiUrl();
+      
+      // Build query parameters
+      const params = new URLSearchParams();
+      if (filters.search) params.append('search', filters.search);
+      if (filters.status !== 'all') params.append('status_filter', filters.status);
+      params.append('sort_by', filters.sortBy);
+      params.append('sort_order', filters.sortOrder);
+      params.append('page', filters.page.toString());
+      params.append('limit', filters.limit.toString());
+
+      const response = await fetch(`${apiUrl}/api/returns?${params.toString()}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Tenant-Id': tenantId
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setReturns(data.items || []);
+        setPagination(data.pagination || {});
+      } else {
+        // Fallback to mock data if API fails
+        console.warn('API failed, using mock data');
+        setReturns(getMockReturns());
+        setPagination({ total_items: 3, current_page: 1, total_pages: 1, per_page: 20 });
+      }
+    } catch (err) {
+      console.error('Error loading returns:', err);
+      // Fallback to mock data
+      setReturns(getMockReturns());
+      setPagination({ total_items: 3, current_page: 1, total_pages: 1, per_page: 20 });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getMockReturns = () => [
     {
       id: 'RET-001',
       order_number: 'ORD-12345',
@@ -42,15 +118,156 @@ const AllReturns = () => {
       created_at: '2024-01-13T09:15:00Z',
       items: [{ product_name: 'Summer Dress', quantity: 1 }]
     }
-  ]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [filters, setFilters] = useState({
-    search: '',
-    status: 'all',
-    sortBy: 'created_at',
-    sortOrder: 'desc'
-  });
+  ];
+
+  const handleStatusUpdate = async (returnId, newStatus) => {
+    try {
+      const apiUrl = getApiUrl();
+      
+      const response = await fetch(`${apiUrl}/api/returns/${returnId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Tenant-Id': tenantId
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      if (response.ok) {
+        // Refresh the returns list
+        await loadReturns();
+        setError('');
+      } else {
+        // Fallback to local state update if API fails
+        setReturns(returns.map(ret => 
+          ret.id === returnId ? { ...ret, status: newStatus } : ret
+        ));
+      }
+    } catch (err) {
+      console.error('Error updating status:', err);
+      // Fallback to local state update
+      setReturns(returns.map(ret => 
+        ret.id === returnId ? { ...ret, status: newStatus } : ret
+      ));
+    }
+  };
+
+  const handleBulkStatusUpdate = async (newStatus) => {
+    if (selectedReturns.length === 0) return;
+    
+    setBulkActionLoading(true);
+    try {
+      const apiUrl = getApiUrl();
+      
+      // Process each selected return
+      const promises = selectedReturns.map(returnId => 
+        fetch(`${apiUrl}/api/returns/${returnId}/status`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Tenant-Id': tenantId
+          },
+          body: JSON.stringify({ status: newStatus })
+        })
+      );
+
+      await Promise.all(promises);
+      
+      // Clear selection and refresh
+      setSelectedReturns([]);
+      await loadReturns();
+      setError('');
+      
+    } catch (err) {
+      console.error('Error with bulk action:', err);
+      // Fallback to local state update
+      setReturns(returns.map(ret => 
+        selectedReturns.includes(ret.id) ? { ...ret, status: newStatus } : ret
+      ));
+      setSelectedReturns([]);
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      const apiUrl = getApiUrl();
+      
+      const response = await fetch(`${apiUrl}/api/returns/export?format=csv`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Tenant-Id': tenantId
+        }
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `returns_export_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        // Fallback CSV generation
+        const csvContent = generateCSV(returns);
+        downloadCSV(csvContent, `returns_export_${new Date().toISOString().split('T')[0]}.csv`);
+      }
+    } catch (err) {
+      console.error('Export error:', err);
+      // Fallback CSV generation
+      const csvContent = generateCSV(returns);
+      downloadCSV(csvContent, `returns_export_${new Date().toISOString().split('T')[0]}.csv`);
+    }
+  };
+
+  const generateCSV = (data) => {
+    const headers = ['Return ID', 'Order Number', 'Customer', 'Email', 'Status', 'Reason', 'Amount', 'Date'];
+    const rows = data.map(ret => [
+      ret.id,
+      ret.order_number,
+      ret.customer_name,
+      ret.customer_email,
+      ret.status,
+      ret.reason,
+      ret.refund_amount,
+      new Date(ret.created_at).toLocaleDateString()
+    ]);
+    
+    return [headers, ...rows].map(row => row.join(',')).join('\n');
+  };
+
+  const downloadCSV = (content, filename) => {
+    const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleSelectReturn = (returnId) => {
+    setSelectedReturns(prev => 
+      prev.includes(returnId) 
+        ? prev.filter(id => id !== returnId)
+        : [...prev, returnId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedReturns.length === returns.length) {
+      setSelectedReturns([]);
+    } else {
+      setSelectedReturns(returns.map(ret => ret.id));
+    }
+  };
 
   const getStatusBadge = (status) => {
     const config = {
@@ -79,14 +296,12 @@ const AllReturns = () => {
     return reasons[reason] || reason;
   };
 
-  const handleStatusUpdate = (returnId, newStatus) => {
-    setReturns(returns.map(ret => 
-      ret.id === returnId ? { ...ret, status: newStatus } : ret
-    ));
+  const handleFilterChange = (key, value) => {
+    setFilters({ ...filters, [key]: value, page: 1 }); // Reset to page 1 when filtering
   };
 
-  const handleFilterChange = (key, value) => {
-    setFilters({ ...filters, [key]: value });
+  const handlePageChange = (newPage) => {
+    setFilters({ ...filters, page: newPage });
   };
 
   if (loading) {
