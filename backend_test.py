@@ -392,6 +392,153 @@ class ReturnsAPITester:
             
         return True
 
+    def test_shopify_oauth_install(self):
+        """Test Shopify OAuth installation endpoint"""
+        # Test with valid shop name
+        success, response = self.make_request('GET', 'shopify/install?shop=test-store')
+        if success and 'auth_url' in response:
+            self.log_test("Shopify OAuth install", True)
+            return True
+        else:
+            self.log_test("Shopify OAuth install", False, str(response))
+            return False
+
+    def test_shopify_connection_status(self):
+        """Test Shopify connection status endpoint"""
+        success, response = self.make_request('GET', 'shopify/connection-status?shop=test-store')
+        if success and 'online' in response:
+            self.log_test("Shopify connection status", True)
+            return True
+        else:
+            self.log_test("Shopify connection status", False, str(response))
+            return False
+
+    def test_enhanced_features_status(self):
+        """Test enhanced features status endpoint"""
+        success, response = self.make_request('GET', 'enhanced/status')
+        if success and 'email' in response and 'ai' in response and 'export' in response:
+            self.log_test("Enhanced features status", True)
+            return True
+        else:
+            self.log_test("Enhanced features status", False, str(response))
+            return False
+
+    def test_ai_suggestions(self, tenant_id: str):
+        """Test AI return reason suggestions"""
+        headers = {'X-Tenant-Id': tenant_id}
+        
+        ai_request = {
+            "product_name": "Wireless Bluetooth Headphones",
+            "product_description": "Premium quality wireless headphones with noise cancellation",
+            "order_date": "2025-01-15T10:00:00Z"
+        }
+        
+        success, response = self.make_request('POST', 'enhanced/ai/suggest-reasons', 
+                                            ai_request, headers)
+        if success and 'suggestions' in response and isinstance(response['suggestions'], list):
+            self.log_test("AI return reason suggestions", True)
+            return True
+        else:
+            self.log_test("AI return reason suggestions", False, str(response))
+            return False
+
+    def test_ai_upsell_generation(self, tenant_id: str):
+        """Test AI upsell message generation"""
+        headers = {'X-Tenant-Id': tenant_id}
+        
+        upsell_request = {
+            "return_reason": "defective",
+            "product_name": "Wireless Headphones"
+        }
+        
+        success, response = self.make_request('POST', 'enhanced/ai/generate-upsell', 
+                                            upsell_request, headers)
+        if success and 'upsell_message' in response:
+            self.log_test("AI upsell generation", True)
+            return True
+        else:
+            self.log_test("AI upsell generation", False, str(response))
+            return False
+
+    def test_ai_pattern_analysis(self, tenant_id: str):
+        """Test AI return pattern analysis"""
+        headers = {'X-Tenant-Id': tenant_id}
+        
+        success, response = self.make_request('GET', 'enhanced/ai/analyze-patterns?days=30', 
+                                            headers=headers)
+        if success and 'analysis' in response:
+            self.log_test("AI pattern analysis", True)
+            return True
+        else:
+            self.log_test("AI pattern analysis", False, str(response))
+            return False
+
+    def test_email_settings(self):
+        """Test email service settings"""
+        success, response = self.make_request('GET', 'enhanced/email/settings')
+        if success and 'enabled' in response:
+            self.log_test("Email settings", True)
+            return True
+        else:
+            self.log_test("Email settings", False, str(response))
+            return False
+
+    def test_email_test_send(self, tenant_id: str):
+        """Test sending test email"""
+        headers = {'X-Tenant-Id': tenant_id}
+        
+        email_request = {
+            "email": "test@example.com"
+        }
+        
+        success, response = self.make_request('POST', 'enhanced/email/test', 
+                                            email_request, headers)
+        if success and 'success' in response:
+            self.log_test("Email test send", True)
+            return True
+        else:
+            self.log_test("Email test send", False, str(response))
+            return False
+
+    def test_export_csv(self, tenant_id: str):
+        """Test CSV export functionality"""
+        headers = {'X-Tenant-Id': tenant_id}
+        
+        success, response = self.make_request('GET', 'enhanced/export/returns/csv?days=30', 
+                                            headers=headers, expected_status=200)
+        if success:
+            self.log_test("Export returns CSV", True)
+            return True
+        else:
+            self.log_test("Export returns CSV", False, str(response))
+            return False
+
+    def test_export_pdf(self, tenant_id: str):
+        """Test PDF export functionality"""
+        headers = {'X-Tenant-Id': tenant_id}
+        
+        success, response = self.make_request('GET', 'enhanced/export/returns/pdf?days=30', 
+                                            headers=headers, expected_status=200)
+        if success:
+            self.log_test("Export returns PDF", True)
+            return True
+        else:
+            self.log_test("Export returns PDF", False, str(response))
+            return False
+
+    def test_export_excel(self, tenant_id: str):
+        """Test Excel export functionality"""
+        headers = {'X-Tenant-Id': tenant_id}
+        
+        success, response = self.make_request('GET', 'enhanced/export/analytics/excel?days=30', 
+                                            headers=headers, expected_status=200)
+        if success:
+            self.log_test("Export analytics Excel", True)
+            return True
+        else:
+            self.log_test("Export analytics Excel", False, str(response))
+            return False
+
     def run_all_tests(self):
         """Run comprehensive test suite"""
         print("🚀 Starting Returns Management SaaS API Tests")
