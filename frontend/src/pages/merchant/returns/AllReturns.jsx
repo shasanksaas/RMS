@@ -306,9 +306,14 @@ const AllReturns = () => {
 
   if (loading) {
     return (
-      <div className="space-y-4">
-        <div className="h-8 bg-gray-200 rounded animate-pulse" />
-        <div className="h-96 bg-gray-200 rounded animate-pulse" />
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Returns</h1>
+          <p className="text-gray-500">Manage return requests and track their progress</p>
+        </div>
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+        </div>
       </div>
     );
   }
@@ -320,10 +325,15 @@ const AllReturns = () => {
           <h1 className="text-3xl font-bold text-gray-900">Returns</h1>
           <p className="text-gray-500">Manage return requests and track their progress</p>
         </div>
+        <Alert className="border-red-200 bg-red-50">
+          <AlertDescription className="text-red-800">
+            {error}
+          </AlertDescription>
+        </Alert>
         <Card>
           <CardContent className="p-6 text-center">
-            <p className="text-red-600">{error}</p>
-            <Button onClick={() => setError('')} className="mt-4">
+            <Button onClick={loadReturns} className="mt-4">
+              <RefreshCw className="h-4 w-4 mr-2" />
               Try Again
             </Button>
           </CardContent>
@@ -378,20 +388,43 @@ const AllReturns = () => {
         </div>
 
         <div className="flex items-center space-x-2">
-          <Button variant="outline" onClick={() => console.log('Export')}>
+          <Button variant="outline" onClick={handleExport}>
             <Download className="h-4 w-4 mr-2" />
-            Export
+            Export CSV
           </Button>
-          <Button variant="outline" onClick={() => console.log('Bulk approve')}>
-            Bulk Actions
-          </Button>
+          {selectedReturns.length > 0 && (
+            <div className="flex items-center space-x-2">
+              <Button 
+                variant="outline" 
+                onClick={() => handleBulkStatusUpdate('approved')}
+                disabled={bulkActionLoading}
+                className="text-green-600 hover:text-green-700"
+              >
+                {bulkActionLoading ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600 mr-2" />
+                ) : (
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                )}
+                Approve ({selectedReturns.length})
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => handleBulkStatusUpdate('denied')}
+                disabled={bulkActionLoading}
+                className="text-red-600 hover:text-red-700"
+              >
+                <XCircle className="h-4 w-4 mr-2" />
+                Deny ({selectedReturns.length})
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Returns Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Return Requests ({returns.length})</CardTitle>
+          <CardTitle>Return Requests ({pagination.total_items || returns.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {returns.length === 0 ? (
@@ -405,6 +438,14 @@ const AllReturns = () => {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200">
+                    <th className="py-3 px-4 text-left">
+                      <input
+                        type="checkbox"
+                        checked={selectedReturns.length === returns.length && returns.length > 0}
+                        onChange={handleSelectAll}
+                        className="rounded"
+                      />
+                    </th>
                     <th className="py-3 px-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Customer</th>
                     <th className="py-3 px-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Order</th>
                     <th className="py-3 px-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Items</th>
@@ -418,6 +459,14 @@ const AllReturns = () => {
                 <tbody className="divide-y divide-gray-200">
                   {returns.map((returnRequest) => (
                     <tr key={returnRequest.id} className="hover:bg-gray-50">
+                      <td className="py-4 px-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedReturns.includes(returnRequest.id)}
+                          onChange={() => handleSelectReturn(returnRequest.id)}
+                          className="rounded"
+                        />
+                      </td>
                       <td className="py-4 px-4">
                         <div>
                           <div className="font-medium">{returnRequest.customer_name}</div>
@@ -467,6 +516,7 @@ const AllReturns = () => {
                                 size="sm" 
                                 className="text-green-600 hover:text-green-700"
                                 onClick={() => handleStatusUpdate(returnRequest.id, 'approved')}
+                                title="Approve Return"
                               >
                                 <CheckCircle className="h-4 w-4" />
                               </Button>
@@ -475,6 +525,7 @@ const AllReturns = () => {
                                 size="sm" 
                                 className="text-red-600 hover:text-red-700"
                                 onClick={() => handleStatusUpdate(returnRequest.id, 'denied')}
+                                title="Deny Return"
                               >
                                 <XCircle className="h-4 w-4" />
                               </Button>
@@ -493,6 +544,35 @@ const AllReturns = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Pagination */}
+      {pagination.total_pages > 1 && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-gray-700">
+            Showing <span className="font-medium">{((pagination.current_page - 1) * pagination.per_page) + 1}</span> to{' '}
+            <span className="font-medium">{Math.min(pagination.current_page * pagination.per_page, pagination.total_items)}</span> of{' '}
+            <span className="font-medium">{pagination.total_items}</span> results
+          </p>
+          <div className="flex items-center space-x-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              disabled={pagination.current_page <= 1}
+              onClick={() => handlePageChange(pagination.current_page - 1)}
+            >
+              Previous
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              disabled={pagination.current_page >= pagination.total_pages}
+              onClick={() => handlePageChange(pagination.current_page + 1)}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
