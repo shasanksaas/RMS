@@ -672,8 +672,14 @@ async def get_return_audit_log(return_id: str, tenant_id: str = Depends(get_tena
     if not return_req:
         raise HTTPException(status_code=404, detail="Return request not found")
     
-    # Get audit log entries
-    audit_logs = await db.audit_logs.find({"return_id": return_id}).sort("timestamp", 1).to_list(100)
+    # Get audit log entries (convert ObjectId to string for JSON serialization)
+    audit_logs_cursor = db.audit_logs.find({"return_id": return_id}).sort("timestamp", 1)
+    audit_logs = []
+    async for log in audit_logs_cursor:
+        # Convert ObjectId to string
+        if '_id' in log:
+            log['_id'] = str(log['_id'])
+        audit_logs.append(log)
     
     return {
         "return_id": return_id,
