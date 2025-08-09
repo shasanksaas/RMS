@@ -25,8 +25,15 @@ const CustomerStart = () => {
       // Get backend URL from environment
       const backendUrl = import.meta.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
       
+      // For development, use different URLs
+      let apiUrl = backendUrl;
+      if (backendUrl.includes('preview.emergentagent.com')) {
+        // In preview mode, use localhost for API calls
+        apiUrl = 'http://localhost:8001';
+      }
+      
       // Call backend API to validate order
-      const response = await fetch(`${backendUrl}/api/orders/lookup`, {
+      const response = await fetch(`${apiUrl}/api/orders/lookup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
