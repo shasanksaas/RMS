@@ -89,6 +89,11 @@ class AIService:
         
         suggestions = []
         product_text = f"{product_name} {product_description}".lower()
+        
+        # Handle timezone-aware datetime
+        if order_date.tzinfo is not None:
+            order_date = order_date.replace(tzinfo=None)
+        
         days_since_order = (datetime.utcnow() - order_date).days
         
         # Rule-based suggestion engine
