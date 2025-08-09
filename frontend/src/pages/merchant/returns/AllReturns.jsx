@@ -272,18 +272,21 @@ const AllReturns = () => {
                     </td>
                     <td className="py-4 px-4">
                       <div className="text-sm">
-                        {returnRequest.items.map((item, idx) => (
-                          <div key={idx}>
-                            {item.productName} (×{item.quantity})
-                          </div>
-                        ))}
+                        {returnRequest.items && returnRequest.items.length > 0 ? 
+                          returnRequest.items.map((item, idx) => (
+                            <div key={idx}>
+                              {item.product_name || item.productName} (×{item.quantity})
+                            </div>
+                          )) :
+                          <span className="text-gray-400">No items</span>
+                        }
                       </div>
                     </td>
                     <td className="py-4 px-4">
                       <span className="text-sm">{formatReason(returnRequest.reason)}</span>
                     </td>
                     <td className="py-4 px-4">
-                      <span className="font-medium">${returnRequest.refundAmount}</span>
+                      <span className="font-medium">${returnRequest.refund_amount || returnRequest.refundAmount}</span>
                     </td>
                     <td className="py-4 px-4">
                       {getStatusBadge(returnRequest.status)}
