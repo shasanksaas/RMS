@@ -11,7 +11,7 @@ import aiohttp
 import secrets
 from datetime import datetime, timedelta
 
-from ..config.database import db
+from ...config.database import db
 
 
 class ShopifyOAuth:
