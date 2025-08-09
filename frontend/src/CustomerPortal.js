@@ -348,6 +348,21 @@ const ReturnFormStep = ({ order, onSubmit, loading, error }) => {
   const [reason, setReason] = useState('');
   const [notes, setNotes] = useState('');
 
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     
