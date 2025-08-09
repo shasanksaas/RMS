@@ -294,10 +294,42 @@ const ReturnDetail = () => {
   };
 
   if (loading) {
-    return <div className="animate-pulse space-y-4">
-      <div className="h-8 bg-gray-200 rounded" />
-      <div className="h-96 bg-gray-200 rounded" />
-    </div>;
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center space-x-4">
+          <Link to="/app/returns">
+            <Button variant="ghost" size="sm">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Returns
+            </Button>
+          </Link>
+          <div className="animate-pulse">
+            <div className="h-8 w-48 bg-gray-200 rounded" />
+          </div>
+        </div>
+        <div className="animate-pulse space-y-4">
+          <div className="h-96 bg-gray-200 rounded" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <Link to="/app/returns">
+          <Button variant="ghost" size="sm">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Returns
+          </Button>
+        </Link>
+        <Alert className="border-red-200 bg-red-50">
+          <AlertDescription className="text-red-800">
+            {error}
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
   }
 
   if (!returnRequest) {
