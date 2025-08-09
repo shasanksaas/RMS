@@ -1,29 +1,104 @@
-import React, { useState } from 'react';
-import { Save, Building, Mail, Clock } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Save, Building, Mail, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
 import { Textarea } from '../../../components/ui/textarea';
+import { Alert, AlertDescription } from '../../../components/ui/alert';
 
 const General = () => {
   const [settings, setSettings] = useState({
-    storeName: 'Fashion Forward',
-    storeEmail: 'support@fashionforward.com',
+    storeName: '',
+    storeEmail: '',
     returnWindow: 30,
     autoApprove: true,
     requirePhotos: false,
-    customMessage: 'We\'re here to help with your return!'
+    customMessage: ''
   });
 
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState({ type: '', text: '' });
+
+  // Get backend URL from environment
+  const backendUrl = import.meta.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+  const tenantId = 'tenant-fashion-store'; // TODO: Get from auth context
+
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const loadSettings = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${backendUrl}/api/tenants/${tenantId}/settings`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Tenant-Id': tenantId
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const settingsData = data.settings || {};
+        
+        setSettings({
+          storeName: settingsData.store_name || 'Fashion Forward',
+          storeEmail: settingsData.support_email || 'support@fashionforward.com',
+          returnWindow: settingsData.return_window_days || 30,
+          autoApprove: settingsData.auto_approve_eligible_returns || true,
+          requirePhotos: settingsData.require_photos || false,
+          customMessage: settingsData.welcome_message || 'We\'re here to help with your return!'
+        });
+      } else {
+        console.error('Failed to load settings:', response.status);
+        setMessage({ type: 'error', text: 'Failed to load settings' });
+      }
+    } catch (error) {
+      console.error('Error loading settings:', error);
+      setMessage({ type: 'error', text: 'Error loading settings' });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSave = async () => {
-    setSaving(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setSaving(false);
-    alert('Settings saved successfully!');
+    try {
+      setSaving(true);
+      setMessage({ type: '', text: '' });
+
+      const payload = {
+        store_name: settings.storeName,
+        support_email: settings.storeEmail,
+        return_window_days: settings.returnWindow,
+        auto_approve_eligible_returns: settings.autoApprove,
+        require_photos: settings.requirePhotos,
+        welcome_message: settings.customMessage
+      };
+
+      const response = await fetch(`${backendUrl}/api/tenants/${tenantId}/settings`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Tenant-Id': tenantId
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        setMessage({ type: 'success', text: 'Settings saved successfully!' });
+        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+      } else {
+        const errorData = await response.json();
+        setMessage({ type: 'error', text: errorData.detail || 'Failed to save settings' });
+      }
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      setMessage({ type: 'error', text: 'Error saving settings' });
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
