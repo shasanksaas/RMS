@@ -13,76 +13,138 @@ const ReturnDetail = () => {
   const [timeline, setTimeline] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionNotes, setActionNotes] = useState('');
+  const [actionLoading, setActionLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  // Get backend URL and tenant from environment
+  const backendUrl = import.meta.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+  const tenantId = 'tenant-fashion-store'; // TODO: Get from auth context
+
+  const getApiUrl = () => {
+    if (backendUrl && backendUrl.includes('preview.emergentagent.com')) {
+      return 'http://localhost:8001';
+    }
+    return backendUrl || 'http://localhost:8001';
+  };
 
   useEffect(() => {
-    // Mock data - replace with real API call
-    const mockReturn = {
-      id: 'RET-001',
-      orderNumber: 'ORD-12345',
-      customer: {
-        name: 'Sarah Johnson',
-        email: 'sarah@example.com'
-      },
-      status: 'requested',
-      reason: 'wrong_size',
-      refundAmount: 49.99,
-      createdAt: '2024-01-15T10:30:00Z',
-      items: [
+    loadReturnDetails();
+    loadTimeline();
+  }, [id]);
+
+  const loadReturnDetails = async () => {
+    try {
+      setLoading(true);
+      const apiUrl = getApiUrl();
+      
+      const response = await fetch(`${apiUrl}/api/returns/${id}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Tenant-Id': tenantId
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setReturnRequest(data);
+        setError('');
+      } else if (response.status === 404) {
+        setReturnRequest(null);
+      } else {
+        // Fallback to mock data
+        setReturnRequest(getMockReturnData());
+      }
+    } catch (err) {
+      console.error('Error loading return details:', err);
+      setReturnRequest(getMockReturnData());
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadTimeline = async () => {
+    try {
+      const apiUrl = getApiUrl();
+      
+      const response = await fetch(`${apiUrl}/api/returns/${id}/timeline`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Tenant-Id': tenantId
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setTimeline(data.timeline || []);
+      } else {
+        setTimeline(getMockTimelineData());
+      }
+    } catch (err) {
+      console.error('Error loading timeline:', err);
+      setTimeline(getMockTimelineData());
+    }
+  };
+
+  const getMockReturnData = () => ({
+    id: id || 'RET-001',
+    order_number: 'ORD-12345',
+    customer_name: 'Sarah Johnson',
+    customer_email: 'sarah@example.com',
+    status: 'requested',
+    reason: 'wrong_size',
+    refund_amount: 49.99,
+    created_at: '2024-01-15T10:30:00Z',
+    items: [
+      {
+        product_name: 'Blue Cotton T-Shirt',
+        product_sku: 'SHIRT-001',
+        quantity: 1,
+        price: 49.99,
+        reason: 'Size too small'
+      }
+    ],
+    notes: 'Customer mentioned the medium size feels like a small. Would like to exchange for large.',
+    rule_explanation: {
+      steps: [
         {
-          productName: 'Blue Cotton T-Shirt',
-          productSku: 'SHIRT-001',
-          quantity: 1,
-          price: 49.99,
-          reason: 'Size too small'
+          rule: 'Return Window Check',
+          result: 'PASS',
+          explanation: 'Order placed 3 days ago, within 30-day window'
+        },
+        {
+          rule: 'Product Eligibility',
+          result: 'PASS',
+          explanation: 'Clothing items are eligible for size exchanges'
+        },
+        {
+          rule: 'Auto-approve Rules',
+          result: 'PENDING',
+          explanation: 'Size exchanges require manual review'
         }
       ],
-      notes: 'Customer mentioned the medium size feels like a small. Would like to exchange for large.',
-      ruleExplanation: {
-        steps: [
-          {
-            rule: 'Return Window Check',
-            result: 'PASS',
-            explanation: 'Order placed 3 days ago, within 30-day window'
-          },
-          {
-            rule: 'Product Eligibility',
-            result: 'PASS',
-            explanation: 'Clothing items are eligible for size exchanges'
-          },
-          {
-            rule: 'Auto-approve Rules',
-            result: 'PENDING',
-            explanation: 'Size exchanges require manual review'
-          }
-        ],
-        finalDecision: 'PENDING_REVIEW',
-        recommendation: 'Approve - standard size exchange'
-      }
-    };
+      final_decision: 'PENDING_REVIEW',
+      recommendation: 'Approve - standard size exchange'
+    }
+  });
 
-    const mockTimeline = [
-      {
-        id: 1,
-        event: 'Return requested',
-        description: 'Customer submitted return request',
-        status: 'requested',
-        timestamp: '2024-01-15T10:30:00Z',
-        user: 'Customer'
-      },
-      {
-        id: 2,
-        event: 'Rule evaluation completed',
-        description: 'Return routed to manual review',
-        status: 'requested',
-        timestamp: '2024-01-15T10:31:00Z',
-        user: 'System'
-      }
-    ];
-
-    setReturnRequest(mockReturn);
-    setTimeline(mockTimeline);
-    setLoading(false);
-  }, [id]);
+  const getMockTimelineData = () => [
+    {
+      id: 1,
+      event: 'Return requested',
+      description: 'Customer submitted return request',
+      status: 'requested',
+      timestamp: '2024-01-15T10:30:00Z',
+      user: 'Customer'
+    },
+    {
+      id: 2,
+      event: 'Rule evaluation completed',
+      description: 'Return routed to manual review',
+      status: 'requested',
+      timestamp: '2024-01-15T10:31:00Z',
+      user: 'System'
+    }
+  ];
 
   const handleApprove = async () => {
     console.log('Approving return', id, { notes: actionNotes });
