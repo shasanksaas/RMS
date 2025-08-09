@@ -22,31 +22,43 @@ const CustomerStart = () => {
     setLoading(true);
 
     try {
-      // Simulate API call to validate order
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Get backend URL from environment
+      const backendUrl = import.meta.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
       
-      // Mock validation
-      if (formData.orderNumber === 'ORD-404') {
-        setError('We couldn\'t find that order. Please check the order number and email address.');
-        setLoading(false);
-        return;
-      }
-
-      if (formData.email === 'wrong@email.com') {
-        setError('The email address doesn\'t match our records for this order.');
-        setLoading(false);
-        return;
-      }
-
-      // Success - navigate to item selection
-      navigate('/returns/select', { 
-        state: { 
-          orderNumber: formData.orderNumber, 
-          email: formData.email 
-        } 
+      // Call backend API to validate order
+      const response = await fetch(`${backendUrl}/api/orders/lookup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          order_number: formData.orderNumber,
+          email: formData.email
+        })
       });
+
+      if (response.ok) {
+        const orderData = await response.json();
+        // Success - navigate to item selection with order data
+        navigate('/returns/select', { 
+          state: { 
+            order: orderData,
+            orderNumber: formData.orderNumber, 
+            email: formData.email 
+          } 
+        });
+      } else if (response.status === 404) {
+        setError('We couldn\'t find that order. Please check the order number and email address.');
+      } else if (response.status === 403) {
+        setError('The email address doesn\'t match our records for this order.');
+      } else {
+        const errorData = await response.json();
+        setError(errorData.detail || 'Unable to lookup order. Please try again.');
+      }
     } catch (err) {
+      console.error('Order lookup error:', err);
       setError('Something went wrong. Please try again.');
+    } finally {
       setLoading(false);
     }
   };
