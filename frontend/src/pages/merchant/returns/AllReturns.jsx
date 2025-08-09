@@ -263,12 +263,12 @@ const AllReturns = () => {
                     </td>
                     <td className="py-4 px-4">
                       <div>
-                        <div className="font-medium">{returnRequest.customer.name}</div>
-                        <div className="text-sm text-gray-500">{returnRequest.customer.email}</div>
+                        <div className="font-medium">{returnRequest.customer_name || returnRequest.customer?.name}</div>
+                        <div className="text-sm text-gray-500">{returnRequest.customer_email || returnRequest.customer?.email}</div>
                       </div>
                     </td>
                     <td className="py-4 px-4">
-                      <span className="font-mono text-sm">{returnRequest.orderNumber}</span>
+                      <span className="font-mono text-sm">{returnRequest.order_number || returnRequest.orderNumber}</span>
                     </td>
                     <td className="py-4 px-4">
                       <div className="text-sm">
