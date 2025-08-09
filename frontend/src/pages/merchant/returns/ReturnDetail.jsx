@@ -513,11 +513,24 @@ const ReturnDetail = () => {
                   rows={3}
                 />
                 <div className="space-y-2">
-                  <Button onClick={handleApprove} className="w-full">
-                    <CheckCircle className="h-4 w-4 mr-2" />
+                  <Button 
+                    onClick={handleApprove} 
+                    className="w-full"
+                    disabled={actionLoading}
+                  >
+                    {actionLoading ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                    ) : (
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                    )}
                     Approve Return
                   </Button>
-                  <Button variant="outline" onClick={handleDeny} className="w-full">
+                  <Button 
+                    variant="outline" 
+                    onClick={handleDeny} 
+                    className="w-full"
+                    disabled={actionLoading}
+                  >
                     <XCircle className="h-4 w-4 mr-2" />
                     Deny Return
                   </Button>
@@ -532,11 +545,24 @@ const ReturnDetail = () => {
                 <CardTitle>Next Steps</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button onClick={handleIssueLabel} className="w-full">
-                  <Printer className="h-4 w-4 mr-2" />
+                <Button 
+                  onClick={handleIssueLabel} 
+                  className="w-full"
+                  disabled={actionLoading}
+                >
+                  {actionLoading ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                  ) : (
+                    <Printer className="h-4 w-4 mr-2" />
+                  )}
                   Generate Return Label
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  onClick={handleSendEmail} 
+                  className="w-full"
+                  disabled={actionLoading}
+                >
                   <Mail className="h-4 w-4 mr-2" />
                   Send Email Update
                 </Button>
