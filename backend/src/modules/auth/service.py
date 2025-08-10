@@ -488,7 +488,7 @@ class ShopifyAuthService:
                 "id": str(order_data["id"]),  # Keep for internal use
                 "order_id": str(order_data["id"]),  # Frontend expects this field
                 "tenant_id": tenant_id,
-                "order_number": order_data.get("order_number", order_data.get("name", "")).replace("#", ""),
+                "order_number": str(order_data.get("order_number", order_data.get("name", ""))).replace("#", ""),
                 "shopify_order_id": str(order_data["id"]),
                 "email": order_data.get("email", ""),
                 "customer_email": order_data.get("email", customer.get("email", "")),
