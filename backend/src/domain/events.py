@@ -15,7 +15,7 @@ from .value_objects import ReturnId, TenantId, OrderId, Email, Money
 class DomainEvent(ABC):
     """Base class for all domain events"""
     occurred_at: datetime
-    correlation_id: Optional[str] = None
+    correlation_id: Optional[str]
     
     @abstractmethod
     def get_event_type(self) -> str:
