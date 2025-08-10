@@ -18,13 +18,19 @@ async def get_orders(
     tenant_id: str = Depends(get_tenant_id),
     search: Optional[str] = Query(None, description="Search in order number, customer email, or SKU"),
     status: Optional[str] = Query(None, description="Order status filter"),
+    status_filter: Optional[str] = Query(None, description="Legacy status filter parameter"),
     financial_status: Optional[str] = Query(None, alias="financialStatus", description="Financial status filter"),
     fulfillment_status: Optional[str] = Query(None, alias="fulfillmentStatus", description="Fulfillment status filter"),
     from_date: Optional[str] = Query(None, alias="from", description="Start date filter (ISO format)"),
     to_date: Optional[str] = Query(None, alias="to", description="End date filter (ISO format)"),
+    date_from: Optional[str] = Query(None, description="Legacy date from parameter"),
+    date_to: Optional[str] = Query(None, description="Legacy date to parameter"),
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(25, ge=1, le=100, alias="pageSize", description="Items per page"),
-    sort: str = Query("-created_at", description="Sort field and direction")
+    limit: int = Query(None, ge=1, le=100, description="Legacy limit parameter"),
+    sort: str = Query("-created_at", description="Sort field and direction"),
+    sort_by: Optional[str] = Query(None, description="Legacy sort field parameter"),
+    sort_order: Optional[str] = Query(None, description="Legacy sort order parameter")
 ):
     """
     Get orders with server-side filtering, search, and pagination
