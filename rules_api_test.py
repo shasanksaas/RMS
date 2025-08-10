@@ -157,7 +157,7 @@ class RulesAPITester:
             "tags": ["test", "debugging"]
         }
         
-        success, response = self.make_request('POST', 'rules/', rule_data, headers)
+        success, response = self.make_request('POST', 'rules', rule_data, headers)
         if success and response.get('success') and 'rule_id' in response:
             rule_id = response['rule_id']
             self.created_rule_ids.append(rule_id)
