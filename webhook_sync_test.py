@@ -399,10 +399,10 @@ class WebhookSyncTestSuite:
                     self.log_test("Webhook Idempotency: No duplicate order created", False, 
                                  f"Order count changed from {pre_duplicate_count} to {post_duplicate_count}")
                 
-                # Verify there's still only one order with our test ID
+                # Verify there's still only one order with our test order number
                 matching_orders = [
                     order for order in updated_orders_data.get("items", [])
-                    if str(order.get("id")) == str(self.test_order_id)
+                    if order.get("order_number", "").replace("#", "") == f"TEST-{self.test_order_id}"
                 ]
                 
                 if len(matching_orders) == 1:
