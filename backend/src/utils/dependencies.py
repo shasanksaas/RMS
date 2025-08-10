@@ -1,51 +1,24 @@
 """
-FastAPI dependency injection utilities
+FastAPI Dependencies
 """
-from fastapi import Header, HTTPException, Request
+
+from fastapi import Depends, HTTPException, Header
 from typing import Optional
+import logging
 
-# Placeholder implementations for missing services
-class TenantService:
-    pass
+logger = logging.getLogger(__name__)
 
-class RulesService:
-    pass
-
-class ShopifyService:
-    pass
-
-class AnalyticsService:
-    pass
-
-
-def get_tenant_service() -> TenantService:
-    """Get tenant service instance"""
-    return TenantService()
-
-
-def get_rules_service() -> RulesService:
-    """Get rules service instance"""
-    return RulesService()
-
-
-def get_analytics_service() -> AnalyticsService:
-    """Get analytics service instance"""
-    return AnalyticsService()
-
-
-def get_shopify_service() -> ShopifyService:
-    """Get Shopify service instance"""
-    return ShopifyService()
-
-
-async def get_current_user(request: Request) -> Optional[str]:
-    """Get current user from request (placeholder implementation)"""
-    # In a real implementation, this would extract user from JWT token or session
-    return "system"
-
-
-async def get_tenant_id(x_tenant_id: str = Header(None)) -> str:
-    """Get tenant ID from header"""
+async def get_tenant_id(x_tenant_id: str = Header(..., alias="X-Tenant-Id")) -> str:
+    """Get tenant ID from header (required)"""
     if not x_tenant_id:
-        raise HTTPException(status_code=400, detail="X-Tenant-Id header required")
+        raise HTTPException(status_code=400, detail="X-Tenant-Id header is required")
     return x_tenant_id
+
+async def get_tenant_id_optional(x_tenant_id: Optional[str] = Header(None, alias="X-Tenant-Id")) -> Optional[str]:
+    """Get tenant ID from header (optional)"""
+    return x_tenant_id
+
+async def rate_limit_by_ip(max_requests: int = 10, window_minutes: int = 5):
+    """Rate limiting decorator (placeholder)"""
+    # TODO: Implement proper rate limiting with Redis
+    pass

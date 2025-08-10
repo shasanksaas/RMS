@@ -1,121 +1,107 @@
 """
-Label Service - Handle return label generation
-Supports multiple carriers and sandbox/production modes
+Label Service - Mock implementation for returns labels
 """
-from typing import Dict, List, Any, Optional
+
+import logging
 import os
-import uuid
+from typing import Dict, Any, Optional
 from datetime import datetime
+import uuid
+
+from ..config.database import db
+
+logger = logging.getLogger(__name__)
 
 class LabelService:
-    """Service for generating return shipping labels"""
+    """Label generation service with mock/sandbox implementations"""
     
     def __init__(self):
-        self.mode = os.environ.get('LABEL_MODE', 'mock')  # mock, shippo, easypost
-        self.api_key = os.environ.get('LABEL_API_KEY', '')
-        
-    async def generate_return_label(
-        self, 
-        order: Dict[str, Any], 
-        items: List[Dict[str, Any]], 
-        tenant_id: str
-    ) -> Dict[str, Any]:
-        """
-        Generate return shipping label
-        Returns: {label_url, tracking_number, carrier, service}
-        """
-        
-        if self.mode == 'mock':
-            return await self._generate_mock_label(order, items, tenant_id)
-        elif self.mode == 'shippo':
-            return await self._generate_shippo_label(order, items, tenant_id)
-        elif self.mode == 'easypost':
-            return await self._generate_easypost_label(order, items, tenant_id)
-        else:
-            raise ValueError(f"Unsupported label mode: {self.mode}")
+        self.feature_mode = os.environ.get('FEATURE_LABELS', 'mock')
     
-    async def _generate_mock_label(
-        self, 
-        order: Dict[str, Any], 
-        items: List[Dict[str, Any]], 
-        tenant_id: str
-    ) -> Dict[str, Any]:
-        """Generate mock label for testing"""
+    async def create_return_label(self, tenant_id: str, return_request: Dict, order: Dict) -> Dict[str, Any]:
+        """Create return shipping label"""
+        try:
+            if self.feature_mode == 'mock':
+                return await self._create_mock_label(tenant_id, return_request, order)
+            elif self.feature_mode == 'shippo':
+                return await self._create_shippo_label(tenant_id, return_request, order)
+            elif self.feature_mode == 'easypost':
+                return await self._create_easypost_label(tenant_id, return_request, order)
+            else:
+                return await self._create_mock_label(tenant_id, return_request, order)
         
-        tracking_number = f"1Z{uuid.uuid4().hex[:16].upper()}"
-        label_id = str(uuid.uuid4())
-        
-        # Create mock label URL (in production, this would be stored in S3)
-        label_url = f"https://mock-labels.example.com/{label_id}.pdf"
-        
-        return {
-            "label_url": label_url,
-            "tracking_number": tracking_number,
-            "carrier": "UPS",
-            "service": "UPS Ground",
-            "label_id": label_id,
-            "cost": 8.50,
-            "estimated_delivery": "3-5 business days"
-        }
+        except Exception as e:
+            logger.error(f"Create label error: {e}")
+            return {"success": False, "error": "Failed to create shipping label"}
     
-    async def _generate_shippo_label(
-        self, 
-        order: Dict[str, Any], 
-        items: List[Dict[str, Any]], 
-        tenant_id: str
-    ) -> Dict[str, Any]:
-        """Generate label using Shippo API"""
-        
-        # This would integrate with actual Shippo API
-        # For now, return mock data
-        tracking_number = f"SP{uuid.uuid4().hex[:12].upper()}"
-        
-        return {
-            "label_url": f"https://shippo-labels.s3.amazonaws.com/{tracking_number}.pdf",
-            "tracking_number": tracking_number,
-            "carrier": "USPS",
-            "service": "USPS Priority Mail",
-            "cost": 7.25,
-            "estimated_delivery": "2-3 business days"
-        }
-    
-    async def _generate_easypost_label(
-        self, 
-        order: Dict[str, Any], 
-        items: List[Dict[str, Any]], 
-        tenant_id: str
-    ) -> Dict[str, Any]:
-        """Generate label using EasyPost API"""
-        
-        # This would integrate with actual EasyPost API
-        # For now, return mock data
-        tracking_number = f"EP{uuid.uuid4().hex[:12].upper()}"
-        
-        return {
-            "label_url": f"https://easypost-labels.s3.amazonaws.com/{tracking_number}.pdf",
-            "tracking_number": tracking_number,
-            "carrier": "FedEx",
-            "service": "FedEx Ground",
-            "cost": 9.75,
-            "estimated_delivery": "3-5 business days"
-        }
-    
-    async def get_tracking_info(self, tracking_number: str) -> Dict[str, Any]:
-        """Get tracking information for a return label"""
-        
-        if self.mode == 'mock':
-            return {
-                "tracking_number": tracking_number,
-                "status": "in_transit",
-                "carrier": "UPS",
-                "events": [
-                    {
-                        "status": "label_created",
-                        "description": "Shipping label created",
-                        "timestamp": datetime.utcnow().isoformat()
-                    }
-                ]
+    async def _create_mock_label(self, tenant_id: str, return_request: Dict, order: Dict) -> Dict[str, Any]:
+        """Create mock label for testing/demo"""
+        try:
+            # Generate mock tracking number
+            tracking = f"MOCK{datetime.now().strftime('%Y%m%d')}{str(uuid.uuid4())[:8].upper()}"
+            
+            # Mock label URL (would be actual PDF in production)
+            label_url = f"https://mock-labels.example.com/{tracking}.pdf"
+            
+            # Create shipping label record
+            label_doc = {
+                "id": str(uuid.uuid4()),
+                "tenant_id": tenant_id,
+                "return_request_id": return_request["id"],
+                "carrier": "Mock Carrier",
+                "method": return_request.get("return_method", "PREPAID_LABEL"),
+                "label_url": label_url,
+                "tracking": tracking,
+                "cost": 5.99,
+                "status": "ISSUED",
+                "created_at": datetime.utcnow()
             }
-        
-        # For production, integrate with carrier APIs
-        return {"tracking_number": tracking_number, "status": "unknown"}
+            
+            await db.shipping_labels.insert_one(label_doc)
+            
+            logger.info(f"Mock label created: {tracking} for return {return_request['id']}")
+            
+            return {
+                "success": True,
+                "label_url": label_url,
+                "tracking": tracking,
+                "cost": 5.99,
+                "carrier": "Mock Carrier",
+                "estimated_delivery": "2-3 business days"
+            }
+            
+        except Exception as e:
+            logger.error(f"Mock label creation error: {e}")
+            return {"success": False, "error": "Failed to create mock label"}
+    
+    async def _create_shippo_label(self, tenant_id: str, return_request: Dict, order: Dict) -> Dict[str, Any]:
+        """Create label using Shippo API (sandbox)"""
+        # TODO: Implement Shippo integration
+        logger.warning("Shippo integration not implemented, falling back to mock")
+        return await self._create_mock_label(tenant_id, return_request, order)
+    
+    async def _create_easypost_label(self, tenant_id: str, return_request: Dict, order: Dict) -> Dict[str, Any]:
+        """Create label using EasyPost API (sandbox)"""
+        # TODO: Implement EasyPost integration  
+        logger.warning("EasyPost integration not implemented, falling back to mock")
+        return await self._create_mock_label(tenant_id, return_request, order)
+    
+    async def void_label(self, tenant_id: str, label_id: str) -> Dict[str, Any]:
+        """Void a shipping label"""
+        try:
+            result = await db.shipping_labels.update_one(
+                {"id": label_id, "tenant_id": tenant_id},
+                {"$set": {"status": "VOIDED", "updated_at": datetime.utcnow()}}
+            )
+            
+            if result.modified_count == 0:
+                return {"success": False, "error": "Label not found"}
+            
+            return {"success": True, "message": "Label voided successfully"}
+            
+        except Exception as e:
+            logger.error(f"Void label error: {e}")
+            return {"success": False, "error": "Failed to void label"}
+
+# Singleton instance
+label_service = LabelService()
