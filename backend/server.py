@@ -106,7 +106,12 @@ async def security_and_audit_middleware(request: Request, call_next):
         raise
     except Exception as e:
         logger.error(f"Security middleware error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal security error")
+        logger.error(f"Request path: {request.url.path}")
+        logger.error(f"Request method: {request.method}")
+        logger.error(f"Should skip tenant: {should_skip_tenant}")
+        import traceback
+        logger.error(f"Full traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"Internal security error: {str(e)}")
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
