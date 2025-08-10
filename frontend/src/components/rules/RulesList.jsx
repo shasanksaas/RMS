@@ -69,7 +69,7 @@ const RulesList = ({ onCreateRule, onEditRule, onDeleteRule }) => {
       });
 
       if (searchTerm) params.append('search', searchTerm);
-      if (tagFilter) params.append('tag_filter', tagFilter);
+      if (tagFilter && tagFilter !== 'all') params.append('tag_filter', tagFilter);
 
       const response = await fetch(
         `${process.env.REACT_APP_BACKEND_URL}/api/rules/?${params}`,
