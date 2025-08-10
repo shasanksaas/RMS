@@ -25,9 +25,7 @@ const Integrations = () => {
   // Connection form state
   const [showConnectionForm, setShowConnectionForm] = useState(false);
   const [connectionForm, setConnectionForm] = useState({
-    shop: '',
-    api_key: '81e556a66ac6d28a54e1ed972a3c43ad', // Pre-filled for demo
-    api_secret: 'd23f49ea8d18e93a8a26c2c04dba826c' // Pre-filled for demo
+    shop: ''
   });
   
   // App state
