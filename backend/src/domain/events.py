@@ -60,7 +60,7 @@ class ReturnRejected(DomainEvent):
     rejected_by: str
     reason: str
     occurred_at: datetime
-    correlation_id: Optional[str] = None
+    correlation_id: Optional[str]
     
     def get_event_type(self) -> str:
         return "return.rejected"
