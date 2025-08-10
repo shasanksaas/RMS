@@ -281,7 +281,7 @@ class WebhookSyncTestSuite:
         
         if not test_order_found:
             self.log_test("Order API Check: Test order found in API", False, 
-                         f"Test order with ID {self.test_order_id} not found in orders API")
+                         f"Test order with number TEST-{self.test_order_id} not found in orders API")
             return False
         
         return True
