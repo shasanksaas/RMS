@@ -72,7 +72,7 @@ async def security_and_audit_middleware(request: Request, call_next):
     start_time = time.time()
     
     # Skip middleware for health checks and static files
-    if request.url.path in ["/health", "/", "/docs", "/redoc", "/openapi.json", "/api/", "/api/health"] or request.url.path.startswith("/static"):
+    if request.url.path in ["/health", "/", "/docs", "/redoc", "/openapi.json", "/api/", "/api/health", "/api/config"] or request.url.path.startswith("/static"):
         response = await call_next(request)
         return response
     
