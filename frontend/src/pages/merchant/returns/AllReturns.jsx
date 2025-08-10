@@ -540,7 +540,7 @@ const AllReturns = () => {
                           type="checkbox"
                           checked={selectedReturns.includes(returnRequest.id)}
                           onChange={() => handleSelectReturn(returnRequest.id)}
-                          className="rounded"
+                          className="rounded touch-manipulation"
                         />
                         <div>
                           <div className="font-medium text-sm">{returnRequest.customer_name}</div>
