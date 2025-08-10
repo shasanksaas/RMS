@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from dataclasses import dataclass
 
 from ..value_objects import PolicySnapshot, Money, ReturnReason
-from ..entities import return as return_entity
+from ..entities.return_entity import ReturnLineItem
 
 
 @dataclass
