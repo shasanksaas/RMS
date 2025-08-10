@@ -99,7 +99,7 @@ class OrdersEndpointTest:
             return False
         
         pagination = orders_data['pagination']
-        required_pagination_fields = ['current_page', 'total_pages', 'total_count', 'per_page', 'has_next', 'has_prev']
+        required_pagination_fields = ['current_page', 'total_pages', 'total_items', 'per_page', 'has_next_page', 'has_prev_page']
         missing_fields = [field for field in required_pagination_fields if field not in pagination]
         
         if missing_fields:
