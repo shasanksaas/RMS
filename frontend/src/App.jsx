@@ -76,6 +76,10 @@ const App = () => {
             <Route index element={<Navigate to="/returns/start" replace />} />
           </Route>
 
+          {/* Public Portal Routes */}
+          <Route path="/portal/returns/start" element={<ReturnPortal />} />
+          <Route path="/portal/returns/confirmation/:returnId" element={<CustomerReturnConfirmation />} />
+
           {/* Legacy customer route */}
           <Route path="/customer" element={<Navigate to="/returns/start" replace />} />
 
