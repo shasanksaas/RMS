@@ -57,8 +57,8 @@ class ShopifyAuthService:
             "read_refunds", "write_refunds", "read_locations", "read_shipping"
         ]
         
-        # Repository for tenant-scoped operations
-        self.repo = TenantScopedRepository()
+        # Repository will be initialized when needed
+        self.repo = None
     
     def validate_shop_domain(self, shop: str) -> bool:
         """Validate shop domain format"""
