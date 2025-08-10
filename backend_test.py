@@ -1727,6 +1727,8 @@ class ReturnsAPITester:
         print("12. 🆕 Auth Service Enhancement with OAuth")
         print("13. 🆕 Testing Endpoints for Development")
         print("14. 🔗 NEW: Shopify Connectivity Test Endpoints")
+        print("15. 🔧 NEW: Enhanced Rules API Endpoints")
+        print("16. 🔗 NEW: Rules Integration with Returns Processing")
         print("=" * 80)
         
         # Test seeded data first
