@@ -119,6 +119,26 @@ const AllReturns = () => {
     loadReturns();
   }, []);
 
+  // Debounced search handler
+  const debouncedSearch = useMemo(
+    () => debounce((searchTerm) => {
+      setFilters(prev => ({ ...prev, search: searchTerm, page: 1 }));
+    }, 300),
+    [debounce]
+  );
+
+  // Handle search input change
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setFilters(prev => ({ ...prev, search: value }));
+    debouncedSearch(value);
+  };
+
+  // Handle filter changes
+  const handleFilterChange = (key, value) => {
+    setFilters(prev => ({ ...prev, [key]: value, page: 1 }));
+  };
+
   const getMockReturns = () => [
     {
       id: 'RET-001',
