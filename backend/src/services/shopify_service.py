@@ -401,3 +401,45 @@ class ShopifyService:
             json.dump({"products": products}, f, indent=2)
         
         return products
+
+    # Methods needed by unified returns controller
+    async def find_order_by_number(self, order_number: str) -> Optional[Dict[str, Any]]:
+        """Find order by order number"""
+        if self.tenant_id:
+            # Get tenant's shop info from database
+            tenant = await db.tenants.find_one({"id": self.tenant_id})
+            if tenant and tenant.get('shopify_store'):
+                shop = tenant['shopify_store']
+                orders = await self.get_orders(shop, self.tenant_id, 100)
+                
+                for order in orders:
+                    if order.get('name') == f"#{order_number}" or order.get('order_number') == order_number:
+                        return order
+        
+        # Fallback: search in seeded data
+        orders_cursor = db.orders.find({"tenant_id": self.tenant_id, "order_number": order_number})
+        orders = await orders_cursor.to_list(1)
+        if orders:
+            return orders[0]
+        
+        return None
+
+    async def get_order(self, order_id: str) -> Optional[Dict[str, Any]]:
+        """Get order by ID"""
+        if self.tenant_id:
+            # First try from seeded data
+            order = await db.orders.find_one({"id": order_id, "tenant_id": self.tenant_id})
+            if order:
+                return order
+                
+            # Then try from Shopify if online
+            tenant = await db.tenants.find_one({"id": self.tenant_id})
+            if tenant and tenant.get('shopify_store'):
+                shop = tenant['shopify_store']
+                orders = await self.get_orders(shop, self.tenant_id, 100)
+                
+                for order in orders:
+                    if order.get('id') == order_id:
+                        return order
+        
+        return None
