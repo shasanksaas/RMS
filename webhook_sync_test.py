@@ -407,10 +407,10 @@ class WebhookSyncTestSuite:
                 
                 if len(matching_orders) == 1:
                     self.log_test("Webhook Idempotency: Single order instance maintained", True, 
-                                 f"Only one order with ID {self.test_order_id} exists")
+                                 f"Only one order with number TEST-{self.test_order_id} exists")
                 else:
                     self.log_test("Webhook Idempotency: Single order instance maintained", False, 
-                                 f"Found {len(matching_orders)} orders with ID {self.test_order_id}")
+                                 f"Found {len(matching_orders)} orders with number TEST-{self.test_order_id}")
             else:
                 self.log_test("Webhook Idempotency: Failed to verify order count", False, 
                              "Could not retrieve orders after duplicate webhook")
