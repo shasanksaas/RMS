@@ -2,7 +2,7 @@
 Security middleware for tenant context injection and permission validation
 """
 from typing import Optional, Dict, Any
-from fastapi import HTTPException, Request, status
+from fastapi import HTTPException, Request, status, Depends
 from fastapi.security import HTTPBearer
 import logging
 import time
@@ -19,6 +19,26 @@ class TenantContext:
 
 # Global tenant context
 tenant_context = TenantContext()
+
+async def get_tenant_id(request: Request) -> str:
+    """Dependency to get tenant ID from request headers"""
+    tenant_id = request.headers.get("X-Tenant-Id")
+    
+    if not tenant_id:
+        # Try to extract from path for admin routes
+        if "/tenants/" in str(request.url):
+            path_parts = str(request.url).split("/tenants/")
+            if len(path_parts) > 1:
+                tenant_id = path_parts[1].split("/")[0]
+    
+    if not tenant_id:
+        logger.warning(f"Missing tenant ID for request: {request.url}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tenant ID is required. Please include X-Tenant-Id header."
+        )
+    
+    return tenant_id
 
 class SecurityMiddleware:
     """Middleware to inject tenant context and validate permissions"""
