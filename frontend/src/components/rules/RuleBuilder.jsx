@@ -560,11 +560,17 @@ const RuleBuilder = ({ rule = null, onSave, onCancel, isOpen }) => {
                             <SelectValue placeholder="Select action" />
                           </SelectTrigger>
                           <SelectContent>
-                            {fieldOptions.actions.map((actionType) => (
-                              <SelectItem key={actionType.value} value={actionType.value}>
-                                {actionType.label}
+                            {fieldOptions.actions && fieldOptions.actions.length > 0 ? (
+                              fieldOptions.actions.map((actionType) => (
+                                <SelectItem key={actionType.value} value={actionType.value}>
+                                  {actionType.label}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <SelectItem value="" disabled>
+                                Loading actions...
                               </SelectItem>
-                            ))}
+                            )}
                           </SelectContent>
                         </Select>
                         {errors[`action_${actionIndex}_type`] && (
