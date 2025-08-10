@@ -66,6 +66,8 @@ const App = () => {
           {/* Customer Portal Routes */}
           <Route path="/returns" element={<CustomerLayout />}>
             <Route path="start" element={<CustomerStart />} />
+            <Route path="create" element={<CustomerCreateReturn />} />
+            <Route path="confirmation/:returnId" element={<CustomerReturnConfirmation />} />
             <Route path="select" element={<CustomerSelectItems />} />
             <Route path="resolution" element={<CustomerResolution />} />
             <Route path="confirm" element={<CustomerConfirm />} />
@@ -80,6 +82,7 @@ const App = () => {
           <Route path="/app" element={<MerchantLayout isOnline={isOnline} />}>
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="returns" element={<AllReturns />} />
+            <Route path="returns/create" element={<CreateReturnMerchant />} />
             <Route path="returns/:id" element={<ReturnDetail />} />
             <Route path="orders" element={<Orders />} />
             <Route path="orders/:orderId" element={<OrderDetail />} />
