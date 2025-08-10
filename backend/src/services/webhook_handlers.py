@@ -505,22 +505,26 @@ class WebhookProcessor:
     # HELPER METHODS
     def _transform_order_payload(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """Transform Shopify order payload to our format"""
+        customer = payload.get("customer", {})
         return {
             "order_id": str(payload.get("id")),
-            "order_number": payload.get("name"),
+            "order_number": payload.get("name", "").replace("#", ""),
             "email": payload.get("email"),
-            "customer_id": str(payload.get("customer", {}).get("id", "")),
-            "customer_name": f"{payload.get('customer', {}).get('first_name', '')} {payload.get('customer', {}).get('last_name', '')}".strip(),
-            "customer_email": payload.get("customer", {}).get("email"),
+            "customer_id": str(customer.get("id", "")),
+            "customer_name": f"{customer.get('first_name', '')} {customer.get('last_name', '')}".strip(),
+            "customer_email": customer.get("email"),
             "financial_status": payload.get("financial_status"),
             "fulfillment_status": payload.get("fulfillment_status"),
             "total_price": float(payload.get("total_price", 0)),
-            "currency": payload.get("currency"),
+            "currency_code": payload.get("currency", "USD"),
             "created_at": payload.get("created_at"),
             "updated_at": payload.get("updated_at"),
+            "processed_at": payload.get("processed_at"),
             "line_items": payload.get("line_items", []),
             "shipping_address": payload.get("shipping_address"),
-            "billing_address": payload.get("billing_address")
+            "billing_address": payload.get("billing_address"),
+            "fulfillments": [f.get("id") for f in payload.get("fulfillments", [])],
+            "raw_order_data": payload
         }
 
     def _transform_return_payload(self, payload: Dict[str, Any]) -> Dict[str, Any]:
