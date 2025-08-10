@@ -49,7 +49,7 @@ class ReturnItemRequest(BaseModel):
     unit_price: float = Field(..., ge=0)
     reason: str
     reason_description: Optional[str] = None
-    condition: str = Field(..., regex="^(new|used|damaged)$")
+    condition: str = Field(..., pattern="^(new|used|damaged)$")
     photos: List[str] = Field(default_factory=list)
     notes: Optional[str] = ""
 
