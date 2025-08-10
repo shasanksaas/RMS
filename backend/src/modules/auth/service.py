@@ -504,9 +504,9 @@ class ShopifyAuthService:
                 "synced_at": datetime.utcnow()
             }
             
-            # Upsert order
+            # Upsert order - use both id and order_id to ensure compatibility
             await db.orders.update_one(
-                {"id": str(order_data["id"]), "tenant_id": tenant_id},
+                {"order_id": str(order_data["id"]), "tenant_id": tenant_id},
                 {"$set": order_doc},
                 upsert=True
             )
