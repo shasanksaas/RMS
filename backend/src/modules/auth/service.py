@@ -26,10 +26,22 @@ class ShopifyAuthService:
     
     def __init__(self):
         # Encryption key for securing tokens (use KMS in production)
-        self.encryption_key = os.environ.get('ENCRYPTION_KEY', Fernet.generate_key())
-        if isinstance(self.encryption_key, str):
-            self.encryption_key = self.encryption_key.encode()
-        self.cipher = Fernet(self.encryption_key)
+        encryption_key_str = os.environ.get('ENCRYPTION_KEY')
+        if not encryption_key_str or encryption_key_str == 'fernet-key-32-bytes-base64-encoded-here':
+            # Generate a new key for development
+            self.encryption_key = Fernet.generate_key()
+        else:
+            if isinstance(encryption_key_str, str):
+                self.encryption_key = encryption_key_str.encode()
+            else:
+                self.encryption_key = encryption_key_str
+                
+        try:
+            self.cipher = Fernet(self.encryption_key)
+        except ValueError:
+            # If key is invalid, generate a new one
+            self.encryption_key = Fernet.generate_key()
+            self.cipher = Fernet(self.encryption_key)
         
         self.api_version = "2025-07"
         self.base_redirect_uri = os.environ.get(
