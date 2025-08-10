@@ -344,10 +344,10 @@ const AllReturns = () => {
   };
 
   const handleSelectAll = () => {
-    if (selectedReturns.length === returns.length) {
+    if (selectedReturns.length === filteredReturns.length && filteredReturns.length > 0) {
       setSelectedReturns([]);
     } else {
-      setSelectedReturns(returns.map(ret => ret.id));
+      setSelectedReturns(filteredReturns.map(ret => ret.id));
     }
   };
 
