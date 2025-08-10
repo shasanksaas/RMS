@@ -301,7 +301,7 @@ const Integrations = () => {
                   <Label htmlFor="shop" className="text-sm font-medium">Shop Domain</Label>
                   <Input
                     id="shop"
-                    placeholder="e.g., demo-store or demo-store.myshopify.com"
+                    placeholder="e.g., rms34 or rms34.myshopify.com"
                     value={connectionForm.shop}
                     onChange={(e) => setConnectionForm({...connectionForm, shop: e.target.value})}
                     className="mt-1 touch-manipulation"
@@ -311,81 +311,10 @@ const Integrations = () => {
                   </p>
                 </div>
 
-                <div>
-                  <Label htmlFor="api_key" className="text-sm font-medium">API Key</Label>
-                  <Input
-                    id="api_key"
-                    placeholder="Your Shopify API Key"
-                    value={connectionForm.api_key}
-                    onChange={(e) => setConnectionForm({...connectionForm, api_key: e.target.value})}
-                    className="mt-1 font-mono text-sm touch-manipulation"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    From your Shopify Partner Dashboard or private app settings
-                  </p>
-                </div>
-
-                <div>
-                  <Label htmlFor="api_secret" className="text-sm font-medium">API Secret</Label>
-                  <Input
-                    id="api_secret"
-                    type="password"
-                    placeholder="Your Shopify API Secret"
-                    value={connectionForm.api_secret}
-                    onChange={(e) => setConnectionForm({...connectionForm, api_secret: e.target.value})}
-                    className="mt-1 font-mono text-sm touch-manipulation"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Keep this secret secure - it's encrypted in our database
-                  </p>
-                </div>
-
-                {/* Validation Results */}
-                {validationResults && (
-                  <div className="p-3 border rounded bg-white">
-                    <h4 className="font-medium text-sm mb-2">Credential Validation</h4>
-                    <div className="space-y-1 text-xs">
-                      <div className="flex items-center space-x-2">
-                        {validationResults.validations.shop_domain.valid ? (
-                          <Check className="h-3 w-3 text-green-500 flex-shrink-0" />
-                        ) : (
-                          <AlertCircle className="h-3 w-3 text-red-500 flex-shrink-0" />
-                        )}
-                        <span className="truncate">Shop Domain: {validationResults.validations.shop_domain.normalized || 'Invalid'}</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        {validationResults.validations.api_key.valid ? (
-                          <Check className="h-3 w-3 text-green-500 flex-shrink-0" />
-                        ) : (
-                          <AlertCircle className="h-3 w-3 text-red-500 flex-shrink-0" />
-                        )}
-                        <span>API Key: {validationResults.validations.api_key.valid ? 'Valid format' : 'Invalid format'}</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        {validationResults.validations.api_secret.valid ? (
-                          <Check className="h-3 w-3 text-green-500 flex-shrink-0" />
-                        ) : (
-                          <AlertCircle className="h-3 w-3 text-red-500 flex-shrink-0" />
-                        )}
-                        <span>API Secret: {validationResults.validations.api_secret.valid ? 'Valid format' : 'Invalid format'}</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 pt-2">
                   <Button 
-                    onClick={validateCredentials}
-                    variant="outline"
-                    size="sm"
-                    disabled={connecting}
-                    className="touch-manipulation"
-                  >
-                    Validate
-                  </Button>
-                  <Button 
                     onClick={handleConnect} 
-                    disabled={connecting || !connectionForm.shop || !connectionForm.api_key || !connectionForm.api_secret}
+                    disabled={connecting || !connectionForm.shop}
                     className="flex-1 touch-manipulation"
                   >
                     {connecting ? (
@@ -403,12 +332,12 @@ const Integrations = () => {
                 </div>
 
                 <div className="bg-blue-50 border border-blue-200 rounded p-3 text-sm">
-                  <p className="font-medium text-blue-900 mb-1">How it works:</p>
+                  <p className="font-medium text-blue-900 mb-1">Secure OAuth Connection:</p>
                   <ol className="text-blue-800 space-y-1 text-xs list-decimal list-inside">
-                    <li>Enter your shop domain and API credentials</li>
-                    <li>Click "Connect to Shopify" to authorize</li>
-                    <li>We'll securely store your encrypted credentials</li>
-                    <li>Your returns will sync automatically</li>
+                    <li>Enter your shop domain</li>
+                    <li>Click "Connect to Shopify" to start OAuth flow</li>
+                    <li>Authorize the app in Shopify</li>
+                    <li>Return here to see your connected store and data sync</li>
                   </ol>
                 </div>
               </div>
