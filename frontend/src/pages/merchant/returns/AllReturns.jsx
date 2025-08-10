@@ -137,10 +137,9 @@ const AllReturns = () => {
       }
     } catch (err) {
       console.error('Error loading returns:', err);
-      // Fallback to mock data
-      const mockData = getMockReturns();
-      setAllReturns(mockData);
-      setPagination({ total_items: mockData.length, current_page: 1, total_pages: 1, per_page: 20 });
+      setAllReturns([]);
+      setPagination({ total_items: 0, current_page: 1, total_pages: 1, per_page: 20 });
+      setError('Failed to load returns. Please try again.');
     } finally {
       setLoading(false);
     }
