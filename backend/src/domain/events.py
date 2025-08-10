@@ -45,8 +45,8 @@ class ReturnApproved(DomainEvent):
     tenant_id: TenantId
     approved_by: str
     occurred_at: datetime
+    correlation_id: Optional[str]
     auto_approved: bool = False
-    correlation_id: Optional[str] = None
     
     def get_event_type(self) -> str:
         return "return.approved"
