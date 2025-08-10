@@ -42,7 +42,7 @@ class RejectReturnRequest(BaseModel):
 
 class ProcessRefundRequest(BaseModel):
     refund_amount: float = Field(..., ge=0)
-    refund_method: str = Field(..., regex="^(original_payment|store_credit|manual)$")
+    refund_method: str = Field(..., pattern="^(original_payment|store_credit|manual)$")
 
 
 class ApproveDraftRequest(BaseModel):
