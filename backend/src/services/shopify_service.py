@@ -34,7 +34,7 @@ class ShopifyService:
                 "status": "connected"
             })
             return integration is not None
-        except:
+        except Exception as e:
             return False
     
     async def is_online(self) -> bool:
