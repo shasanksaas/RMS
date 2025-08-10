@@ -417,7 +417,7 @@ class EnhancedOrderLookupTestSuite:
         
         # Test 2: Invalid tenant ID
         valid_data = {
-            "orderNumber": "1001",
+            "order_number": "1001",
             "email": "test@example.com",
             "channel": "customer"
         }
