@@ -1769,6 +1769,12 @@ class ReturnsAPITester:
         print("\n📝 Testing Audit Log Timeline...")
         self.test_audit_log_timeline(tenant_id)
         
+        print("\n🔧 Testing Enhanced Rules API...")
+        self.test_enhanced_rules_api_endpoints(tenant_id)
+        
+        print("\n🔗 Testing Rules Integration...")
+        self.test_rules_integration_with_returns(tenant_id)
+        
         # Additional core tests
         print("\n🔧 Testing Core Functionality...")
         self.test_products_crud(tenant_id)
