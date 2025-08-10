@@ -111,16 +111,16 @@ async def oauth_callback(
         shop_name = result["shop_info"].get("name", result["shop"])
         
         # In production, redirect to frontend success page
-        success_url = f"https://511ecf3c-8cd3-47d8-acef-2c70bd69eb4a.preview.emergentagent.com/app/settings/integrations?connected=true&tenant={tenant_id}&shop={shop_name}"
+        success_url = f"https://733d44a0-d288-43eb-83ff-854115be232e.preview.emergentagent.com/app/settings/integrations?connected=true&tenant={tenant_id}&shop={shop_name}"
         
         return RedirectResponse(url=success_url, status_code=302)
         
     except AuthenticationError as e:
         # Redirect to error page
-        error_url = f"https://511ecf3c-8cd3-47d8-acef-2c70bd69eb4a.preview.emergentagent.com/app/settings/integrations?error=auth&message={str(e)}"
+        error_url = f"https://733d44a0-d288-43eb-83ff-854115be232e.preview.emergentagent.com/app/settings/integrations?error=auth&message={str(e)}"
         return RedirectResponse(url=error_url, status_code=302)
     except Exception as e:
-        error_url = f"https://511ecf3c-8cd3-47d8-acef-2c70bd69eb4a.preview.emergentagent.com/app/settings/integrations?error=system&message=Connection failed"
+        error_url = f"https://733d44a0-d288-43eb-83ff-854115be232e.preview.emergentagent.com/app/settings/integrations?error=system&message=Connection failed"
         return RedirectResponse(url=error_url, status_code=302)
 
 

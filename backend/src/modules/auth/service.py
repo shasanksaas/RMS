@@ -46,7 +46,7 @@ class ShopifyAuthService:
         self.api_version = "2025-07"
         self.base_redirect_uri = os.environ.get(
             'SHOPIFY_REDIRECT_URI', 
-            'https://511ecf3c-8cd3-47d8-acef-2c70bd69eb4a.preview.emergentagent.com/auth/callback'
+            'https://733d44a0-d288-43eb-83ff-854115be232e.preview.emergentagent.com/auth/callback'
         )
         
         # Required scopes for Returns Management

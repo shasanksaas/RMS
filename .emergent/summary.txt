@@ -1,0 +1,84 @@
+<analysis>
+The previous AI engineer successfully initiated and progressed the Returns Management SaaS MVP, focusing on core functionality and multi-tenancy. Key achievements include detailed documentation of the project structure and APIs via a comprehensive . A major undertaking was the implementation of a sophisticated Rules module, featuring a multi-step builder, dynamic conditions/actions, and backend integration. This module faced significant debugging challenges related to MongoDB ObjectId serialization, correct API URL configuration (local vs. external backend URL, including trailing slashes), and frontend dropdown rendering, which were systematically resolved. A critical incident involved the temporary breakage of Shopify OAuth due to incorrect frontend URL configuration, which was promptly identified and fixed. The engineer has now embarked on building a unified Create Return form for both admin and customer portals, with initial backend API and frontend step components already in place. The work demonstrates methodical problem-solving and a deep understanding of full-stack development.
+</analysis>
+
+<product_requirements>
+The objective is to develop a production-grade, multi-tenant Returns Management SaaS. The application, initially integrated with Shopify, requires features like Shopify OAuth, real-time order/return data synchronization, a shopper return portal, a configurable rules engine, AI suggestions, label issuing, email notifications, analytics, and Stripe billing. Strict multi-tenancy via  is essential, alongside a responsive React frontend. The MVP has moved from mock to live Shopify integration, establishing core merchant and customer portals, and a functional returns system. Recent efforts focused on comprehensive Shopify integration, including API credentials and webhooks, and UI updates for Orders and Returns modules. The immediate, detailed task was to build a fully configurable and operational Rules module, integrated with , , , and  using live Shopify data. The current task is to build a unified Create Return form usable by both admin and customer, fully integrated with Shopify, policy enforcement, and backend APIs.
+</product_requirements>
+
+<key_technical_concepts>
+-   **Multi-Tenancy**: Data isolation via .
+-   **Modular Architecture**: FastAPI (Python) backend, React frontend, MongoDB persistence.
+-   **Shopify Integration**: OAuth 2.0, GraphQL/REST APIs, Webhooks.
+-   **Rules Engine**: Deterministic, JSON-based policy enforcement.
+-   **State Machine**: Manages return status transitions.
+-   **Encryption**: Fernet for sensitive data.
+-   **Responsive Design**: Tailwind CSS.
+</key_technical_concepts>
+
+<code_architecture>
+The application uses a FastAPI backend and a React frontend with MongoDB persistence.
+
+**Directory Structure (Updated):**
+
+
+
+**Key Files and Changes Summary from Trajectory:**
+
+*   : Modified to provide comprehensive documentation, including project overview, tech stack, architecture, setup guide, API docs, project structure, testing, deployment, and troubleshooting. This serves as the primary developer handbook.
+*   : Modified to register the new  and , making their API endpoints accessible.
+*   : Modified to correctly handle authentication and routing for the newly added rules endpoints, resolving initial access issues.
+*   : Minor fix for import paths to ensure correct database configuration is loaded for new modules.
+*   : Updated  to point to the correct external URL, crucial for the Shopify OAuth flow.
+*   : Modified multiple times; initially changed to  which broke Shopify OAuth, then reverted to the external  to ensure proper backend communication and Shopify OAuth functionality.
+*    (New): Handles all CRUD (Create, Read, Update, Delete) operations for return rules.
+*    (New): Will handle the API endpoints for the unified Create Return form, managing return requests from both admin and customer portals.
+*    (New): Implements business logic for rule management, interacting with the rule repository and the enhanced rules engine.
+*    (New): Will implement the core business logic for processing unified return requests, including Shopify API interactions and policy application.
+*    (New): Manages persistence of return rules to the MongoDB database.
+*    (New): Will manage persistence of unified return requests to MongoDB.
+*    (New): A comprehensive module for evaluating return rules based on defined conditions and executing corresponding actions. This is central to the automated returns process.
+*    (Modified): Transformed into the main dashboard for the Rules module, displaying a list of rules with search, filter, and sorting capabilities. It integrates the  component.
+*    (New): The multi-step form component for creating and editing return rules. It includes sections for basic info, conditions, actions, and review. This was extensively debugged for dropdown functionality and validation.
+*    (Modified/New): A reusable UI component for dropdowns, modified to fix issues with empty values and ensure proper display of options dynamically fetched from the backend.
+*    (New): The main reusable React component for the Create Return flow, intended to be used by both admin and customer portals.
+*    (New): A series of new components (, , , , , , , ) that form the individual steps of the .
+</code_architecture>
+
+<pending_tasks>
+-   Implement  webhook handler for tenant cleanup.
+-   Implement full webhook consumers for all registered topics.
+-   Finalize backfill sync strategy for initial order data on install.
+-   Finalize testing setup for webhook and dev store interactions.
+-   Implement AI Suggestions, Label Issuing, Email Notifications, Stripe Billing.
+-   Finalize test coverage to ≥70%, performance optimization, and Lighthouse ≥90.
+-   Update remaining core documentation (specifically ).
+-   Complete the unified Create Return form integration with frontend routes for admin and customer portals.
+</pending_tasks>
+
+<current_work>
+Immediately before this summary request, the AI engineer was actively engaged in implementing the comprehensive, unified Create Return form. This form is designed to be a single, reusable component for both the Admin/Staff dashboard and the Customer self-service portal, handling the entire return creation flow from order verification to submission.
+
+The work accomplished so far on this specific feature includes:
+1.  **Backend API Scaffolding**: New backend components were created to support the unified return flow:
+    *   : To define API endpoints for creating and managing unified returns.
+    *   : To encapsulate the business logic for these returns.
+    *   : To handle data persistence for unified returns in MongoDB.
+2.  **Backend Integration**:  was updated to register the new , making its endpoints available.
+3.  **Frontend Core Component**: The main reusable component, , has been created.
+4.  **Frontend Step Components**: All individual step components that make up the multi-step return form have been created:
+    *   
+    *   
+    *   
+    *   
+    *   
+    *   
+    *   
+    *   
+
+The project is currently in the phase of integrating these frontend step components into the overall application flow, specifically by creating the necessary routes for both the admin and customer portals.
+</current_work>
+
+<optional_next_step>
+The next step is to create the route components for the unified Create Return form for both the admin and customer portals.
+</optional_next_step>

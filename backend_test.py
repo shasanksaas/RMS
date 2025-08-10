@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Any
 
 # Use the external backend URL from frontend/.env for real testing
-BACKEND_URL = "https://511ecf3c-8cd3-47d8-acef-2c70bd69eb4a.preview.emergentagent.com"
+BACKEND_URL = "https://733d44a0-d288-43eb-83ff-854115be232e.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 class ReturnsAPITester:
