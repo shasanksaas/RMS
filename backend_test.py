@@ -1342,6 +1342,7 @@ class ReturnsAPITester:
         print("11. 🆕 Sync Service with Initial Backfill")
         print("12. 🆕 Auth Service Enhancement with OAuth")
         print("13. 🆕 Testing Endpoints for Development")
+        print("14. 🔗 NEW: Shopify Connectivity Test Endpoints")
         print("=" * 80)
         
         # Test seeded data first
