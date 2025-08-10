@@ -413,6 +413,101 @@ backend:
         comment: "✅ VERIFIED: New Shopify connectivity test endpoints working perfectly! All 3 endpoints operational: (1) Quick Test - basic shop info and products query working, connects to rms34.myshopify.com successfully ✅ (2) Raw Query Test - executes exact GraphQL query from user's curl command, returns proper data structure ✅ (3) Full Connectivity Test - comprehensive test suite with 100% success rate, all 5 GraphQL operations (shop_info, products_query, orders_query, returns_query, customers_query) working correctly ✅ Real credentials integration confirmed: Store rms34.myshopify.com, Access Token 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, API Version 2025-07. Fixed middleware issue by adding /api/shopify-test/ to skip tenant validation list. Endpoints now production-ready for testing Shopify connectivity."
 
 frontend:
+  - task: "Unified Return Form Component"
+    implemented: true
+    working: false
+    file: "src/components/returns/UnifiedReturnForm.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Created comprehensive unified return form with all 8 step components, form validation, auto-save for admin, and role-based functionality"
+
+  - task: "Return Form Step Components"
+    implemented: true
+    working: false
+    file: "src/components/returns/steps/*.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Created all 8 step components: OrderVerification, ItemSelection, ReturnReason, PreferredOutcome, ReturnMethod, PolicyPreview, AdditionalNotes, ReviewSubmit"
+
+  - task: "Admin Create Return Route"
+    implemented: true
+    working: false
+    file: "src/pages/merchant/returns/CreateReturn.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Created admin create return page with UnifiedReturnForm integration and proper navigation"
+
+  - task: "Customer Create Return Route"
+    implemented: true
+    working: false
+    file: "src/pages/customer/CreateReturn.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Customer create return page already exists, updated routing in App.jsx"
+
+  - task: "Return Confirmation Page"
+    implemented: true
+    working: false
+    file: "src/pages/customer/ReturnConfirmation.jsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Return confirmation page already exists with comprehensive return details display"
+
+  - task: "App.jsx Route Integration"
+    implemented: true
+    working: false
+    file: "src/App.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Updated App.jsx with new routes: /returns/create, /returns/confirmation/:returnId, /app/returns/create"
+
+  - task: "Returns Page Create Button"
+    implemented: true
+    working: false
+    file: "src/pages/merchant/returns/AllReturns.jsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added Create Return button to merchant returns page with proper navigation"
+
+  - task: "Customer Portal Navigation Enhancement"
+    implemented: true
+    working: false
+    file: "src/pages/customer/Start.jsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added guided return process button to customer start page for alternative flow"
   - task: "Frontend Routing Structure & Navigation"
     implemented: true
     working: true
