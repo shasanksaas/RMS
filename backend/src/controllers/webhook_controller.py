@@ -89,35 +89,56 @@ async def handle_shopify_fulfillments_update(
     )
 
 
-@router.post("/shopify/returns_create")
-async def handle_shopify_returns_create(
+@router.post("/shopify/refunds_create")
+async def handle_shopify_refunds_create(
     request: Request,
     x_shopify_shop_domain: str = Header(None, alias="X-Shopify-Shop-Domain")
 ):
-    """Handle Shopify returns/create webhook - simplified version"""
+    """Handle Shopify refunds/create webhook - convert to return"""
     try:
         # Get request body
         body = await request.body()
-        return_data = json.loads(body)
+        refund_data = json.loads(body)
         
-        # Extract shop domain
         if not x_shopify_shop_domain:
             logger.error("Missing shop domain in webhook")
             return {"status": "error", "message": "Missing shop domain"}
         
-        # Convert shop domain to tenant ID
         tenant_id = f"tenant-{x_shopify_shop_domain.replace('.myshopify.com', '')}"
         
-        # Save return using webhook processor
-        from ..services.webhook_handlers import webhook_processor
-        result = await webhook_processor.handle_return_created(x_shopify_shop_domain, return_data)
+        # Convert Shopify refund to return format
+        return_data = {
+            'id': str(uuid.uuid4()),
+            'return_id': f"RET-{refund_data.get('return', {}).get('id', refund_data.get('id'))}",
+            'tenant_id': tenant_id,
+            'order_id': str(refund_data.get('order_id')),
+            'customer_name': 'Customer',  # Will be filled from order lookup
+            'customer_email': '',
+            'status': 'completed',
+            'reason': 'return',
+            'total_amount': float(refund_data.get('total_duties_set', {}).get('shop_money', {}).get('amount', 0)),
+            'currency_code': refund_data.get('total_duties_set', {}).get('shop_money', {}).get('currency_code', 'USD'),
+            'refund_amount': float(refund_data.get('total_duties_set', {}).get('shop_money', {}).get('amount', 0)),
+            'shopify_return_id': str(refund_data.get('return', {}).get('id', '')),
+            'shopify_refund_id': str(refund_data.get('id')),
+            'created_at': refund_data.get('created_at', datetime.utcnow().isoformat()),
+            'updated_at': refund_data.get('created_at', datetime.utcnow().isoformat()),
+            'processed_at': refund_data.get('processed_at')
+        }
         
-        logger.info(f"Webhook: Synced return {return_data.get('name', return_data.get('id'))} for {tenant_id}")
+        # Save return
+        await db.return_requests.update_one(
+            {'return_id': return_data['return_id'], 'tenant_id': tenant_id},
+            {'$set': return_data},
+            upsert=True
+        )
         
-        return {"status": "success", "message": "Return synced", "result": result}
+        logger.info(f"Webhook: Synced return {return_data['return_id']} for {tenant_id}")
+        
+        return {"status": "success", "message": "Return synced"}
         
     except Exception as e:
-        logger.error(f"Returns webhook error: {e}")
+        logger.error(f"Refunds webhook error: {e}")
         return {"status": "error", "message": str(e)}
 
 
