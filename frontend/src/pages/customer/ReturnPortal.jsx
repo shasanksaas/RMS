@@ -1,79 +1,87 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Package, Mail, Search, ArrowRight, ShieldCheck, Clock, Truck } from 'lucide-react';
+import { Package, Mail, Search, ArrowRight, ShieldCheck, Clock, Truck, Zap } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Alert, AlertDescription } from '../../components/ui/alert';
-import UnifiedReturnForm from '../../components/returns/UnifiedReturnForm';
+import OrderLookupForm from '../../components/returns/OrderLookupForm';
+import ShopifyOrderDisplay from '../../components/returns/ShopifyOrderDisplay';
+import FallbackModeDisplay from '../../components/returns/FallbackModeDisplay';
 
 const ReturnPortal = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [step, setStep] = useState('lookup'); // 'lookup' or 'form'
+  const [currentView, setCurrentView] = useState('lookup'); // 'lookup', 'shopify-order', 'fallback-mode', 'return-form'
   const [orderData, setOrderData] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  
-  // Form data for order lookup
-  const [orderNumber, setOrderNumber] = useState(searchParams.get('order') || '');
-  const [email, setEmail] = useState(searchParams.get('email') || '');
+  const [fallbackData, setFallbackData] = useState(null);
+  const [selectedReturnData, setSelectedReturnData] = useState(null);
 
-  const backendUrl = process.env.REACT_APP_BACKEND_URL;
-
-  const handleOrderLookup = async () => {
-    if (!orderNumber.trim() || !email.trim()) {
-      setError('Please enter both order number and email address');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-
-    try {
-      const response = await fetch(`${backendUrl}/api/portal/returns/lookup-order`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Tenant-Id': 'tenant-rms34'
-        },
-        body: JSON.stringify({
-          orderNumber: orderNumber.replace('#', ''),
-          email: email.toLowerCase()
-        })
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        setOrderData(result);
-        setStep('form');
-      } else {
-        setError(result.error || 'Order not found. Please check your details.');
-      }
-    } catch (err) {
-      setError('Failed to lookup order. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+  const handleShopifyOrderFound = (order) => {
+    setOrderData(order);
+    setCurrentView('shopify-order');
   };
 
-  const handleReturnSuccess = (result) => {
-    // Navigate to confirmation page
-    navigate(`/portal/returns/confirmation/${result.return_id}`, {
-      state: { returnData: result }
+  const handleFallbackModeTriggered = (fallbackResult) => {
+    setFallbackData(fallbackResult);
+    setCurrentView('fallback-mode');
+  };
+
+  const handleItemsSelected = (returnData) => {
+    setSelectedReturnData(returnData);
+    // You could navigate to a return form here or process directly
+    navigate('/portal/returns/create', {
+      state: { returnData }
     });
   };
 
-  if (step === 'form' && orderData) {
+  const handleBackToLookup = () => {
+    setCurrentView('lookup');
+    setOrderData(null);
+    setFallbackData(null);
+    setSelectedReturnData(null);
+  };
+
+  const handleSubmitAdditionalInfo = (additionalData) => {
+    // Process additional fallback data
+    console.log('Additional fallback data:', additionalData);
+    // Could show success message or navigate elsewhere
+  };
+
+  if (currentView === 'shopify-order' && orderData) {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-6xl mx-auto p-6">
-          <UnifiedReturnForm
-            role="customer"
-            prefilledOrderId={orderData.order?.id}
-            onSuccess={handleReturnSuccess}
-            onCancel={() => setStep('lookup')}
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-gray-900">Return Items from Your Order</h1>
+            <p className="text-gray-600 mt-2">
+              Select the items you'd like to return and provide a reason for each item.
+            </p>
+          </div>
+          
+          <ShopifyOrderDisplay
+            order={orderData}
+            onItemsSelected={handleItemsSelected}
+            onBackToLookup={handleBackToLookup}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (currentView === 'fallback-mode' && fallbackData) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-6xl mx-auto p-6">
+          <div className="mb-6 text-center">
+            <h1 className="text-3xl font-bold text-gray-900">Return Request Submitted</h1>
+            <p className="text-gray-600 mt-2">
+              We've received your return request and will review it shortly.
+            </p>
+          </div>
+          
+          <FallbackModeDisplay
+            fallbackData={fallbackData}
+            onBackToLookup={handleBackToLookup}
+            onSubmitAdditionalInfo={handleSubmitAdditionalInfo}
           />
         </div>
       </div>
@@ -90,17 +98,24 @@ const ReturnPortal = () => {
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Start Your Return</h1>
           <p className="text-xl text-gray-600">
-            Simple, hassle-free returns in just a few steps
+            Quick and hassle-free returns with real-time processing
           </p>
         </div>
 
-        {/* Features */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        {/* Enhanced Features */}
+        <div className="grid md:grid-cols-4 gap-6 mb-8">
+          <Card className="text-center">
+            <CardContent className="pt-6">
+              <Zap className="h-8 w-8 text-yellow-600 mx-auto mb-3" />
+              <h3 className="font-semibold mb-2">Instant Processing</h3>
+              <p className="text-sm text-gray-600">Connected to your store for real-time order lookup</p>
+            </CardContent>
+          </Card>
           <Card className="text-center">
             <CardContent className="pt-6">
               <ShieldCheck className="h-8 w-8 text-green-600 mx-auto mb-3" />
               <h3 className="font-semibold mb-2">Secure & Safe</h3>
-              <p className="text-sm text-gray-600">Your data is protected with enterprise-grade security</p>
+              <p className="text-sm text-gray-600">Email verification and secure order matching</p>
             </CardContent>
           </Card>
           <Card className="text-center">
@@ -113,97 +128,94 @@ const ReturnPortal = () => {
           <Card className="text-center">
             <CardContent className="pt-6">
               <Truck className="h-8 w-8 text-purple-600 mx-auto mb-3" />
-              <h3 className="font-semibold mb-2">Free Shipping</h3>
+              <h3 className="font-semibold mb-2">Free Labels</h3>
               <p className="text-sm text-gray-600">Prepaid return labels for eligible items</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Order Lookup Form */}
-        <Card className="max-w-2xl mx-auto">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Search className="h-5 w-5" />
-              <span>Find Your Order</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {error && (
-              <Alert className="border-red-200 bg-red-50">
-                <AlertDescription className="text-red-800">
-                  {error}
-                </AlertDescription>
-              </Alert>
-            )}
+        <OrderLookupForm
+          onShopifyOrderFound={handleShopifyOrderFound}
+          onFallbackModeTriggered={handleFallbackModeTriggered}
+          tenantId="tenant-rms34"
+          channel="customer"
+        />
 
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="orderNumber" className="block text-sm font-medium text-gray-700 mb-2">
-                  Order Number
-                </label>
-                <Input
-                  id="orderNumber"
-                  type="text"
-                  placeholder="e.g., 1001 or #1001"
-                  value={orderNumber}
-                  onChange={(e) => setOrderNumber(e.target.value)}
-                  className="w-full"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                  Email Address
-                </label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="Email used for your order"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full"
-                />
-              </div>
-
-              <Button
-                onClick={handleOrderLookup}
-                disabled={loading || !orderNumber.trim() || !email.trim()}
-                className="w-full bg-blue-600 hover:bg-blue-700"
-              >
-                {loading ? 'Looking up order...' : 'Find My Order'}
-                {!loading && <ArrowRight className="h-4 w-4 ml-2" />}
-              </Button>
-            </div>
-
-            <div className="text-center text-sm text-gray-500 mt-4">
-              <p>Need help? Contact our support team</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* How it Works */}
-        <div className="max-w-4xl mx-auto mt-12">
-          <h2 className="text-2xl font-bold text-center mb-8">How It Works</h2>
-          <div className="grid md:grid-cols-4 gap-6">
-            {[
-              { step: 1, title: "Find Order", desc: "Enter your order number and email" },
-              { step: 2, title: "Select Items", desc: "Choose which items to return" },
-              { step: 3, title: "Tell Us Why", desc: "Select reason and upload photos if needed" },
-              { step: 4, title: "Get Approved", desc: "Receive instant approval and prepaid label" }
-            ].map((item) => (
-              <div key={item.step} className="text-center">
-                <div className="bg-blue-100 text-blue-800 rounded-full w-10 h-10 flex items-center justify-center font-bold mx-auto mb-3">
-                  {item.step}
+        {/* How it Works - Enhanced */}
+        <div className="max-w-4xl mx-auto mt-16">
+          <h2 className="text-2xl font-bold text-center mb-8">How Our Smart Return System Works</h2>
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Shopify Connected Flow */}
+            <Card className="border-blue-200">
+              <CardHeader>
+                <CardTitle className="text-blue-800 flex items-center">
+                  <Zap className="h-5 w-5 mr-2" />
+                  Store Connected (Instant)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-3">
+                    <div className="bg-blue-100 text-blue-800 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">1</div>
+                    <span className="text-sm">Enter order number & email</span>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <div className="bg-blue-100 text-blue-800 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">2</div>
+                    <span className="text-sm">See your order items instantly</span>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <div className="bg-blue-100 text-blue-800 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">3</div>
+                    <span className="text-sm">Select items & reasons</span>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <div className="bg-blue-100 text-blue-800 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">4</div>
+                    <span className="text-sm">Get instant approval & label</span>
+                  </div>
                 </div>
-                <h3 className="font-semibold mb-2">{item.title}</h3>
-                <p className="text-sm text-gray-600">{item.desc}</p>
-              </div>
-            ))}
+              </CardContent>
+            </Card>
+
+            {/* Fallback Flow */}
+            <Card className="border-amber-200">
+              <CardHeader>
+                <CardTitle className="text-amber-800 flex items-center">
+                  <Clock className="h-5 w-5 mr-2" />
+                  Manual Review (24hrs)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-3">
+                    <div className="bg-amber-100 text-amber-800 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">1</div>
+                    <span className="text-sm">Submit order details</span>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <div className="bg-amber-100 text-amber-800 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">2</div>
+                    <span className="text-sm">We verify your order</span>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <div className="bg-amber-100 text-amber-800 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">3</div>
+                    <span className="text-sm">Email confirmation sent</span>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <div className="bg-amber-100 text-amber-800 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">4</div>
+                    <span className="text-sm">Receive return instructions</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
+        </div>
+
+        <div className="text-center mt-8 text-sm text-gray-500">
+          <p>Questions? Contact our support team at support@returns-manager.com</p>
         </div>
       </div>
     </div>
   );
 };
+
+export default ReturnPortal;
 
 export default ReturnPortal;
