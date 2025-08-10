@@ -36,6 +36,20 @@ async def get_orders(
     Get orders with server-side filtering, search, and pagination
     """
     try:
+        # Handle legacy parameters
+        if limit:
+            page_size = limit
+        if status_filter:
+            status = status_filter  
+        if date_from:
+            from_date = date_from
+        if date_to:
+            to_date = date_to
+        if sort_by and sort_order:
+            # Convert legacy sort parameters to new format
+            sort_prefix = "-" if sort_order.lower() == "desc" else ""
+            sort = f"{sort_prefix}{sort_by}"
+        
         # Build query
         query = {"tenant_id": tenant_id}
         
