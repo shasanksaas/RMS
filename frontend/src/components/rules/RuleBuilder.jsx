@@ -47,6 +47,7 @@ const RuleBuilder = ({ rule = null, onSave, onCancel, isOpen }) => {
 
   const [testResult, setTestResult] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingFieldOptions, setIsLoadingFieldOptions] = useState(false);
   const [errors, setErrors] = useState({});
 
   // Load field options and rule data on mount
