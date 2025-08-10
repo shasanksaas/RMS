@@ -225,9 +225,9 @@ async def lookup_order(
             success=True,
             order_id=order['id'],
             order_number=order['order_number'],
-            customer_name=f"{order.get('billing_address', {}).get('first_name', '')} {order.get('billing_address', {}).get('last_name', '')}".strip(),
+            customer_name=f"{order.get('billing_address', {}).get('first_name', '')} {order.get('billing_address', {}).get('last_name', '')}".strip() or order.get('customer_name', 'Customer'),
             order_date=order_date,
-            total_amount=float(order['total_price']),
+            total_amount=float(order.get('total_price', 0)),
             eligible_items=eligible_items,
             policy_preview=policy_preview
         )
