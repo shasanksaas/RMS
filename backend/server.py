@@ -1035,6 +1035,11 @@ async def shopify_order_webhook(order_data: Dict[str, Any], x_tenant_id: str = H
     # For now, return success
     return {"status": "received", "order_id": order_data.get("id")}
 
+@app.get("/_health")
+async def health_check():
+    """Health check endpoint for deployment verification"""
+    return {"status": "ok", "timestamp": datetime.now().isoformat()}
+
 @api_router.get("/")
 async def root():
     return {"message": "Returns Management SaaS API", "version": "1.0.0"}
