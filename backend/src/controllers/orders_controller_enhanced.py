@@ -7,8 +7,8 @@ from typing import Optional, Dict, Any, List
 from datetime import datetime
 import re
 
-from ...middleware.security import get_tenant_id
-from ...config.database import db
+from src.middleware.security import get_tenant_id
+from src.config.database import db
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 
