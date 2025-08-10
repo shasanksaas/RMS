@@ -90,14 +90,33 @@ async def handle_shopify_fulfillments_update(
 @router.post("/shopify/returns_create")
 async def handle_shopify_returns_create(
     request: Request,
-    x_shopify_topic: str = Header(None, alias="X-Shopify-Topic"),
-    x_shopify_shop_domain: str = Header(None, alias="X-Shopify-Shop-Domain"),
-    x_shopify_hmac_sha256: str = Header(None, alias="X-Shopify-Hmac-Sha256")
+    x_shopify_shop_domain: str = Header(None, alias="X-Shopify-Shop-Domain")
 ):
-    """Handle Shopify returns/create webhook"""
-    return await process_shopify_webhook(
-        request, "returns/create", x_shopify_shop_domain, x_shopify_hmac_sha256
-    )
+    """Handle Shopify returns/create webhook - simplified version"""
+    try:
+        # Get request body
+        body = await request.body()
+        return_data = json.loads(body)
+        
+        # Extract shop domain
+        if not x_shopify_shop_domain:
+            logger.error("Missing shop domain in webhook")
+            return {"status": "error", "message": "Missing shop domain"}
+        
+        # Convert shop domain to tenant ID
+        tenant_id = f"tenant-{x_shopify_shop_domain.replace('.myshopify.com', '')}"
+        
+        # Save return using webhook processor
+        from ..services.webhook_handlers import webhook_processor
+        result = await webhook_processor.handle_return_created(x_shopify_shop_domain, return_data)
+        
+        logger.info(f"Webhook: Synced return {return_data.get('name', return_data.get('id'))} for {tenant_id}")
+        
+        return {"status": "success", "message": "Return synced", "result": result}
+        
+    except Exception as e:
+        logger.error(f"Returns webhook error: {e}")
+        return {"status": "error", "message": str(e)}
 
 
 @router.post("/shopify/returns_update")
