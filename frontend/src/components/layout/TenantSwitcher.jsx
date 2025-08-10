@@ -34,36 +34,36 @@ const TenantSwitcher = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="flex items-center space-x-2">
-          <Building2 className="h-4 w-4" />
-          <div className="text-left">
-            <div className="text-sm font-medium">{currentTenant.name}</div>
-            <div className="text-xs text-gray-500">{currentTenant.plan}</div>
+        <Button variant="outline" className="flex items-center space-x-2 w-full sm:w-auto min-w-0 touch-manipulation">
+          <Building2 className="h-4 w-4 flex-shrink-0" />
+          <div className="text-left min-w-0 flex-1">
+            <div className="text-sm font-medium truncate">{currentTenant.name}</div>
+            <div className="text-xs text-gray-500 truncate">{currentTenant.plan}</div>
           </div>
-          <ChevronDown className="h-4 w-4" />
+          <ChevronDown className="h-4 w-4 flex-shrink-0" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-64">
+      <DropdownMenuContent className="w-64" align="end">
         <DropdownMenuLabel>Switch Store</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {tenants.map((tenant) => (
           <DropdownMenuItem
             key={tenant.id}
             onClick={() => handleTenantSwitch(tenant)}
-            className="flex items-center space-x-2"
+            className="flex items-center space-x-2 touch-manipulation"
           >
-            <Building2 className="h-4 w-4" />
-            <div className="flex-1">
-              <div className="font-medium">{tenant.name}</div>
-              <div className="text-xs text-gray-500">{tenant.plan}</div>
+            <Building2 className="h-4 w-4 flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <div className="font-medium truncate">{tenant.name}</div>
+              <div className="text-xs text-gray-500 truncate">{tenant.plan}</div>
             </div>
             {currentTenant.id === tenant.id && (
-              <Check className="h-4 w-4 text-blue-600" />
+              <Check className="h-4 w-4 text-blue-600 flex-shrink-0" />
             )}
           </DropdownMenuItem>
         ))}
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
+        <DropdownMenuItem className="touch-manipulation">
           <Building2 className="h-4 w-4 mr-2" />
           Add Store...
         </DropdownMenuItem>
