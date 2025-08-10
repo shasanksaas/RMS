@@ -28,6 +28,11 @@ async def get_tenant_service():
     from ..services.tenant_service import TenantService
     return TenantService()
 
+async def get_current_user():
+    """Get current user (placeholder for auth)"""
+    # TODO: Implement proper user authentication
+    return {"user_id": "system", "role": "admin"}
+
 async def rate_limit_by_ip(max_requests: int = 10, window_minutes: int = 5):
     """Rate limiting decorator (placeholder)"""
     # TODO: Implement proper rate limiting with Redis
