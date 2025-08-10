@@ -349,8 +349,8 @@ class ShopifyIntegrationTester:
         """Test webhook processing with idempotency checks"""
         print("\n🔗 Testing Webhook Processing with Idempotency...")
         
-        # Get sample webhook payloads
-        success, samples_response = self.make_request('GET', 'test/webhook/samples')
+        # Get sample webhook payloads - use GET method
+        success, samples_response = self.make_request('POST', 'test/webhook/samples')
         if success and 'samples' in samples_response:
             self.log_test("Webhook Processing - Sample Payloads", True)
             
@@ -391,7 +391,27 @@ class ShopifyIntegrationTester:
                 else:
                     self.log_test("Webhook Processing - App Uninstalled", False, str(result))
         else:
+            # If samples endpoint fails, test webhook processing directly
             self.log_test("Webhook Processing - Sample Payloads", False, str(samples_response))
+            
+            # Test with hardcoded sample
+            webhook_data = {
+                "topic": "orders/create",
+                "shop_domain": "tenant-fashion-store.myshopify.com",
+                "payload": {
+                    "id": 12345,
+                    "name": "#1001",
+                    "email": "customer@example.com",
+                    "financial_status": "paid",
+                    "total_price": "99.99"
+                }
+            }
+            
+            success, result = self.make_request('POST', 'test/webhook', webhook_data)
+            if success and result.get('status') == 'success':
+                self.log_test("Webhook Processing - Direct Test", True)
+            else:
+                self.log_test("Webhook Processing - Direct Test", False, str(result))
             
         return True
 
