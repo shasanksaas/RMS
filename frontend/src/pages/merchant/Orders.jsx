@@ -31,6 +31,13 @@ const Orders = () => {
 
   useEffect(() => {
     loadOrders();
+    
+    // Auto-refresh orders every 30 seconds to catch new orders
+    const interval = setInterval(() => {
+      loadOrders();
+    }, 30000);
+    
+    return () => clearInterval(interval);
   }, [filters]);
 
   const getApiUrl = () => {
