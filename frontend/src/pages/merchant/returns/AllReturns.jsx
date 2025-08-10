@@ -9,7 +9,8 @@ import { Badge } from '../../../components/ui/badge';
 import { Alert, AlertDescription } from '../../../components/ui/alert';
 
 const AllReturns = () => {
-  const [returns, setReturns] = useState([]);
+  const [allReturns, setAllReturns] = useState([]); // Store all returns
+  const [filteredReturns, setFilteredReturns] = useState([]); // Store filtered results
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({});
   const [error, setError] = useState('');
