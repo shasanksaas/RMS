@@ -131,6 +131,39 @@ class EmailService:
         except Exception as e:
             logger.error(f"Send refund processed email error: {e}")
     
+    async def send_draft_approved(self, tenant_id: str, draft: Dict, return_id: str):
+        """Send draft approval notification"""
+        try:
+            await self._send_email(
+                tenant_id=tenant_id,
+                to_email=draft.get("email"),
+                to_name="Customer",
+                template="draft_approved",
+                data={
+                    "order_number": draft.get("order_number"),
+                    "return_id": return_id,
+                    "message": "Your return request has been approved and is now being processed."
+                }
+            )
+        except Exception as e:
+            logger.error(f"Send draft approved email error: {e}")
+    
+    async def send_draft_rejected(self, tenant_id: str, draft: Dict, reason: str):
+        """Send draft rejection notification"""
+        try:
+            await self._send_email(
+                tenant_id=tenant_id,
+                to_email=draft.get("email"),
+                to_name="Customer",
+                template="draft_rejected",
+                data={
+                    "order_number": draft.get("order_number"),
+                    "reason": reason
+                }
+            )
+        except Exception as e:
+            logger.error(f"Send draft rejected email error: {e}")
+
     async def _send_email(self, tenant_id: str, to_email: str, to_name: str, 
                          template: str, data: Dict[str, Any]):
         """Send email using configured service"""
