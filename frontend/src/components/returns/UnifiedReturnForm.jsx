@@ -252,15 +252,17 @@ const UnifiedReturnForm = ({
         reason: formData.itemReasons[item.id]?.reason || 'other'
       }));
 
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/unified-returns/policy-preview`, {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/portal/returns/policy-preview`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Tenant-Id': localStorage.getItem('currentTenant') || 'tenant-fashion-store'
+          'X-Tenant-Id': 'tenant-rms34'
         },
         body: JSON.stringify({
+          order_id: formData.orderId,
           items: items,
-          order_id: formData.orderId
+          preferred_outcome: formData.preferredOutcome || 'REFUND',
+          return_method: formData.returnMethod || 'PREPAID_LABEL'
         })
       });
 
