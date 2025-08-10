@@ -31,6 +31,8 @@ class ReturnCreated(DomainEvent):
     customer_email: Email
     channel: str
     estimated_refund: Money
+    occurred_at: datetime
+    correlation_id: Optional[str] = None
     
     def get_event_type(self) -> str:
         return "return.created"
