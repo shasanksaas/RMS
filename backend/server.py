@@ -821,6 +821,7 @@ async def root():
     return {"message": "Returns Management SaaS API", "version": "1.0.0"}
 
 # Include routers in the api_router first
+api_router.include_router(auth_router)
 api_router.include_router(shopify_router)
 api_router.include_router(enhanced_router)
 
