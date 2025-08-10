@@ -70,6 +70,8 @@ const RuleBuilder = ({ rule = null, onSave, onCancel, isOpen }) => {
   const loadFieldOptions = async () => {
     try {
       console.log('Loading field options...');
+      setIsLoadingFieldOptions(true);
+      
       const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/rules/field-types/options`, {
         headers: {
           'X-Tenant-Id': localStorage.getItem('currentTenant') || 'tenant-fashion-store'
@@ -82,9 +84,21 @@ const RuleBuilder = ({ rule = null, onSave, onCancel, isOpen }) => {
       
       const data = await response.json();
       console.log('Field options loaded:', data);
+      console.log('Field types count:', data.field_types?.length);
+      console.log('Operators count:', data.operators?.length);
+      console.log('Actions count:', data.actions?.length);
+      
       setFieldOptions(data);
     } catch (error) {
       console.error('Failed to load field options:', error);
+      // Set default empty arrays in case of error
+      setFieldOptions({
+        field_types: [],
+        operators: [],
+        actions: []
+      });
+    } finally {
+      setIsLoadingFieldOptions(false);
     }
   };
 
