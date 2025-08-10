@@ -270,10 +270,22 @@ class ShopifyAuthService:
     async def register_webhooks(self, tenant_id: str, shop: str, access_token: str):
         """Register required webhooks for the connected store"""
         webhook_topics = [
+            # App lifecycle - CRITICAL for cleanup
+            "app/uninstalled",
+            
+            # Orders
             "orders/create", "orders/updated", "orders/cancelled", "orders/fulfilled",
-            "orders/partially_fulfilled", "orders/paid", "returns/create", "returns/requested",
-            "returns/approved", "returns/declined", "returns/cancelled", "refunds/create",
-            "fulfillments/create", "fulfillments/update", "fulfillments/cancel",
+            "orders/partially_fulfilled", "orders/paid",
+            
+            # Returns
+            "returns/create", "returns/requested", "returns/approved", 
+            "returns/declined", "returns/cancelled",
+            
+            # Refunds and fulfillments
+            "refunds/create", "fulfillments/create", "fulfillments/update", 
+            "fulfillments/cancel",
+            
+            # Products and inventory
             "products/update", "product_variants/update", "inventory_levels/update"
         ]
         
