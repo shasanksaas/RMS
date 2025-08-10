@@ -141,7 +141,38 @@ const Integrations = () => {
     return false;
   };
 
-  const handleConnect = async () => {
+  const handleResync = async () => {
+    setMessage({ type: '', text: '' });
+    try {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/integrations/shopify/resync`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Tenant-Id': 'tenant-fashion-store' // TODO: Get from auth context
+        }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setMessage({ 
+          type: 'success', 
+          text: `Resync started successfully (Job ID: ${result.job_id}). This may take a few minutes.` 
+        });
+        // Reload status to show updated sync job
+        setTimeout(() => loadConnectedStores(), 1000);
+      } else {
+        const errorData = await response.json();
+        setMessage({ 
+          type: 'error', 
+          text: errorData.detail || 'Failed to start resync' 
+        });
+      }
+    } catch (error) {
+      console.error('Resync failed:', error);
+      setMessage({ type: 'error', text: 'Failed to start resync. Please try again.' });
+    }
+  };
     setConnecting(true);
     setMessage({ type: '', text: '' });
 
