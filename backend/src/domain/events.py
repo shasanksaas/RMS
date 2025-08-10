@@ -146,6 +146,8 @@ class DraftLinkedToOrder(DomainEvent):
     tenant_id: TenantId
     order_id: OrderId
     linked_by: str
+    occurred_at: datetime
+    correlation_id: Optional[str] = None
     
     def get_event_type(self) -> str:
         return "draft.linked_to_order"
