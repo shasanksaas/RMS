@@ -437,7 +437,7 @@ class EnhancedOrderLookupTestSuite:
         
         # Test 3: Empty order number
         empty_data = {
-            "orderNumber": "",
+            "order_number": "",
             "email": "test@example.com",
             "channel": "customer"
         }
