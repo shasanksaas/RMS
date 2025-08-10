@@ -126,39 +126,30 @@ const Integrations = () => {
     setMessage({ type: '', text: '' });
 
     try {
-      // Validate credentials first
-      const isValid = await validateCredentials();
-      if (!isValid) {
-        setMessage({ type: 'error', text: 'Invalid credentials. Please check your shop domain, API key, and API secret.' });
+      // Validate shop domain format
+      const shop = connectionForm.shop.trim();
+      if (!shop) {
+        setMessage({ type: 'error', text: 'Please enter your shop domain' });
         setConnecting(false);
         return;
       }
-
-      const apiUrl = getApiUrl();
       
-      const response = await fetch(`${apiUrl}/api/auth/initiate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(connectionForm)
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        // Redirect to Shopify OAuth
-        window.location.href = data.auth_url;
-      } else {
-        const errorData = await response.json();
-        setMessage({ 
-          type: 'error', 
-          text: errorData.detail || 'Failed to initiate connection' 
-        });
+      // Normalize shop domain
+      let shopDomain = shop;
+      if (!shopDomain.endsWith('.myshopify.com')) {
+        shopDomain = `${shopDomain}.myshopify.com`;
       }
+
+      // Redirect to OAuth install endpoint
+      const apiUrl = getApiUrl();
+      const installUrl = `${apiUrl}/api/auth/shopify/install?shop=${encodeURIComponent(shopDomain)}`;
+      
+      // Redirect to Shopify OAuth
+      window.location.href = installUrl;
+      
     } catch (error) {
       console.error('Connection failed:', error);
       setMessage({ type: 'error', text: 'Connection failed. Please try again.' });
-    } finally {
       setConnecting(false);
     }
   };
