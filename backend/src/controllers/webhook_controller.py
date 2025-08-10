@@ -17,6 +17,137 @@ router = APIRouter(prefix="/webhooks", tags=["webhooks"])
 logger = logging.getLogger(__name__)
 
 
+@router.post("/shopify/orders_create")
+async def handle_shopify_orders_create(
+    request: Request,
+    x_shopify_topic: str = Header(None, alias="X-Shopify-Topic"),
+    x_shopify_shop_domain: str = Header(None, alias="X-Shopify-Shop-Domain"),
+    x_shopify_hmac_sha256: str = Header(None, alias="X-Shopify-Hmac-Sha256")
+):
+    """Handle Shopify orders/create webhook"""
+    return await process_shopify_webhook(
+        request, "orders/create", x_shopify_shop_domain, x_shopify_hmac_sha256
+    )
+
+
+@router.post("/shopify/orders_updated")
+async def handle_shopify_orders_updated(
+    request: Request,
+    x_shopify_topic: str = Header(None, alias="X-Shopify-Topic"),
+    x_shopify_shop_domain: str = Header(None, alias="X-Shopify-Shop-Domain"),
+    x_shopify_hmac_sha256: str = Header(None, alias="X-Shopify-Hmac-Sha256")
+):
+    """Handle Shopify orders/updated webhook"""
+    return await process_shopify_webhook(
+        request, "orders/updated", x_shopify_shop_domain, x_shopify_hmac_sha256
+    )
+
+
+@router.post("/shopify/fulfillments_create")
+async def handle_shopify_fulfillments_create(
+    request: Request,
+    x_shopify_topic: str = Header(None, alias="X-Shopify-Topic"),
+    x_shopify_shop_domain: str = Header(None, alias="X-Shopify-Shop-Domain"),
+    x_shopify_hmac_sha256: str = Header(None, alias="X-Shopify-Hmac-Sha256")
+):
+    """Handle Shopify fulfillments/create webhook"""
+    return await process_shopify_webhook(
+        request, "fulfillments/create", x_shopify_shop_domain, x_shopify_hmac_sha256
+    )
+
+
+@router.post("/shopify/fulfillments_update")
+async def handle_shopify_fulfillments_update(
+    request: Request,
+    x_shopify_topic: str = Header(None, alias="X-Shopify-Topic"),
+    x_shopify_shop_domain: str = Header(None, alias="X-Shopify-Shop-Domain"),
+    x_shopify_hmac_sha256: str = Header(None, alias="X-Shopify-Hmac-Sha256")
+):
+    """Handle Shopify fulfillments/update webhook"""
+    return await process_shopify_webhook(
+        request, "fulfillments/update", x_shopify_shop_domain, x_shopify_hmac_sha256
+    )
+
+
+@router.post("/shopify/returns_create")
+async def handle_shopify_returns_create(
+    request: Request,
+    x_shopify_topic: str = Header(None, alias="X-Shopify-Topic"),
+    x_shopify_shop_domain: str = Header(None, alias="X-Shopify-Shop-Domain"),
+    x_shopify_hmac_sha256: str = Header(None, alias="X-Shopify-Hmac-Sha256")
+):
+    """Handle Shopify returns/create webhook"""
+    return await process_shopify_webhook(
+        request, "returns/create", x_shopify_shop_domain, x_shopify_hmac_sha256
+    )
+
+
+@router.post("/shopify/returns_update")
+async def handle_shopify_returns_update(
+    request: Request,
+    x_shopify_topic: str = Header(None, alias="X-Shopify-Topic"),
+    x_shopify_shop_domain: str = Header(None, alias="X-Shopify-Shop-Domain"),
+    x_shopify_hmac_sha256: str = Header(None, alias="X-Shopify-Hmac-Sha256")
+):
+    """Handle Shopify returns/update webhook"""
+    return await process_shopify_webhook(
+        request, "returns/update", x_shopify_shop_domain, x_shopify_hmac_sha256
+    )
+
+
+async def process_shopify_webhook(
+    request: Request,
+    topic: str,
+    shop_domain: Optional[str],
+    hmac_signature: Optional[str]
+):
+    """Process Shopify webhook with HMAC verification and tenant resolution"""
+    try:
+        if not shop_domain:
+            logger.error(f"Missing shop domain for webhook {topic}")
+            raise HTTPException(status_code=400, detail="Missing shop domain")
+        
+        # Get request body
+        body = await request.body()
+        
+        # Verify HMAC signature
+        if hmac_signature:
+            if not await auth_service.verify_webhook_hmac(body, hmac_signature):
+                logger.error(f"HMAC verification failed for {topic} from {shop_domain}")
+                raise HTTPException(status_code=401, detail="HMAC verification failed")
+        
+        # Parse JSON payload
+        try:
+            webhook_data = json.loads(body)
+        except json.JSONDecodeError:
+            logger.error(f"Invalid JSON payload for {topic} from {shop_domain}")
+            raise HTTPException(status_code=400, detail="Invalid JSON payload")
+        
+        # Resolve tenant by shop domain
+        tenant_id = f"tenant-{shop_domain.replace('.myshopify.com', '').replace('.', '-').replace('_', '-')}"
+        
+        # Process webhook data
+        result = await webhook_processor.process_webhook(
+            topic=topic,
+            tenant_id=tenant_id,
+            shop_domain=shop_domain,
+            webhook_data=webhook_data
+        )
+        
+        if result.get("success"):
+            logger.info(f"Successfully processed {topic} webhook for {shop_domain}")
+            return JSONResponse({"status": "success", "processed": True})
+        else:
+            logger.error(f"Failed to process {topic} webhook for {shop_domain}: {result.get('error')}")
+            return JSONResponse({"status": "error", "message": result.get("error")}, status_code=500)
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error processing {topic} webhook from {shop_domain}: {str(e)}")
+        return JSONResponse({"status": "error", "message": "Internal server error"}, status_code=500)
+
+
 @router.post("/app_uninstalled")
 async def handle_app_uninstalled(
     request: Request,
