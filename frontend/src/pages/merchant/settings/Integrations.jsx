@@ -71,9 +71,7 @@ const Integrations = () => {
   }, [searchParams]);
 
   const getApiUrl = () => {
-    if (backendUrl && backendUrl.includes('preview.emergentagent.com')) {
-      return 'http://localhost:8001';
-    }
+    // Always use the configured backend URL for production
     return backendUrl || 'http://localhost:8001';
   };
 
