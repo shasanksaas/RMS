@@ -60,6 +60,11 @@ async def startup_db_client():
     global repository_factory
     repository_factory = RepositoryFactory(db)
     print("✅ Database connected and repository factory initialized")
+    
+    # Initialize environment configuration
+    from src.config.environment import env_config
+    await env_config.initialize()
+    print("✅ Environment configuration initialized")
 
 # Add security middleware
 @app.middleware("http")
