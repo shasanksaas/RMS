@@ -308,8 +308,8 @@ const AllReturns = () => {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Returns</h1>
-          <p className="text-gray-500">Manage return requests and track their progress</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Returns</h1>
+          <p className="text-gray-500 text-sm md:text-base">Manage return requests and track their progress</p>
         </div>
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
@@ -322,8 +322,8 @@ const AllReturns = () => {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Returns</h1>
-          <p className="text-gray-500">Manage return requests and track their progress</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Returns</h1>
+          <p className="text-gray-500 text-sm md:text-base">Manage return requests and track their progress</p>
         </div>
         <Alert className="border-red-200 bg-red-50">
           <AlertDescription className="text-red-800">
@@ -343,27 +343,27 @@ const AllReturns = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Returns</h1>
-        <p className="text-gray-500">Manage return requests and track their progress</p>
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Returns</h1>
+        <p className="text-gray-500 text-sm md:text-base">Manage return requests and track their progress</p>
       </div>
 
       {/* Header Actions */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div className="flex items-center space-x-4">
+      <div className="flex flex-col space-y-4 md:space-y-0 md:flex-row md:gap-4 items-start md:items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 w-full md:w-auto">
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
             <Input
               placeholder="Search customers, orders..."
               value={filters.search}
               onChange={(e) => handleFilterChange('search', e.target.value)}
-              className="pl-10"
+              className="pl-10 w-full sm:w-64"
             />
           </div>
 
           <Select value={filters.status} onValueChange={(value) => handleFilterChange('status', value)}>
-            <SelectTrigger>
+            <SelectTrigger className="w-full sm:w-40">
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>
@@ -376,7 +376,7 @@ const AllReturns = () => {
           </Select>
 
           <Select value={filters.sortBy} onValueChange={(value) => handleFilterChange('sortBy', value)}>
-            <SelectTrigger>
+            <SelectTrigger className="w-full sm:w-40">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -387,18 +387,18 @@ const AllReturns = () => {
           </Select>
         </div>
 
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" onClick={handleExport}>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 w-full md:w-auto">
+          <Button variant="outline" onClick={handleExport} className="w-full sm:w-auto">
             <Download className="h-4 w-4 mr-2" />
             Export CSV
           </Button>
           {selectedReturns.length > 0 && (
-            <div className="flex items-center space-x-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
               <Button 
                 variant="outline" 
                 onClick={() => handleBulkStatusUpdate('approved')}
                 disabled={bulkActionLoading}
-                className="text-green-600 hover:text-green-700"
+                className="text-green-600 hover:text-green-700 w-full sm:w-auto"
               >
                 {bulkActionLoading ? (
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600 mr-2" />
@@ -411,7 +411,7 @@ const AllReturns = () => {
                 variant="outline" 
                 onClick={() => handleBulkStatusUpdate('denied')}
                 disabled={bulkActionLoading}
-                className="text-red-600 hover:text-red-700"
+                className="text-red-600 hover:text-red-700 w-full sm:w-auto"
               >
                 <XCircle className="h-4 w-4 mr-2" />
                 Deny ({selectedReturns.length})
@@ -424,130 +424,218 @@ const AllReturns = () => {
       {/* Returns Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Return Requests ({pagination.total_items || returns.length})</CardTitle>
+          <CardTitle className="text-lg">Return Requests ({pagination.total_items || returns.length})</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0 md:p-6">
           {returns.length === 0 ? (
-            <div className="text-center py-12">
+            <div className="text-center py-12 px-6">
               <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No returns found</h3>
               <p className="text-gray-500">When customers submit return requests, they'll appear here.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="py-3 px-4 text-left">
-                      <input
-                        type="checkbox"
-                        checked={selectedReturns.length === returns.length && returns.length > 0}
-                        onChange={handleSelectAll}
-                        className="rounded"
-                      />
-                    </th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Order</th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Items</th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Reason</th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                    <th className="py-3 px-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {returns.map((returnRequest) => (
-                    <tr key={returnRequest.id} className="hover:bg-gray-50">
-                      <td className="py-4 px-4">
+            <>
+              {/* Mobile Card View */}
+              <div className="md:hidden space-y-4 p-4">
+                {returns.map((returnRequest) => (
+                  <div key={returnRequest.id} className="border rounded-lg p-4 space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center space-x-3">
                         <input
                           type="checkbox"
                           checked={selectedReturns.includes(returnRequest.id)}
                           onChange={() => handleSelectReturn(returnRequest.id)}
                           className="rounded"
                         />
-                      </td>
-                      <td className="py-4 px-4">
                         <div>
-                          <div className="font-medium">{returnRequest.customer_name}</div>
-                          <div className="text-sm text-gray-500">{returnRequest.customer_email}</div>
+                          <div className="font-medium text-sm">{returnRequest.customer_name}</div>
+                          <div className="text-xs text-gray-500">{returnRequest.customer_email}</div>
                         </div>
-                      </td>
-                      <td className="py-4 px-4">
-                        <span className="font-mono text-sm">{returnRequest.order_number}</span>
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="text-sm">
-                          {returnRequest.items && returnRequest.items.length > 0 ? 
-                            returnRequest.items.map((item, idx) => (
-                              <div key={idx}>
-                                {item.product_name} (×{item.quantity})
-                              </div>
-                            )) :
-                            <span className="text-gray-400">No items</span>
-                          }
-                        </div>
-                      </td>
-                      <td className="py-4 px-4">
-                        <span className="text-sm">{formatReason(returnRequest.reason)}</span>
-                      </td>
-                      <td className="py-4 px-4">
-                        <span className="font-medium">${returnRequest.refund_amount}</span>
-                      </td>
-                      <td className="py-4 px-4">
-                        {getStatusBadge(returnRequest.status)}
-                      </td>
-                      <td className="py-4 px-4">
-                        <span className="text-sm text-gray-500">
-                          {new Date(returnRequest.created_at).toLocaleDateString()}
-                        </span>
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="flex items-center space-x-2">
-                          <Button variant="ghost" size="sm" asChild>
-                            <Link to={`/app/returns/${returnRequest.id}`}>
-                              <Eye className="h-4 w-4" />
-                            </Link>
+                      </div>
+                      {getStatusBadge(returnRequest.status)}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <span className="text-gray-500">Order:</span>
+                        <div className="font-mono text-xs">{returnRequest.order_number}</div>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Amount:</span>
+                        <div className="font-medium">${returnRequest.refund_amount}</div>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Reason:</span>
+                        <div>{formatReason(returnRequest.reason)}</div>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Date:</span>
+                        <div>{new Date(returnRequest.created_at).toLocaleDateString()}</div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className="text-gray-500 text-sm">Items:</span>
+                      <div className="text-sm">
+                        {returnRequest.items && returnRequest.items.length > 0 ? 
+                          returnRequest.items.map((item, idx) => (
+                            <div key={idx}>
+                              {item.product_name} (×{item.quantity})
+                            </div>
+                          )) :
+                          <span className="text-gray-400">No items</span>
+                        }
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t">
+                      <Button variant="ghost" size="sm" asChild>
+                        <Link to={`/app/returns/${returnRequest.id}`}>
+                          <Eye className="h-4 w-4 mr-1" />
+                          View
+                        </Link>
+                      </Button>
+                      {returnRequest.status === 'requested' && (
+                        <div className="flex space-x-2">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-green-600 hover:text-green-700"
+                            onClick={() => handleStatusUpdate(returnRequest.id, 'approved')}
+                          >
+                            <CheckCircle className="h-4 w-4" />
                           </Button>
-                          {returnRequest.status === 'requested' && (
-                            <>
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="text-green-600 hover:text-green-700"
-                                onClick={() => handleStatusUpdate(returnRequest.id, 'approved')}
-                                title="Approve Return"
-                              >
-                                <CheckCircle className="h-4 w-4" />
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="text-red-600 hover:text-red-700"
-                                onClick={() => handleStatusUpdate(returnRequest.id, 'denied')}
-                                title="Deny Return"
-                              >
-                                <XCircle className="h-4 w-4" />
-                              </Button>
-                            </>
-                          )}
-                          <Button variant="ghost" size="sm">
-                            <MoreHorizontal className="h-4 w-4" />
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-red-600 hover:text-red-700"
+                            onClick={() => handleStatusUpdate(returnRequest.id, 'denied')}
+                          >
+                            <XCircle className="h-4 w-4" />
                           </Button>
                         </div>
-                      </td>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="py-3 px-4 text-left">
+                        <input
+                          type="checkbox"
+                          checked={selectedReturns.length === returns.length && returns.length > 0}
+                          onChange={handleSelectAll}
+                          className="rounded"
+                        />
+                      </th>
+                      <th className="py-3 px-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                      <th className="py-3 px-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Order</th>
+                      <th className="py-3 px-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Items</th>
+                      <th className="py-3 px-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Reason</th>
+                      <th className="py-3 px-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                      <th className="py-3 px-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="py-3 px-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                      <th className="py-3 px-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {returns.map((returnRequest) => (
+                      <tr key={returnRequest.id} className="hover:bg-gray-50">
+                        <td className="py-4 px-4">
+                          <input
+                            type="checkbox"
+                            checked={selectedReturns.includes(returnRequest.id)}
+                            onChange={() => handleSelectReturn(returnRequest.id)}
+                            className="rounded"
+                          />
+                        </td>
+                        <td className="py-4 px-4">
+                          <div>
+                            <div className="font-medium">{returnRequest.customer_name}</div>
+                            <div className="text-sm text-gray-500">{returnRequest.customer_email}</div>
+                          </div>
+                        </td>
+                        <td className="py-4 px-4">
+                          <span className="font-mono text-sm">{returnRequest.order_number}</span>
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="text-sm">
+                            {returnRequest.items && returnRequest.items.length > 0 ? 
+                              returnRequest.items.map((item, idx) => (
+                                <div key={idx}>
+                                  {item.product_name} (×{item.quantity})
+                                </div>
+                              )) :
+                              <span className="text-gray-400">No items</span>
+                            }
+                          </div>
+                        </td>
+                        <td className="py-4 px-4">
+                          <span className="text-sm">{formatReason(returnRequest.reason)}</span>
+                        </td>
+                        <td className="py-4 px-4">
+                          <span className="font-medium">${returnRequest.refund_amount}</span>
+                        </td>
+                        <td className="py-4 px-4">
+                          {getStatusBadge(returnRequest.status)}
+                        </td>
+                        <td className="py-4 px-4">
+                          <span className="text-sm text-gray-500">
+                            {new Date(returnRequest.created_at).toLocaleDateString()}
+                          </span>
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="flex items-center space-x-2">
+                            <Button variant="ghost" size="sm" asChild>
+                              <Link to={`/app/returns/${returnRequest.id}`}>
+                                <Eye className="h-4 w-4" />
+                              </Link>
+                            </Button>
+                            {returnRequest.status === 'requested' && (
+                              <>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="text-green-600 hover:text-green-700"
+                                  onClick={() => handleStatusUpdate(returnRequest.id, 'approved')}
+                                  title="Approve Return"
+                                >
+                                  <CheckCircle className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="text-red-600 hover:text-red-700"
+                                  onClick={() => handleStatusUpdate(returnRequest.id, 'denied')}
+                                  title="Deny Return"
+                                >
+                                  <XCircle className="h-4 w-4" />
+                                </Button>
+                              </>
+                            )}
+                            <Button variant="ghost" size="sm">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
 
       {/* Pagination */}
       {pagination.total_pages > 1 && (
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-center justify-between space-y-3 sm:space-y-0">
           <p className="text-sm text-gray-700">
             Showing <span className="font-medium">{((pagination.current_page - 1) * pagination.per_page) + 1}</span> to{' '}
             <span className="font-medium">{Math.min(pagination.current_page * pagination.per_page, pagination.total_items)}</span> of{' '}

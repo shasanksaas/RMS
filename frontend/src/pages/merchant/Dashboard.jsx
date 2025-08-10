@@ -29,16 +29,16 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-500">Returns management overview</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-gray-500 text-sm md:text-base">Returns management overview</p>
         </div>
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-3 sm:space-y-0 sm:space-x-3">
           <Select value={timeframe} onValueChange={setTimeframe}>
-            <SelectTrigger className="w-36">
+            <SelectTrigger className="w-full sm:w-36">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -47,7 +47,7 @@ const Dashboard = () => {
               <SelectItem value="90d">Last 90 days</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" onClick={refreshData} disabled={loading}>
+          <Button variant="outline" onClick={refreshData} disabled={loading} className="w-full sm:w-auto">
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
@@ -55,57 +55,57 @@ const Dashboard = () => {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
+        <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Returns</CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{kpis.totalReturns}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-xl md:text-2xl font-bold">{kpis.totalReturns}</div>
+            <p className="text-xs text-muted-foreground flex items-center">
               <TrendingUp className="h-3 w-3 inline mr-1" />
               +12% from last period
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Return Rate</CardTitle>
             <TrendingDown className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{kpis.returnRate}%</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-xl md:text-2xl font-bold">{kpis.returnRate}%</div>
+            <p className="text-xs text-muted-foreground flex items-center">
               <TrendingDown className="h-3 w-3 inline mr-1" />
               -2.1% from last period
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Exchange Rate</CardTitle>
             <RefreshCw className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{kpis.exchangeRate}%</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-xl md:text-2xl font-bold">{kpis.exchangeRate}%</div>
+            <p className="text-xs text-muted-foreground flex items-center">
               <TrendingUp className="h-3 w-3 inline mr-1" />
               +5.3% from last period
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Avg Resolution Time</CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{kpis.avgResolutionTime} days</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-xl md:text-2xl font-bold">{kpis.avgResolutionTime} days</div>
+            <p className="text-xs text-muted-foreground flex items-center">
               <TrendingDown className="h-3 w-3 inline mr-1" />
               -0.8 days from last period
             </p>
@@ -113,17 +113,17 @@ const Dashboard = () => {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         {/* Revenue Impact */}
-        <Card>
+        <Card className="hover:shadow-md transition-shadow">
           <CardHeader>
-            <CardTitle>Revenue Saved</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-lg">Revenue Saved</CardTitle>
+            <CardDescription className="text-sm">
               Revenue retained through exchanges and store credit
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-green-600">
+            <div className="text-2xl md:text-3xl font-bold text-green-600">
               ${kpis.revenueSaved.toLocaleString()}
             </div>
             <div className="mt-4 space-y-2">
@@ -144,10 +144,10 @@ const Dashboard = () => {
         </Card>
 
         {/* Top Return Reasons */}
-        <Card>
+        <Card className="hover:shadow-md transition-shadow">
           <CardHeader>
-            <CardTitle>Top Return Reasons</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-lg">Top Return Reasons</CardTitle>
+            <CardDescription className="text-sm">
               Most common reasons for returns
             </CardDescription>
           </CardHeader>
@@ -155,19 +155,19 @@ const Dashboard = () => {
             <div className="space-y-4">
               {kpis.topReasons.map((reason, index) => (
                 <div key={index} className="flex items-center space-x-3">
-                  <div className="flex-1">
-                    <div className="flex justify-between text-sm">
-                      <span className="font-medium">{reason.reason}</span>
-                      <span className="text-gray-500">{reason.count} returns</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="font-medium truncate">{reason.reason}</span>
+                      <span className="text-gray-500 ml-2 flex-shrink-0">{reason.count} returns</span>
                     </div>
-                    <div className="mt-1 bg-gray-200 rounded-full h-2">
+                    <div className="bg-gray-200 rounded-full h-2">
                       <div
-                        className="bg-blue-600 h-2 rounded-full"
+                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                         style={{ width: `${reason.percentage}%` }}
                       />
                     </div>
                   </div>
-                  <span className="text-sm font-medium">{reason.percentage}%</span>
+                  <span className="text-sm font-medium ml-2 flex-shrink-0">{reason.percentage}%</span>
                 </div>
               ))}
             </div>
@@ -176,13 +176,13 @@ const Dashboard = () => {
       </div>
 
       {/* Recent Activity */}
-      <Card>
+      <Card className="hover:shadow-md transition-shadow">
         <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
-          <CardDescription>Latest return requests and updates</CardDescription>
+          <CardTitle className="text-lg">Recent Activity</CardTitle>
+          <CardDescription className="text-sm">Latest return requests and updates</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="space-y-3 md:space-y-4">
             {[
               {
                 id: 'RET-001',
@@ -209,13 +209,13 @@ const Dashboard = () => {
                 time: '1 hour ago'
               }
             ].map((activity) => (
-              <div key={activity.id} className="flex items-center space-x-4 p-3 border rounded-lg">
-                <div className="flex-1">
-                  <p className="text-sm font-medium">{activity.customer}</p>
+              <div key={activity.id} className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{activity.customer}</p>
                   <p className="text-sm text-gray-500">{activity.action}</p>
                   <p className="text-xs text-gray-400">{activity.product} • {activity.time}</p>
                 </div>
-                <div className="text-right">
+                <div className="flex-shrink-0">
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                     activity.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                     activity.status === 'approved' ? 'bg-blue-100 text-blue-800' :
