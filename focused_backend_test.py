@@ -167,9 +167,8 @@ class FocusedAPITester:
         seeded_tenants = ["tenant-fashion-store.myshopify.com", "tenant-tech-gadgets.myshopify.com"]
         
         for tenant_id in seeded_tenants:
-            # Test initial sync
-            sync_data = {"sync_type": "initial"}
-            success, result = self.make_request('POST', f'test/sync/{tenant_id}', sync_data)
+            # Test initial sync - send sync_type as string in body
+            success, result = self.make_request('POST', f'test/sync/{tenant_id}', "initial")
             if success and result.get('status') == 'success':
                 self.log_test(f"Sync Service - Initial sync ({tenant_id})", True)
                 
@@ -182,9 +181,8 @@ class FocusedAPITester:
             else:
                 self.log_test(f"Sync Service - Initial sync ({tenant_id})", False, str(result))
                 
-            # Test manual sync
-            manual_sync_data = {"sync_type": "manual"}
-            success, manual_result = self.make_request('POST', f'test/sync/{tenant_id}', manual_sync_data)
+            # Test manual sync - send sync_type as string in body
+            success, manual_result = self.make_request('POST', f'test/sync/{tenant_id}', "manual")
             if success and manual_result.get('status') == 'success':
                 self.log_test(f"Sync Service - Manual sync ({tenant_id})", True)
             else:
