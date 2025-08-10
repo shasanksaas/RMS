@@ -173,6 +173,8 @@ const Integrations = () => {
       setMessage({ type: 'error', text: 'Failed to start resync. Please try again.' });
     }
   };
+
+  const handleConnect = async () => {
     setConnecting(true);
     setMessage({ type: '', text: '' });
 
