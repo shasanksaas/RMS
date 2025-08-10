@@ -11,6 +11,7 @@ import time
 from src.controllers.shopify_controller import router as shopify_router
 from src.controllers.enhanced_features_controller import router as enhanced_router
 from src.modules.auth.controller import router as auth_router
+from src.controllers.webhook_controller import router as webhook_router
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 import uuid
