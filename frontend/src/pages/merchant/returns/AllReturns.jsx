@@ -351,14 +351,6 @@ const AllReturns = () => {
     return reasons[reason] || reason;
   };
 
-  const handleFilterChange = (key, value) => {
-    setFilters({ ...filters, [key]: value, page: 1 }); // Reset to page 1 when filtering
-  };
-
-  const handlePageChange = (newPage) => {
-    setFilters({ ...filters, page: newPage });
-  };
-
   if (loading) {
     return (
       <div className="space-y-6">
