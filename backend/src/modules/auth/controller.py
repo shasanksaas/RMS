@@ -90,15 +90,25 @@ async def initiate_oauth(request: InitiateOAuthRequest):
 
 @router.get("/shopify/install")
 async def shopify_oauth_install(
+    request: Request,
     shop: str = Query(..., description="Shop domain (e.g., rms34.myshopify.com)")
 ):
     """
-    Shopify OAuth Install Route
-    Initiates the OAuth flow by redirecting to Shopify authorization
+    Shopify OAuth Install Route with Dynamic URL Detection
+    Automatically detects the correct APP_URL and builds redirect_uri
     
     Usage: GET /api/auth/shopify/install?shop=rms34.myshopify.com
     """
     try:
+        # Ensure environment config is initialized
+        await env_config.initialize()
+        
+        # Update APP_URL from request if needed (for dynamic environments)
+        request_host = request.headers.get('host')
+        request_scheme = 'https' if request.headers.get('x-forwarded-proto') == 'https' or request.url.scheme == 'https' else 'http'
+        if request_host:
+            env_config.update_app_url_from_request(request_host, request_scheme)
+        
         # Validate shop domain
         if not shop:
             raise HTTPException(status_code=400, detail="Shop domain is required")
@@ -111,21 +121,25 @@ async def shopify_oauth_install(
         if not shop.replace('.myshopify.com', '').replace('-', '').replace('_', '').isalnum():
             raise HTTPException(status_code=400, detail="Invalid shop domain format")
         
-        # Get Shopify credentials from environment
-        api_key = os.environ.get('SHOPIFY_API_KEY')
+        # Get Shopify credentials from environment config
+        shopify_credentials = env_config.get_shopify_credentials()
+        api_key = shopify_credentials.get('api_key')
+        
         if not api_key:
-            raise HTTPException(status_code=500, detail="Shopify API key not configured")
+            raise HTTPException(
+                status_code=500, 
+                detail="Shopify API key not configured. Set SHOPIFY_API_KEY environment variable."
+            )
         
-        # Required scopes for MVP (exactly as specified)
-        scopes = "read_orders,read_fulfillments,read_products,read_customers,read_returns,write_returns"
+        # Get scopes and redirect URI from environment config
+        scopes = env_config.get_shopify_scopes()
+        redirect_uri = env_config.get_oauth_redirect_uri()
         
-        # Get APP_URL from environment for consistent redirect URI
-        app_url = os.environ.get('APP_URL')
-        if not app_url:
-            raise HTTPException(status_code=500, detail="APP_URL not configured")
-        
-        # Build redirect URI from APP_URL
-        redirect_uri = f"{app_url}/api/auth/shopify/callback"
+        # Log the URLs being used for debugging
+        print(f"🔗 OAuth Install Request:")
+        print(f"   APP_URL: {env_config.get_app_url()}")
+        print(f"   Redirect URI: {redirect_uri}")
+        print(f"   Shop: {shop}")
         
         # Generate and store CSRF state token
         state = auth_service.generate_oauth_state()
@@ -151,11 +165,13 @@ async def shopify_oauth_install(
     except HTTPException:
         raise
     except Exception as e:
+        print(f"❌ OAuth installation failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"OAuth installation failed: {str(e)}")
 
 
 @router.get("/shopify/callback")
 async def shopify_oauth_callback(
+    request: Request,
     shop: str = Query(..., description="Shop domain"),
     code: str = Query(..., description="Authorization code from Shopify"),
     state: str = Query(..., description="State parameter for CSRF protection"),
@@ -163,12 +179,26 @@ async def shopify_oauth_callback(
     timestamp: Optional[str] = Query(None, description="Request timestamp")
 ):
     """
-    Shopify OAuth Callback Route
+    Shopify OAuth Callback Route with Dynamic URL Detection
     Processes the callback after user authorizes the app
     
     Usage: This is called automatically by Shopify after user approval
     """
     try:
+        # Ensure environment config is initialized
+        await env_config.initialize()
+        
+        # Update APP_URL from request if needed
+        request_host = request.headers.get('host')
+        request_scheme = 'https' if request.headers.get('x-forwarded-proto') == 'https' or request.url.scheme == 'https' else 'http'
+        if request_host:
+            env_config.update_app_url_from_request(request_host, request_scheme)
+        
+        print(f"🔄 OAuth Callback:")
+        print(f"   APP_URL: {env_config.get_app_url()}")
+        print(f"   Shop: {shop}")
+        print(f"   State: {state}")
+        
         # Verify HMAC signature for security
         if hmac:
             await auth_service.verify_shopify_hmac(shop, code, state, hmac, timestamp)
@@ -187,7 +217,7 @@ async def shopify_oauth_callback(
         tenant_data = {
             "shop": shop,
             "access_token": access_token,  # Will be encrypted by service
-            "scopes": "read_orders,read_fulfillments,read_products,read_customers,read_returns,write_returns",
+            "scopes": env_config.get_shopify_scopes(),
             "installed_at": datetime.utcnow().isoformat(),
             "provider": "shopify",
             "shop_info": shop_info
@@ -204,19 +234,24 @@ async def shopify_oauth_callback(
         # Register webhooks
         await auth_service.register_shopify_webhooks(shop, access_token)
         
-        # 302 redirect to integrations page with success
-        success_url = f"/app/settings/integrations?connected=1&shop={shop}"
-        full_success_url = f"https://733d44a0-d288-43eb-83ff-854115be232e.preview.emergentagent.com{success_url}"
+        # 302 redirect to integrations page with success (using dynamic APP_URL)
+        app_url = env_config.get_app_url()
+        success_url = f"{app_url}/app/settings/integrations?connected=1&shop={shop}"
         
-        return RedirectResponse(url=full_success_url, status_code=302)
+        print(f"✅ OAuth Success - Redirecting to: {success_url}")
+        
+        return RedirectResponse(url=success_url, status_code=302)
         
     except HTTPException:
         raise
     except Exception as e:
-        print(f"OAuth callback error: {e}")  # Log for debugging, don't expose sensitive info
-        error_url = "/app/settings/integrations?error=1&message=Connection failed"
-        full_error_url = f"https://733d44a0-d288-43eb-83ff-854115be232e.preview.emergentagent.com{error_url}"
-        return RedirectResponse(url=full_error_url, status_code=302)
+        print(f"❌ OAuth callback error: {e}")
+        
+        # Build error URL using dynamic APP_URL
+        app_url = env_config.get_app_url()
+        error_url = f"{app_url}/app/settings/integrations?error=1&message=Connection failed"
+        
+        return RedirectResponse(url=error_url, status_code=302)
 
 
 @router.get("/callback")
