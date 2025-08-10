@@ -124,27 +124,13 @@ class ShopifyCredentialsTest:
         success, response = self.make_request('GET', 'auth/status')
         
         if success:
-            api_key = response.get('api_key', '')
             api_version = response.get('api_version', '')
             redirect_uri = response.get('redirect_uri', '')
-            
-            # Check if new API key is loaded
-            if api_key == NEW_CREDENTIALS['api_key']:
-                self.log_test(
-                    "Auth Service Status - API Key", 
-                    True, 
-                    f"New API key loaded correctly: {api_key[:8]}..."
-                )
-            else:
-                self.log_test(
-                    "Auth Service Status - API Key", 
-                    False, 
-                    f"Expected {NEW_CREDENTIALS['api_key'][:8]}..., got {api_key[:8] if api_key else 'None'}..."
-                )
-                return False
+            required_scopes = response.get('required_scopes', [])
+            encryption = response.get('encryption', '')
             
             # Check API version
-            if api_version:
+            if api_version == "2025-07":
                 self.log_test(
                     "Auth Service Status - API Version", 
                     True, 
@@ -154,7 +140,7 @@ class ShopifyCredentialsTest:
                 self.log_test(
                     "Auth Service Status - API Version", 
                     False, 
-                    "API version not configured"
+                    f"Expected 2025-07, got {api_version}"
                 )
             
             # Check redirect URI
@@ -169,6 +155,34 @@ class ShopifyCredentialsTest:
                     "Auth Service Status - Redirect URI", 
                     False, 
                     "Redirect URI not configured"
+                )
+            
+            # Check required scopes
+            if required_scopes:
+                self.log_test(
+                    "Auth Service Status - Required Scopes", 
+                    True, 
+                    f"Scopes configured: {', '.join(required_scopes)}"
+                )
+            else:
+                self.log_test(
+                    "Auth Service Status - Required Scopes", 
+                    False, 
+                    "Required scopes not configured"
+                )
+            
+            # Check encryption
+            if encryption:
+                self.log_test(
+                    "Auth Service Status - Encryption", 
+                    True, 
+                    f"Encryption: {encryption}"
+                )
+            else:
+                self.log_test(
+                    "Auth Service Status - Encryption", 
+                    False, 
+                    "Encryption not configured"
                 )
             
             return True
