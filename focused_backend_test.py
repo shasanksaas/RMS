@@ -32,7 +32,7 @@ class FocusedAPITester:
         else:
             print(f"❌ {name} - {details}")
         
-    def make_request(self, method: str, endpoint: str, data: Dict = None, 
+    def make_request(self, method: str, endpoint: str, data: any = None, 
                     headers: Dict = None, expected_status: int = 200) -> tuple:
         """Make HTTP request and return success status and response data"""
         url = f"{API_BASE}/{endpoint}"
@@ -44,7 +44,12 @@ class FocusedAPITester:
             if method == 'GET':
                 response = requests.get(url, headers=request_headers)
             elif method == 'POST':
-                response = requests.post(url, json=data, headers=request_headers)
+                if isinstance(data, str):
+                    # Send as raw string for endpoints expecting string body
+                    request_headers['Content-Type'] = 'text/plain'
+                    response = requests.post(url, data=data, headers=request_headers)
+                else:
+                    response = requests.post(url, json=data, headers=request_headers)
             elif method == 'PUT':
                 response = requests.put(url, json=data, headers=request_headers)
             elif method == 'DELETE':
