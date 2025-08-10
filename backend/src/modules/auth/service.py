@@ -25,6 +25,12 @@ class ShopifyAuthService:
     """Enhanced Shopify Authentication Service with dynamic connectivity"""
     
     def __init__(self):
+        # Set API version
+        self.api_version = os.environ.get('SHOPIFY_API_VERSION', '2025-07')
+        
+        # Set base redirect URI
+        self.base_redirect_uri = os.environ.get('SHOPIFY_REDIRECT_URI', 'https://1ce8ef7a-c16d-43a6-b3d4-da8a63312de8.preview.emergentagent.com/api/auth/shopify/callback')
+        
         # Encryption key for securing tokens (use KMS in production)
         encryption_key_str = os.environ.get('ENCRYPTION_KEY')
         if not encryption_key_str or encryption_key_str == 'fernet-key-32-bytes-base64-encoded-here':
