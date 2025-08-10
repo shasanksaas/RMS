@@ -84,21 +84,20 @@ const Orders = () => {
       setSyncing(true);
       const apiUrl = getApiUrl();
       
-      // Trigger manual sync
-      const response = await fetch(`${apiUrl}/api/test/sync`, {
+      // First trigger sync
+      const response = await fetch(`${apiUrl}/api/integrations/shopify/resync`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-Tenant-Id': tenantId
-        },
-        body: JSON.stringify({
-          tenant_id: tenantId,
-          sync_type: 'manual'
-        })
+        }
       });
 
       if (response.ok) {
-        // Refresh orders after sync
+        // Wait 2 seconds for sync to process
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Force reload orders immediately
         await loadOrders();
         setError('');
       } else {
