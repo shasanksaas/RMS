@@ -115,7 +115,7 @@ class WebhookSyncTestSuite:
         print("\n🔍 Testing Webhook Endpoint Availability...")
         
         # Test webhook samples endpoint
-        success, samples_data, status = await self.make_request("GET", "/test/webhook/samples")
+        success, samples_data, status = await self.make_request("POST", "/test/webhook/samples")
         
         if success and samples_data.get("samples"):
             supported_topics = samples_data.get("topics_supported", [])
