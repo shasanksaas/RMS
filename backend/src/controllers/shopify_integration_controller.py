@@ -7,10 +7,10 @@ from typing import Optional, Dict, Any, List
 from datetime import datetime, timedelta
 import uuid
 
-from ...middleware.security import get_tenant_id
-from ...config.database import db
-from ...config.environment import env_config
-from ..auth.service import auth_service
+from src.middleware.security import get_tenant_id
+from src.config.database import db
+from src.config.environment import env_config
+from src.modules.auth.service import auth_service
 
 router = APIRouter(prefix="/integrations/shopify", tags=["shopify-integration"])
 
