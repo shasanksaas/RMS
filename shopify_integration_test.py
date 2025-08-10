@@ -44,7 +44,12 @@ class ShopifyIntegrationTester:
             if method == 'GET':
                 response = requests.get(url, headers=request_headers, timeout=30)
             elif method == 'POST':
-                response = requests.post(url, json=data, headers=request_headers, timeout=30)
+                if isinstance(data, str):
+                    # For string data, send as text/plain
+                    request_headers['Content-Type'] = 'text/plain'
+                    response = requests.post(url, data=data, headers=request_headers, timeout=30)
+                else:
+                    response = requests.post(url, json=data, headers=request_headers, timeout=30)
             elif method == 'PUT':
                 response = requests.put(url, json=data, headers=request_headers, timeout=30)
             elif method == 'DELETE':
