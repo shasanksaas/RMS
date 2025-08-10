@@ -111,11 +111,14 @@ backend:
     file: "src/controllers/unified_returns_controller.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Created comprehensive unified returns controller with full CRUD operations, order lookup, policy preview, and return creation endpoints for both admin and customer portals"
+      - working: false
+        agent: "testing"
+        comment: "⚠️ IMPLEMENTATION ISSUES FOUND: All 5 unified returns endpoints are registered and accessible but have implementation issues. Order lookup endpoint (500 error), eligible items endpoint (500 error), create return endpoint (500 error), policy preview endpoint (422 error), photo upload endpoint (422 error). Root cause: Missing dependencies and service integration issues. ShopifyService constructor doesn't accept tenant_id parameter, missing find_order_by_number method, and other service integration problems."
 
   - task: "Unified Returns Service Implementation"
     implemented: true
@@ -123,23 +126,29 @@ backend:
     file: "src/services/unified_returns_service.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Created unified returns service with business logic for order lookup, item eligibility, policy enforcement, and return processing"
+      - working: false
+        agent: "testing"
+        comment: "⚠️ SERVICE INTEGRATION ISSUES: Unified returns service exists but has integration problems with ShopifyService. The service expects methods like find_order_by_number() which don't exist in the current ShopifyService implementation. Service architecture is sound but needs integration fixes."
 
   - task: "Unified Return Repository Implementation"
     implemented: true
-    working: false
+    working: true
     file: "src/repositories/unified_return_repository.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Created repository layer for unified return data persistence with search, filtering, and statistics capabilities"
+      - working: true
+        agent: "testing"
+        comment: "✅ REPOSITORY LAYER WORKING: Unified return repository implementation is complete and functional. All CRUD operations, search, filtering, and statistics methods are properly implemented. MongoDB integration is working correctly."
 
   - task: "Email Service Enhancement for Returns"
     implemented: true
