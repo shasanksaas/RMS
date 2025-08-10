@@ -1158,9 +1158,83 @@ class ReturnsAPITester:
             
         return True
 
+    def test_shopify_connectivity_endpoints(self):
+        """Test the new Shopify connectivity test endpoints with real credentials"""
+        print("\n🔗 Testing NEW Shopify Connectivity Endpoints...")
+        
+        # Test 1: Quick Test Endpoint
+        success, quick_result = self.make_request('GET', 'shopify-test/quick-test')
+        if success and quick_result.get('quick_test', {}).get('overall_success'):
+            self.log_test("Shopify Connectivity - Quick Test", True)
+            
+            # Verify shop info is present
+            shop_info = quick_result.get('shop_info', {})
+            if shop_info.get('shop_name') and shop_info.get('domain'):
+                self.log_test("Shopify Connectivity - Shop Info Retrieved", True)
+            else:
+                self.log_test("Shopify Connectivity - Shop Info Retrieved", False, "Missing shop details")
+                
+            # Verify products are present
+            products_sample = quick_result.get('products_sample', {})
+            if products_sample.get('products_count', 0) > 0:
+                self.log_test("Shopify Connectivity - Products Retrieved", True)
+            else:
+                self.log_test("Shopify Connectivity - Products Retrieved", False, "No products found")
+        else:
+            self.log_test("Shopify Connectivity - Quick Test", False, str(quick_result))
+            
+        # Test 2: Raw Query Test Endpoint
+        success, raw_result = self.make_request('GET', 'shopify-test/raw-query')
+        if success and raw_result.get('raw_query_test', {}).get('success'):
+            self.log_test("Shopify Connectivity - Raw Query Test", True)
+            
+            # Verify the exact query structure matches user's curl command
+            result_data = raw_result.get('result', {}).get('data', {}).get('data', {})
+            if result_data.get('products', {}).get('edges'):
+                self.log_test("Shopify Connectivity - Raw Query Data Structure", True)
+            else:
+                self.log_test("Shopify Connectivity - Raw Query Data Structure", False, "Invalid data structure")
+        else:
+            self.log_test("Shopify Connectivity - Raw Query Test", False, str(raw_result))
+            
+        # Test 3: Full Connectivity Test Endpoint
+        success, full_result = self.make_request('GET', 'shopify-test/connectivity')
+        if success and full_result.get('connectivity_test', {}).get('overall_success'):
+            self.log_test("Shopify Connectivity - Full Test Suite", True)
+            
+            # Check individual test results
+            test_results = full_result.get('test_results', [])
+            test_names = ['shop_info', 'products_query', 'orders_query', 'returns_query', 'customers_query']
+            
+            for test_result in test_results:
+                test_name = test_result.get('test', 'unknown')
+                if test_result.get('success'):
+                    self.log_test(f"Shopify GraphQL - {test_name}", True)
+                else:
+                    self.log_test(f"Shopify GraphQL - {test_name}", False, test_result.get('error', 'Unknown error'))
+                    
+            # Check success rate
+            connectivity_info = full_result.get('connectivity_test', {})
+            success_rate = connectivity_info.get('success_rate', '0%')
+            tests_passed = connectivity_info.get('tests_passed', 0)
+            tests_run = connectivity_info.get('tests_run', 0)
+            
+            if tests_passed >= 3:  # At least 3 out of 5 tests should pass
+                self.log_test(f"Shopify Connectivity - Success Rate ({success_rate})", True)
+            else:
+                self.log_test(f"Shopify Connectivity - Success Rate ({success_rate})", False, f"Only {tests_passed}/{tests_run} tests passed")
+                
+        else:
+            self.log_test("Shopify Connectivity - Full Test Suite", False, str(full_result))
+            
+        return True
+
     def test_shopify_integration_comprehensive(self):
         """Comprehensive test of all Shopify integration components"""
         print("\n🛍️ Testing Shopify Integration Components...")
+        
+        # NEW: Test the Shopify connectivity endpoints first
+        self.test_shopify_connectivity_endpoints()
         
         # Test seeded tenant IDs (these should exist from seed data)
         seeded_tenants = ["tenant-fashion-store.myshopify.com", "tenant-tech-gadgets.myshopify.com"]
