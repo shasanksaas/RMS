@@ -688,7 +688,7 @@ async def get_return_requests(
     returns = await returns_cursor.to_list(limit)
     
     return {
-        "items": [ReturnRequest(**ret) for ret in returns],
+        "items": returns,  # Return raw data without model validation
         "pagination": {
             "current_page": page,
             "total_pages": total_pages,
