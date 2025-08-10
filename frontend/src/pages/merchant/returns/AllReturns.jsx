@@ -29,15 +29,52 @@ const AllReturns = () => {
   const backendUrl = process.env.REACT_APP_BACKEND_URL;
   const tenantId = 'tenant-fashion-store'; // TODO: Get from auth context
 
-  // Load returns from backend
-  useEffect(() => {
-    loadReturns();
-  }, [filters]);
-
   const getApiUrl = () => {
     // Always use the configured backend URL for production
     return backendUrl || 'http://localhost:8001';
   };
+
+  // Debounced search function
+  const debounce = useCallback((func, delay) => {
+    let timeoutId;
+    return (...args) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => func.apply(null, args), delay);
+    };
+  }, []);
+
+  // Filter and search logic
+  const filterReturns = useCallback((returnsData, searchTerm, statusFilter) => {
+    let filtered = [...returnsData];
+
+    // Apply search filter
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase();
+      filtered = filtered.filter(returnItem => 
+        returnItem.customer_name?.toLowerCase().includes(searchLower) ||
+        returnItem.customer_email?.toLowerCase().includes(searchLower) ||
+        returnItem.order_number?.toLowerCase().includes(searchLower) ||
+        returnItem.id?.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Apply status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(returnItem => returnItem.status === statusFilter);
+    }
+
+    return filtered;
+  }, []);
+
+  // Memoized filtered results
+  const displayReturns = useMemo(() => {
+    return filterReturns(allReturns, filters.search, filters.status);
+  }, [allReturns, filters.search, filters.status, filterReturns]);
+
+  // Update filtered returns whenever display returns change
+  useEffect(() => {
+    setFilteredReturns(displayReturns);
+  }, [displayReturns]);
 
   const loadReturns = async () => {
     try {
