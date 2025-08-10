@@ -493,6 +493,30 @@ class ShopifyAuthService:
         except Exception as e:
             print(f"Failed to save order {order_data.get('id')}: {e}")
     
+    async def verify_webhook_hmac(self, body: bytes, hmac_signature: str) -> bool:
+        """Verify webhook HMAC signature from Shopify"""
+        try:
+            # Get API secret
+            api_secret = os.environ.get('SHOPIFY_API_SECRET')
+            if not api_secret:
+                return False
+            
+            # Calculate expected HMAC
+            expected_hmac = base64.b64encode(
+                hmac.new(
+                    api_secret.encode('utf-8'),
+                    body,
+                    hashlib.sha256
+                ).digest()
+            ).decode()
+            
+            # Compare HMACs (constant time comparison)
+            return hmac.compare_digest(hmac_signature, expected_hmac)
+            
+        except Exception as e:
+            print(f"Webhook HMAC verification error: {e}")
+            return False
+
     async def _save_product(self, tenant_id: str, product_data: Dict[str, Any]) -> None:
         """Save product to database"""
         try:
