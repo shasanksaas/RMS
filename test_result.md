@@ -603,12 +603,6 @@ test_plan:
   current_focus:
     - "Unified Returns Controller Implementation"
     - "Unified Returns Service Implementation"
-    - "Unified Return Repository Implementation"
-    - "Unified Return Form Component"
-    - "Return Form Step Components"
-    - "Admin Create Return Route"
-    - "Customer Create Return Route"
-    - "App.jsx Route Integration"
   stuck_tasks: 
     - "GraphQL Service for Returns Operations"
     - "Sync Service with Initial Backfill"
