@@ -1053,7 +1053,33 @@ async def root():
 async def api_health():
     """API health check endpoint for deployment verification"""
     from datetime import datetime
-    return {"status": "ok", "timestamp": datetime.now().isoformat()}
+    from src.config.environment import env_config
+    
+    # Get configuration summary
+    config_summary = env_config.get_config_summary()
+    
+    return {
+        "status": "ok", 
+        "timestamp": datetime.now().isoformat(),
+        "environment": config_summary
+    }
+
+@api_router.get("/config")
+async def get_configuration():
+    """Get current environment configuration for debugging"""
+    from src.config.environment import env_config
+    await env_config.initialize()
+    
+    config = env_config.get_config_summary()
+    
+    # Don't expose sensitive information
+    return {
+        "app_url": config["app_url"],
+        "redirect_uri": config["redirect_uri"],
+        "shopify_configured": config["shopify_configured"],
+        "environment": config["environment"],
+        "initialized": config["initialized"]
+    }
 
 # Include routers in the api_router first
 api_router.include_router(auth_router)
