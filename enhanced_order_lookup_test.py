@@ -115,7 +115,7 @@ class EnhancedOrderLookupTestSuite:
         
         # Test with real order data from tenant-rms34
         real_lookup_data = {
-            "orderNumber": "1001",
+            "order_number": "1001",
             "email": "john.doe@example.com",  # Try with seeded data email
             "channel": "customer"
         }
