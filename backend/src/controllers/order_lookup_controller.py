@@ -22,30 +22,34 @@ router = APIRouter(prefix="/returns", tags=["returns", "lookup"])
 logger = logging.getLogger(__name__)
 
 @router.post("/order-lookup")
-@rate_limit_by_ip(max_requests=20, window_minutes=5)
 async def order_lookup(
-    request: OrderLookupRequest,
+    request_data: Dict[str, Any],
     tenant_id: Optional[str] = Depends(get_tenant_id_optional)
 ):
     """
     Enhanced order lookup with Shopify and fallback modes
     """
     try:
+        # Extract data from request
+        order_number = request_data.get("orderNumber") or request_data.get("order_number", "")
+        email = request_data.get("email", "")
+        channel = request_data.get("channel", "customer")
+        
         # Determine tenant (can be from header or inferred)
-        if not tenant_id and request.shop_domain:
+        if not tenant_id and request_data.get("shop_domain"):
             # Try to resolve tenant by shop domain
             integration = await db.integrations_shopify.find_one({
-                "shop": request.shop_domain.replace("https://", "").replace("http://", "")
+                "shop": request_data["shop_domain"].replace("https://", "").replace("http://", "")
             })
             if integration:
                 tenant_id = integration["tenant_id"]
         
         if not tenant_id:
-            tenant_id = "tenant-guest"  # Default for public portal
+            tenant_id = "tenant-rms34"  # Default for testing
         
         # Clean inputs
-        order_number = request.order_number.replace("#", "").strip()
-        email = request.email.lower().strip()
+        order_number = order_number.replace("#", "").strip()
+        email = email.lower().strip()
         
         if not order_number or not email:
             raise HTTPException(status_code=400, detail="Order number and email are required")
@@ -65,10 +69,10 @@ async def order_lookup(
             
             if order_data:
                 # Successfully found order in Shopify
-                return ShopifyOrderResponse(
-                    mode="shopify",
-                    order=order_data
-                )
+                return {
+                    "mode": "shopify",
+                    "order": order_data
+                }
             else:
                 # Order not found in Shopify or email mismatch
                 raise HTTPException(
@@ -90,40 +94,49 @@ async def order_lookup(
             
             if existing_draft:
                 # Return existing draft info
-                return FallbackOrderResponse(
-                    mode="fallback",
-                    status="pending_validation",
-                    message="We already received your request for this order. It's under review.",
-                    captured={
+                return {
+                    "mode": "fallback",
+                    "status": "pending_validation",
+                    "message": "We already received your request for this order. It's under review.",
+                    "captured": {
                         "orderNumber": order_number,
                         "email": email,
                         "submittedAt": existing_draft["submitted_at"]
                     }
-                )
+                }
             
             # Create new draft record
-            draft = ReturnDraft(
-                tenant_id=tenant_id,
-                order_number=order_number,
-                email=email,
-                channel=request.channel
-            )
+            draft_doc = {
+                "id": str(uuid.uuid4()),
+                "tenant_id": tenant_id,
+                "order_number": order_number,
+                "email": email,
+                "channel": channel,
+                "items": [],
+                "photos": [],
+                "status": "pending_validation",
+                "submitted_at": datetime.utcnow(),
+                "reviewed_at": None,
+                "reviewed_by": None,
+                "linked_shopify_order_id": None,
+                "rejection_reason": None,
+                "customer_note": "",
+                "metadata": {}
+            }
             
             # Save to database
-            draft_doc = draft.dict()
-            draft_doc["submitted_at"] = datetime.utcnow()
             await db.return_drafts.insert_one(draft_doc)
             
-            return FallbackOrderResponse(
-                mode="fallback",
-                status="pending_validation",
-                message="Store not connected to Shopify. Your request will be reviewed within 24 hours.",
-                captured={
+            return {
+                "mode": "fallback",
+                "status": "pending_validation",
+                "message": "Store not connected to Shopify. Your request will be reviewed within 24 hours.",
+                "captured": {
                     "orderNumber": order_number,
                     "email": email,
                     "submittedAt": draft_doc["submitted_at"]
                 }
-            )
+            }
         
     except HTTPException:
         raise
