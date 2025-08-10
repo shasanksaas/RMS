@@ -105,6 +105,65 @@
 user_problem_statement: Implement and verify 10 end-to-end capabilities - Customer Return Initiation, Rules Engine Processing, Merchant Dashboard View, Return Status Updates, Refund/Resolution, Analytics Dashboard, Settings Management, Multi-Tenant Isolation, Mobile/Responsive, and Error Handling. Additionally, complete the unified "Create Return" full process for both admin and customer portals.
 
 backend:
+  - task: "Elite-Grade Returns Creation System - Domain Layer"
+    implemented: true
+    working: "NA"
+    file: "src/domain/"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "✅ DOMAIN LAYER COMPLETE: Implemented comprehensive Domain-Driven Design (DDD) layer including: (1) Return Aggregate Root with business logic, state machine, and domain events (2) Rich Value Objects (Money, PolicySnapshot, ReturnId, TenantId, Email, etc.) (3) ReturnEligibilityService with complex business rules for return validation (4) Complete Domain Events system for CQRS (ReturnCreated, ReturnApproved, ReturnRejected, etc.) (5) Fixed syntax error by renaming return.py to return_entity.py to avoid Python keyword conflict. Domain layer follows strict DDD principles with proper encapsulation, business invariants, and event-driven architecture."
+
+  - task: "Elite-Grade Returns Creation System - Ports & Adapters"
+    implemented: true
+    working: "NA"
+    file: "src/domain/ports/"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "✅ HEXAGONAL ARCHITECTURE PORTS COMPLETE: Implemented comprehensive port definitions for hexagonal architecture: (1) Repository Ports (ReturnRepository, ReturnDraftRepository, OrderRepository) with full CRUD operations and search capabilities (2) Service Ports (ShopifyService, LabelService, NotificationService, PolicyService, EventPublisher) for external integrations (3) Clean interface segregation following dependency inversion principle. All ports define abstract interfaces that the domain layer depends on, enabling testability and flexibility."
+
+  - task: "Elite-Grade Returns Creation System - Application Layer (CQRS)"
+    implemented: true
+    working: "NA"
+    file: "src/application/"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "✅ CQRS APPLICATION LAYER COMPLETE: Implemented comprehensive Command Query Responsibility Segregation pattern: (1) Commands (CreateReturnRequest, CreateReturnDraft, ApproveReturn, RejectReturn, ProcessRefund, ApproveDraftAndConvert) for state-changing operations (2) Queries (GetReturnById, SearchReturns, LookupOrderForReturn, GetPolicyPreview, etc.) for data retrieval (3) Command Handlers with complete business logic using domain services and ports (4) Query Handlers for read-only operations with pagination and filtering. Clean separation of reads and writes following CQRS principles."
+
+  - task: "Elite-Grade Returns Creation System - Infrastructure Adapters"
+    implemented: true
+    working: "NA"
+    file: "src/infrastructure/"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "✅ INFRASTRUCTURE ADAPTERS COMPLETE: Implemented concrete adapters for hexagonal architecture: (1) MongoDB Repository Adapters (MongoReturnRepository, MongoReturnDraftRepository, MongoOrderRepository) with full persistence logic (2) Service Adapters wrapping existing services (ShopifyServiceAdapter, NotificationServiceAdapter, PolicyServiceAdapter, LabelServiceAdapter) (3) Event Publisher implementations (InMemoryEventPublisher, AsyncEventPublisher) for domain events (4) Dependency Container for IoC with proper handler wiring. All adapters implement the port interfaces and integrate with existing infrastructure."
+
+  - task: "Elite-Grade Returns Creation System - Elite Controllers"
+    implemented: true
+    working: "NA"
+    file: "src/controllers/elite_*.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "✅ ELITE CONTROLLERS COMPLETE: Implemented comprehensive Elite-Grade controllers using CQRS handlers: (1) Elite Portal Returns Controller with dual-mode order lookup (Shopify/fallback), policy preview, return creation, and photo upload (2) Elite Admin Returns Controller with return management, draft approval, bulk operations, and audit logs (3) Full implementation of user stories including eligibility checking, policy enforcement, and comprehensive error handling. Controllers follow hexagonal architecture using dependency injection and CQRS handlers."
   - task: "Unified Returns Controller Implementation"
     implemented: true
     working: true
