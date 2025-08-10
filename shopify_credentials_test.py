@@ -89,27 +89,31 @@ class ShopifyCredentialsTest:
         success, response = self.make_request('GET', 'shopify-test/quick-test')
         
         if success:
-            if 'shop_info' in response and 'products' in response:
-                shop_name = response.get('shop_info', {}).get('name', 'Unknown')
-                products_count = len(response.get('products', []))
+            quick_test = response.get('quick_test', {})
+            shop_info = response.get('shop_info', {})
+            products_sample = response.get('products_sample', {})
+            
+            if quick_test.get('overall_success'):
+                shop_name = shop_info.get('shop_name', 'Unknown')
+                products_count = products_sample.get('products_count', 0)
                 self.log_test(
                     "Shopify Quick Test", 
                     True, 
-                    f"Connected to {shop_name}, retrieved {products_count} products"
+                    f"Connected to {NEW_CREDENTIALS['store']}, retrieved {products_count} products"
                 )
                 return True
             else:
                 self.log_test(
                     "Shopify Quick Test", 
                     False, 
-                    f"Invalid response structure: {response}"
+                    f"Connection test failed: {quick_test.get('error', 'Unknown error')}"
                 )
                 return False
         else:
             self.log_test(
                 "Shopify Quick Test", 
                 False, 
-                f"Connection failed: {response}"
+                f"Request failed: {response}"
             )
             return False
 
