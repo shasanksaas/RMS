@@ -437,7 +437,7 @@ const AllReturns = () => {
           </div>
 
           <Select value={filters.status} onValueChange={(value) => handleFilterChange('status', value)}>
-            <SelectTrigger className="w-full sm:w-40">
+            <SelectTrigger className="w-full sm:w-40 touch-manipulation">
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>
