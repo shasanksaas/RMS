@@ -26,6 +26,38 @@ const AllReturns = () => {
   });
   const [syncing, setSyncing] = useState(false);
 
+  const handleSync = async () => {
+    try {
+      setSyncing(true);
+      const apiUrl = getApiUrl();
+      
+      // Trigger Shopify returns sync
+      const response = await fetch(`${apiUrl}/api/integrations/shopify/resync`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Tenant-Id': tenantId
+        }
+      });
+
+      if (response.ok) {
+        // Wait 2 seconds for sync to process
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Force reload returns
+        await loadReturns();
+        setError('');
+      } else {
+        setError('Sync failed. Please try again.');
+      }
+    } catch (err) {
+      console.error('Sync error:', err);
+      setError('Sync failed. Please try again.');
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   // Get backend URL and tenant from environment
   const backendUrl = process.env.REACT_APP_BACKEND_URL;
   const tenantId = 'tenant-fashion-store'; // TODO: Get from auth context
