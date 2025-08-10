@@ -13,6 +13,7 @@ from datetime import datetime
 
 from ..services.webhook_handlers import webhook_processor
 from ..modules.auth.service import auth_service
+from ..database import db
 
 router = APIRouter(prefix="/webhooks", tags=["webhooks"])
 logger = logging.getLogger(__name__)
