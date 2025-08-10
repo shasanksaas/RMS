@@ -662,7 +662,7 @@ const AllReturns = () => {
                           <div className="text-sm">
                             {returnRequest.items && returnRequest.items.length > 0 ? 
                               returnRequest.items.map((item, idx) => (
-                                <div key={idx}>
+                                <div key={`item-${idx}`}>
                                   {item.product_name} (×{item.quantity})
                                 </div>
                               )) :
