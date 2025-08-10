@@ -390,12 +390,7 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus:
-    - "GraphQL Service for Returns Operations"
-    - "Webhook Processing with Idempotency"
-    - "Sync Service with Initial Backfill"
-    - "Auth Service Enhancement with OAuth"
-    - "Testing Endpoints for Development"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
