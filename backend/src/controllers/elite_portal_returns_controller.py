@@ -24,7 +24,7 @@ from ..domain.value_objects import TenantId, OrderId, Email
 from ..infrastructure.services.dependency_container import get_container
 
 
-router = APIRouter(prefix="/api/elite/portal/returns", tags=["Elite Portal Returns"])
+router = APIRouter(prefix="/elite/portal/returns", tags=["Elite Portal Returns"])
 
 
 # Request/Response Models
