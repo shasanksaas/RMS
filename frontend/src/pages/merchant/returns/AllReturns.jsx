@@ -129,12 +129,11 @@ const AllReturns = () => {
         const returnsData = data.items || [];
         setAllReturns(returnsData);
         setPagination(data.pagination || {});
+        setError(''); // Clear any previous errors
       } else {
-        // Fallback to mock data if API fails
-        console.warn('API failed, using mock data');
-        const mockData = getMockReturns();
-        setAllReturns(mockData);
-        setPagination({ total_items: mockData.length, current_page: 1, total_pages: 1, per_page: 20 });
+        console.warn('Returns API failed');
+        setAllReturns([]);
+        setPagination({ total_items: 0, current_page: 1, total_pages: 1, per_page: 20 });
       }
     } catch (err) {
       console.error('Error loading returns:', err);
