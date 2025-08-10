@@ -76,6 +76,7 @@ const AllReturns = () => {
     setFilteredReturns(displayReturns);
   }, [displayReturns]);
 
+  // Load returns from backend
   const loadReturns = async () => {
     try {
       setLoading(true);
@@ -83,16 +84,7 @@ const AllReturns = () => {
       
       const apiUrl = getApiUrl();
       
-      // Build query parameters
-      const params = new URLSearchParams();
-      if (filters.search) params.append('search', filters.search);
-      if (filters.status !== 'all') params.append('status_filter', filters.status);
-      params.append('sort_by', filters.sortBy);
-      params.append('sort_order', filters.sortOrder);
-      params.append('page', filters.page.toString());
-      params.append('limit', filters.limit.toString());
-
-      const response = await fetch(`${apiUrl}/api/returns?${params.toString()}`, {
+      const response = await fetch(`${apiUrl}/api/returns`, {
         headers: {
           'Content-Type': 'application/json',
           'X-Tenant-Id': tenantId
@@ -101,23 +93,31 @@ const AllReturns = () => {
 
       if (response.ok) {
         const data = await response.json();
-        setReturns(data.items || []);
+        const returnsData = data.items || [];
+        setAllReturns(returnsData);
         setPagination(data.pagination || {});
       } else {
         // Fallback to mock data if API fails
         console.warn('API failed, using mock data');
-        setReturns(getMockReturns());
-        setPagination({ total_items: 3, current_page: 1, total_pages: 1, per_page: 20 });
+        const mockData = getMockReturns();
+        setAllReturns(mockData);
+        setPagination({ total_items: mockData.length, current_page: 1, total_pages: 1, per_page: 20 });
       }
     } catch (err) {
       console.error('Error loading returns:', err);
       // Fallback to mock data
-      setReturns(getMockReturns());
-      setPagination({ total_items: 3, current_page: 1, total_pages: 1, per_page: 20 });
+      const mockData = getMockReturns();
+      setAllReturns(mockData);
+      setPagination({ total_items: mockData.length, current_page: 1, total_pages: 1, per_page: 20 });
     } finally {
       setLoading(false);
     }
   };
+
+  // Initial load
+  useEffect(() => {
+    loadReturns();
+  }, []);
 
   const getMockReturns = () => [
     {
