@@ -1,84 +1,94 @@
 <analysis>
-The previous AI engineer successfully initiated and progressed the Returns Management SaaS MVP, focusing on core functionality and multi-tenancy. Key achievements include detailed documentation of the project structure and APIs via a comprehensive . A major undertaking was the implementation of a sophisticated Rules module, featuring a multi-step builder, dynamic conditions/actions, and backend integration. This module faced significant debugging challenges related to MongoDB ObjectId serialization, correct API URL configuration (local vs. external backend URL, including trailing slashes), and frontend dropdown rendering, which were systematically resolved. A critical incident involved the temporary breakage of Shopify OAuth due to incorrect frontend URL configuration, which was promptly identified and fixed. The engineer has now embarked on building a unified Create Return form for both admin and customer portals, with initial backend API and frontend step components already in place. The work demonstrates methodical problem-solving and a deep understanding of full-stack development.
+The previous AI engineer successfully brought the Returns Management SaaS MVP from inception to a functional state, focusing on critical modules and external integrations. Initially, the work centered on building a robust Rules module with a multi-step builder and dynamic logic. The transition then moved to developing a unified Create Return form for both admin and customer portals, with significant backend and frontend scaffolding completed. The most recent and challenging phase involved a comprehensive Shopify OAuth integration and subsequent data surfacing. This phase was characterized by meticulous debugging of  mismatches,  environment variable configurations,  issues, and crucially,  inconsistencies between frontend and backend calls. The engineer systematically addressed these by introducing dynamic environment detection and correcting hardcoded values and tenant ID usage, ensuring a robust, environment-agnostic setup.
 </analysis>
 
 <product_requirements>
-The objective is to develop a production-grade, multi-tenant Returns Management SaaS. The application, initially integrated with Shopify, requires features like Shopify OAuth, real-time order/return data synchronization, a shopper return portal, a configurable rules engine, AI suggestions, label issuing, email notifications, analytics, and Stripe billing. Strict multi-tenancy via  is essential, alongside a responsive React frontend. The MVP has moved from mock to live Shopify integration, establishing core merchant and customer portals, and a functional returns system. Recent efforts focused on comprehensive Shopify integration, including API credentials and webhooks, and UI updates for Orders and Returns modules. The immediate, detailed task was to build a fully configurable and operational Rules module, integrated with , , , and  using live Shopify data. The current task is to build a unified Create Return form usable by both admin and customer, fully integrated with Shopify, policy enforcement, and backend APIs.
+The overarching goal is a production-grade, multi-tenant Returns Management SaaS, initially integrated with Shopify. Key features include Shopify OAuth, real-time order/return data synchronization, a shopper return portal, a configurable rules engine, AI suggestions, label issuing, email notifications, analytics, and Stripe billing. Strict multi-tenancy via  is paramount, alongside a responsive React frontend. The MVP transitioned from mock to live Shopify data, establishing core merchant/customer portals and a functional returns system. Previous work focused on a comprehensive Rules module and its integration. The immediate, detailed requirement was to build a unified Create Return form usable by both admin and customer, fully integrated with Shopify, policy enforcement, and backend APIs. The current focus is on surfacing real Shopify data (Orders, Returns, Customers) across the app and ensuring robust OAuth connectivity and data synchronization.
 </product_requirements>
 
 <key_technical_concepts>
--   **Multi-Tenancy**: Data isolation via .
+-   **Multi-Tenancy**: Data isolation through .
 -   **Modular Architecture**: FastAPI (Python) backend, React frontend, MongoDB persistence.
--   **Shopify Integration**: OAuth 2.0, GraphQL/REST APIs, Webhooks.
--   **Rules Engine**: Deterministic, JSON-based policy enforcement.
+-   **Shopify Integration**: OAuth 2.0, GraphQL/REST APIs, Webhooks, dynamic URL/credential handling.
+-   **Rules Engine**: JSON-based policy enforcement.
 -   **State Machine**: Manages return status transitions.
--   **Encryption**: Fernet for sensitive data.
--   **Responsive Design**: Tailwind CSS.
+-   **Environment Variables**: Centralized configuration for , .
+-   **Error Handling**: Detailed logging and specific error messages.
 </key_technical_concepts>
 
 <code_architecture>
-The application uses a FastAPI backend and a React frontend with MongoDB persistence.
-
-**Directory Structure (Updated):**
+The application utilizes a FastAPI backend and a React frontend with MongoDB persistence, following a modular design.
 
 
 
-**Key Files and Changes Summary from Trajectory:**
+**Key Files and Changes Summary:**
 
-*   : Modified to provide comprehensive documentation, including project overview, tech stack, architecture, setup guide, API docs, project structure, testing, deployment, and troubleshooting. This serves as the primary developer handbook.
-*   : Modified to register the new  and , making their API endpoints accessible.
-*   : Modified to correctly handle authentication and routing for the newly added rules endpoints, resolving initial access issues.
-*   : Minor fix for import paths to ensure correct database configuration is loaded for new modules.
-*   : Updated  to point to the correct external URL, crucial for the Shopify OAuth flow.
-*   : Modified multiple times; initially changed to  which broke Shopify OAuth, then reverted to the external  to ensure proper backend communication and Shopify OAuth functionality.
-*    (New): Handles all CRUD (Create, Read, Update, Delete) operations for return rules.
-*    (New): Will handle the API endpoints for the unified Create Return form, managing return requests from both admin and customer portals.
-*    (New): Implements business logic for rule management, interacting with the rule repository and the enhanced rules engine.
-*    (New): Will implement the core business logic for processing unified return requests, including Shopify API interactions and policy application.
-*    (New): Manages persistence of return rules to the MongoDB database.
-*    (New): Will manage persistence of unified return requests to MongoDB.
-*    (New): A comprehensive module for evaluating return rules based on defined conditions and executing corresponding actions. This is central to the automated returns process.
-*    (Modified): Transformed into the main dashboard for the Rules module, displaying a list of rules with search, filter, and sorting capabilities. It integrates the  component.
-*    (New): The multi-step form component for creating and editing return rules. It includes sections for basic info, conditions, actions, and review. This was extensively debugged for dropdown functionality and validation.
-*    (Modified/New): A reusable UI component for dropdowns, modified to fix issues with empty values and ensure proper display of options dynamically fetched from the backend.
-*    (New): The main reusable React component for the Create Return flow, intended to be used by both admin and customer portals.
-*    (New): A series of new components (, , , , , , , ) that form the individual steps of the .
+*   : Comprehensive project documentation.
+*   : Central FastAPI application. Modified to register new controllers (, , , , ) and include the  and  endpoints in tenant exclusion. Old inline order routes were commented out to prioritize new controllers.
+*   : Handles authentication and multi-tenancy. Modified to correctly validate tenants and exclude specific paths like  and  from tenant validation. A  dependency was properly implemented.
+*   : Environment variables for backend. Modified to update  for OAuth and to add , ,  for dynamic environment configuration.
+*   : Environment variables for frontend. Modified to ensure  is correct, crucial for Shopify OAuth and API calls.
+*    (New): Centralized configuration module for dynamic , ,  detection (including Emergent preview variables). This enhances deployment robustness.
+*   : Manages return rule CRUD.
+*   : Manages unified return requests.
+*    (New): Handles Shopify integration status, resync, and job endpoints.
+*    (New): Provides enhanced API endpoints for fetching orders with server-side filters and pagination.
+*    (New): Provides enhanced API endpoints for fetching returns with server-side filters and pagination.
+*   : Business logic for rule management.
+*   : Business logic for unified returns.
+*   : Shopify API interactions. Modified to accept  in constructor and include  and  methods.
+*   : (Existing) Missing methods added.
+*   : Handles OAuth routes. Modified to implement  and enhance  routes using dynamically built  and environment variables.
+*   : Auth business logic. Missing methods implemented to support OAuth flow and HMAC verification.
+*   : Webhook handling. Missing endpoints for new topics added.
+*   : Rules module dashboard.
+*   : Multi-step form for rules.
+*   : Reusable dropdown component.
+*   : Main multi-step return form.
+*   : Individual steps of the unified return form (OrderVerificationStep, ItemSelectionStep, etc.).
+*    (New): Frontend route for merchant to create returns.
+*   : Frontend route for customer to create returns.
+*   : Frontend page for return confirmation.
+*   : Main React router. Updated to include new routes for unified returns ( for merchant,  for customer, and ).
+*   : Customer portal entry. Modified to add a button navigating to the unified return form.
+*   : Merchant returns list. Modified to add a Create Return button.
+*   : Integrations settings. Heavily modified to fetch and display real Shopify connection status, handle manual resync, simplify the form (removing client-side API key/secret input), and display dynamic data (timestamps, counts, webhook health). Crucially, the tenant ID handling was fixed to match the backend.
+*   : Merchant orders list. Currently being updated to use correct tenant ID.
+*    (New): Python script for comprehensive backend OAuth testing.
+*    (New): Python script for testing environment-agnostic OAuth.
+
 </code_architecture>
 
 <pending_tasks>
--   Implement  webhook handler for tenant cleanup.
--   Implement full webhook consumers for all registered topics.
--   Finalize backfill sync strategy for initial order data on install.
--   Finalize testing setup for webhook and dev store interactions.
--   Implement AI Suggestions, Label Issuing, Email Notifications, Stripe Billing.
--   Finalize test coverage to ≥70%, performance optimization, and Lighthouse ≥90.
--   Update remaining core documentation (specifically ).
--   Complete the unified Create Return form integration with frontend routes for admin and customer portals.
+- Implement  webhook handler for tenant cleanup.
+- Implement full webhook consumers for all registered topics beyond basic setup.
+- Finalize backfill sync strategy for initial order data on install.
+- Finalize testing setup for webhook and dev store interactions.
+- Implement AI Suggestions, Label Issuing, Email Notifications, Stripe Billing.
+- Finalize test coverage to ≥70%, performance optimization, and Lighthouse ≥90.
+- Update remaining core documentation (specifically ).
+- Complete the integration of the unified Create Return form with frontend routes for admin and customer portals, including data population.
+- Complete  and  frontend pages to display real data.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the AI engineer was actively engaged in implementing the comprehensive, unified Create Return form. This form is designed to be a single, reusable component for both the Admin/Staff dashboard and the Customer self-service portal, handling the entire return creation flow from order verification to submission.
+Immediately before this summary request, the primary focus was on implementing the comprehensive Shopify OAuth integration and subsequently surfacing real Shopify data throughout the application.
 
-The work accomplished so far on this specific feature includes:
-1.  **Backend API Scaffolding**: New backend components were created to support the unified return flow:
-    *   : To define API endpoints for creating and managing unified returns.
-    *   : To encapsulate the business logic for these returns.
-    *   : To handle data persistence for unified returns in MongoDB.
-2.  **Backend Integration**:  was updated to register the new , making its endpoints available.
-3.  **Frontend Core Component**: The main reusable component, , has been created.
-4.  **Frontend Step Components**: All individual step components that make up the multi-step return form have been created:
-    *   
-    *   
-    *   
-    *   
-    *   
-    *   
-    *   
-    *   
+The work for the unified Create Return form has already seen backend API scaffolding and frontend step components created. The next step identified for this feature was to create the necessary routes and integrate the frontend components.
 
-The project is currently in the phase of integrating these frontend step components into the overall application flow, specifically by creating the necessary routes for both the admin and customer portals.
+For Shopify integration, the AI engineer made significant progress:
+1.  **Shopify OAuth Flow**: The backend was enhanced to handle the complete OAuth install and callback flow. This involved modifying  and  to build the Shopify authorization URL, verify HMAC and state, exchange code for access tokens, and persist encrypted tokens per tenant.
+2.  **Environment Agnostic Configuration**: A new module, , was created to dynamically detect the  (including Emergent preview URLs) and load  and  from environment variables, removing hardcoded values and making the system deployment-agnostic. The  was updated to initialize this configuration and allow  and  endpoints to bypass tenant validation.
+3.  **Backend Data Endpoints**: New controllers were scaffolded for Shopify integration status (), enhanced orders (), and enhanced returns (). These were registered in , with old inline order routes commented out to avoid conflicts.
+4.  **Frontend Integration Page ()**: This page was significantly refactored to:
+    *   Fetch connection status from .
+    *   Simplify the connection form to only require the Shopify shop domain (API keys/secrets are now server-side).
+    *   Display the connection status, shop domain, installation/sync timestamps, order/return counts, webhook health, and a Resync button.
+    *   **Crucially, a major issue where the frontend was using an incorrect hardcoded tenant ID ( instead of ) was identified and fixed, resolving the visual update issue after successful OAuth connection.**
+5.  **Troubleshooting**: Extensive debugging cycles addressed 405 Method Not Allowed errors (due to  sending HEAD requests),  mismatches (fixed by ensuring exact matching  and  in both code and Shopify Partner Dashboard settings, including removing  versions), and  mismatches.
+6.  **Current State**: The Shopify OAuth flow is fully functional, and the Integrations page now correctly displays the connected store's status and data counts (currently zeros for a new store, indicating successful connection but no backfill yet). The next immediate task is to update the Orders and Returns pages to also use the correct tenant ID and display real data.
 </current_work>
 
 <optional_next_step>
-The next step is to create the route components for the unified Create Return form for both the admin and customer portals.
+Update the Orders page () to use the correct  for fetching data.
 </optional_next_step>

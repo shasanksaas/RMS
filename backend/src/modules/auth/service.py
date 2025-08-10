@@ -262,7 +262,7 @@ class ShopifyAuthService:
             ]
             
             # Base webhook endpoint
-            webhook_base_url = "https://733d44a0-d288-43eb-83ff-854115be232e.preview.emergentagent.com/api/webhooks/shopify"
+            webhook_base_url = "https://1ce8ef7a-c16d-43a6-b3d4-da8a63312de8.preview.emergentagent.com/api/webhooks/shopify"
             
             # Register each webhook
             for topic in webhook_topics:

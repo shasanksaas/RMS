@@ -274,7 +274,7 @@ async def oauth_callback(
         query_params += f"&timestamp={timestamp}"
         
     callback_url = f"/api/auth/shopify/callback{query_params}"
-    full_callback_url = f"https://733d44a0-d288-43eb-83ff-854115be232e.preview.emergentagent.com{callback_url}"
+    full_callback_url = f"https://1ce8ef7a-c16d-43a6-b3d4-da8a63312de8.preview.emergentagent.com{callback_url}"
     
     return RedirectResponse(url=full_callback_url, status_code=302)
 

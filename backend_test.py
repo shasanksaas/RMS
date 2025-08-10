@@ -14,7 +14,7 @@ from typing import Dict, List, Any, Optional
 import uuid
 
 # Configuration
-BACKEND_URL = "https://733d44a0-d288-43eb-83ff-854115be232e.preview.emergentagent.com/api"
+BACKEND_URL = "https://1ce8ef7a-c16d-43a6-b3d4-da8a63312de8.preview.emergentagent.com/api"
 TEST_TENANT_ID = "tenant-fashion-store"
 TEST_HEADERS = {
     "Content-Type": "application/json",
