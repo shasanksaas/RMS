@@ -498,7 +498,10 @@ const AllReturns = () => {
       {/* Returns Table */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Return Requests ({pagination.total_items || returns.length})</CardTitle>
+          <CardTitle className="text-lg">
+            Return Requests ({filteredReturns.length} of {allReturns.length})
+            {filters.search && <span className="text-sm font-normal text-gray-500 ml-2">- Filtered by "{filters.search}"</span>}
+          </CardTitle>
         </CardHeader>
         <CardContent className="p-0 md:p-6">
           {returns.length === 0 ? (
