@@ -1214,6 +1214,35 @@ class ReturnsAPITester:
                 
         return True
 
+    def test_seeded_data_verification(self):
+        """Test with the comprehensive seed data"""
+        # Test with known seeded tenant IDs
+        seeded_tenants = ["tenant-fashion-store", "tenant-tech-gadgets"]
+        
+        for tenant_id in seeded_tenants:
+            headers = {'X-Tenant-Id': tenant_id}
+            
+            # Test that seeded data exists
+            success, products = self.make_request('GET', 'products', headers=headers)
+            if success and len(products) > 0:
+                self.log_test(f"Seeded Data - {tenant_id} products", True)
+            else:
+                self.log_test(f"Seeded Data - {tenant_id} products", False, f"No products found for {tenant_id}")
+                
+            success, orders = self.make_request('GET', 'orders', headers=headers)
+            if success and len(orders) > 0:
+                self.log_test(f"Seeded Data - {tenant_id} orders", True)
+            else:
+                self.log_test(f"Seeded Data - {tenant_id} orders", False, f"No orders found for {tenant_id}")
+                
+            success, returns = self.make_request('GET', 'returns', headers=headers)
+            if success and 'items' in returns and len(returns['items']) > 0:
+                self.log_test(f"Seeded Data - {tenant_id} returns", True)
+            else:
+                self.log_test(f"Seeded Data - {tenant_id} returns", False, f"No returns found for {tenant_id}")
+                
+        return True
+
     def run_all_tests(self):
         """Run comprehensive test suite focusing on 10 end-to-end capabilities + Shopify Integration"""
         print("🚀 Starting Returns Management SaaS API Tests - 10 End-to-End Capabilities + Shopify Integration")
