@@ -330,6 +330,10 @@ async def update_rule(
         "tenant_id": tenant_id
     })
     
+    # Convert ObjectId to string if present
+    if updated_rule and '_id' in updated_rule:
+        updated_rule['_id'] = str(updated_rule['_id'])
+    
     return {
         "success": True,
         "message": "Rule updated successfully",
