@@ -101,7 +101,7 @@ class FocusedAPITester:
 
     def test_webhook_processing_with_idempotency(self):
         """Test webhook processing with idempotency checks"""
-        # Test webhook samples endpoint
+        # Test webhook samples endpoint (GET not POST)
         success, samples = self.make_request('GET', 'test/webhook/samples')
         if success and 'samples' in samples:
             self.log_test("Webhook Processing - Sample payloads", True)
@@ -113,7 +113,7 @@ class FocusedAPITester:
                 if topic in samples['samples']:
                     payload = samples['samples'][topic]
                     
-                    # Test webhook processing
+                    # Test webhook processing with correct format
                     webhook_data = {
                         "topic": topic,
                         "shop_domain": "tenant-fashion-store.myshopify.com",
