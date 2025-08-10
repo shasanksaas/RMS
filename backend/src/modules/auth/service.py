@@ -43,11 +43,486 @@ class ShopifyAuthService:
             self.encryption_key = Fernet.generate_key()
             self.cipher = Fernet(self.encryption_key)
         
-        self.api_version = "2025-07"
-        self.base_redirect_uri = os.environ.get(
-            'SHOPIFY_REDIRECT_URI', 
-            'https://733d44a0-d288-43eb-83ff-854115be232e.preview.emergentagent.com/auth/callback'
-        )
+    def generate_oauth_state(self) -> str:
+        """Generate a secure random state token for CSRF protection"""
+        return secrets.token_urlsafe(32)
+    
+    async def store_oauth_state(self, shop: str, state: str) -> None:
+        """Store OAuth state token temporarily for verification"""
+        # Store in database with expiration (10 minutes)
+        expiry = datetime.utcnow() + timedelta(minutes=10)
+        
+        await db.oauth_states.insert_one({
+            "shop": shop,
+            "state": state,
+            "created_at": datetime.utcnow(),
+            "expires_at": expiry
+        })
+    
+    async def verify_oauth_state(self, shop: str, state: str) -> bool:
+        """Verify OAuth state token and remove it"""
+        try:
+            # Find and remove the state token
+            result = await db.oauth_states.find_one_and_delete({
+                "shop": shop,
+                "state": state,
+                "expires_at": {"$gt": datetime.utcnow()}
+            })
+            return result is not None
+        except Exception:
+            return False
+    
+    async def cleanup_oauth_state(self, shop: str, state: str) -> None:
+        """Clean up expired OAuth state tokens"""
+        try:
+            # Remove the specific state
+            await db.oauth_states.delete_one({"shop": shop, "state": state})
+            
+            # Clean up expired states
+            await db.oauth_states.delete_many({
+                "expires_at": {"$lt": datetime.utcnow()}
+            })
+        except Exception:
+            pass  # Non-critical cleanup
+    
+    async def verify_shopify_hmac(self, shop: str, code: str, state: str, hmac: str, timestamp: str) -> bool:
+        """Verify HMAC signature from Shopify"""
+        try:
+            # Get API secret
+            api_secret = os.environ.get('SHOPIFY_API_SECRET')
+            if not api_secret:
+                return False
+                
+            # Build query string for HMAC verification
+            query_string = f"code={code}&shop={shop}&state={state}"
+            if timestamp:
+                query_string += f"&timestamp={timestamp}"
+            
+            # Calculate expected HMAC
+            expected_hmac = hmac.new(
+                api_secret.encode('utf-8'),
+                query_string.encode('utf-8'),
+                hashlib.sha256
+            ).hexdigest()
+            
+            # Compare HMACs (constant time comparison)
+            return hmac.compare_digest(hmac, expected_hmac)
+            
+        except Exception as e:
+            print(f"HMAC verification error: {e}")
+            return False
+    
+    async def exchange_code_for_token(self, shop: str, code: str) -> str:
+        """Exchange authorization code for access token"""
+        try:
+            # Get API credentials
+            api_key = os.environ.get('SHOPIFY_API_KEY')
+            api_secret = os.environ.get('SHOPIFY_API_SECRET')
+            
+            if not api_key or not api_secret:
+                raise AuthenticationError("Shopify API credentials not configured")
+            
+            # Shopify token exchange endpoint
+            token_url = f"https://{shop}/admin/oauth/access_token"
+            
+            # Request payload
+            payload = {
+                "client_id": api_key,
+                "client_secret": api_secret,
+                "code": code
+            }
+            
+            # Make token exchange request
+            async with aiohttp.ClientSession() as session:
+                async with session.post(token_url, json=payload) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        return data.get("access_token")
+                    else:
+                        error_text = await response.text()
+                        raise AuthenticationError(f"Token exchange failed: {error_text}")
+                        
+        except Exception as e:
+            raise AuthenticationError(f"Failed to exchange code for token: {str(e)}")
+    
+    async def get_shop_info(self, shop: str, access_token: str) -> Dict[str, Any]:
+        """Get shop information using access token"""
+        try:
+            # Shopify shop info endpoint
+            shop_url = f"https://{shop}/admin/api/{self.api_version}/shop.json"
+            
+            headers = {
+                "X-Shopify-Access-Token": access_token,
+                "Content-Type": "application/json"
+            }
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.get(shop_url, headers=headers) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        return data.get("shop", {})
+                    else:
+                        error_text = await response.text()
+                        print(f"Shop info request failed: {error_text}")
+                        return {"name": shop, "domain": shop}  # Fallback
+                        
+        except Exception as e:
+            print(f"Failed to get shop info: {e}")
+            return {"name": shop, "domain": shop}  # Fallback
+    
+    async def save_shop_credentials(self, tenant_data: Dict[str, Any]) -> str:
+        """Save shop credentials to database (encrypted) and return tenant ID"""
+        try:
+            # Generate tenant ID based on shop
+            tenant_id = f"tenant-{tenant_data['shop'].replace('.myshopify.com', '').replace('.', '-').replace('_', '-')}"
+            
+            # Encrypt the access token
+            encrypted_token = self.cipher.encrypt(tenant_data["access_token"].encode()).decode()
+            
+            # Prepare tenant document
+            tenant_doc = {
+                "id": tenant_id,
+                "name": tenant_data.get("shop_info", {}).get("name", tenant_data["shop"]),
+                "domain": tenant_data["shop"],
+                "shopify_store": tenant_data["shop"],
+                "shopify_store_url": f"https://{tenant_data['shop']}",
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow(),
+                "settings": {
+                    "return_window_days": 30,
+                    "auto_approve_threshold": 100.0,
+                    "notification_email": "support@example.com",
+                    "brand_color": "#3b82f6"
+                },
+                "shopify_integration": {
+                    "installed_at": tenant_data["installed_at"],
+                    "provider": tenant_data["provider"],
+                    "scopes": tenant_data["scopes"],
+                    "access_token_encrypted": encrypted_token,
+                    "shop_info": tenant_data.get("shop_info", {}),
+                    "last_sync": None,
+                    "webhook_status": "pending"
+                },
+                "is_active": True
+            }
+            
+            # Upsert tenant document
+            await db.tenants.update_one(
+                {"id": tenant_id},
+                {"$set": tenant_doc},
+                upsert=True
+            )
+            
+            return tenant_id
+            
+        except Exception as e:
+            raise AuthenticationError(f"Failed to save shop credentials: {str(e)}")
+    
+    async def enqueue_initial_data_sync(self, tenant_id: str, shop: str, access_token: str) -> None:
+        """Enqueue initial data synchronization job"""
+        try:
+            # Create sync job document
+            sync_job = {
+                "id": f"initial-sync-{tenant_id}-{int(datetime.utcnow().timestamp())}",
+                "tenant_id": tenant_id,
+                "shop": shop,
+                "job_type": "initial_sync",
+                "status": "queued",
+                "created_at": datetime.utcnow(),
+                "sync_config": {
+                    "orders_days_back": 90,
+                    "include_orders": True,
+                    "include_products": True,
+                    "include_customers": True,
+                    "include_returns": True
+                }
+            }
+            
+            # Store job
+            await db.sync_jobs.insert_one(sync_job)
+            
+            # For now, we'll process immediately in background
+            # In production, this would use a proper job queue like Celery
+            asyncio.create_task(self._process_initial_sync(tenant_id, shop, access_token))
+            
+        except Exception as e:
+            print(f"Failed to enqueue initial sync: {e}")
+    
+    async def register_shopify_webhooks(self, shop: str, access_token: str) -> None:
+        """Register required webhooks with Shopify"""
+        try:
+            # Webhook topics to register (as specified)
+            webhook_topics = [
+                "orders/create",
+                "orders/updated", 
+                "fulfillments/create",
+                "fulfillments/update",
+                "returns/create",
+                "returns/update"
+            ]
+            
+            # Base webhook endpoint
+            webhook_base_url = "https://733d44a0-d288-43eb-83ff-854115be232e.preview.emergentagent.com/api/webhooks/shopify"
+            
+            # Register each webhook
+            for topic in webhook_topics:
+                try:
+                    await self._register_single_webhook(shop, access_token, topic, f"{webhook_base_url}/{topic.replace('/', '_')}")
+                except Exception as e:
+                    print(f"Failed to register webhook {topic}: {e}")
+                    # Continue with other webhooks
+                    
+            print(f"Webhook registration completed for {shop}")
+                    
+        except Exception as e:
+            print(f"Webhook registration failed: {e}")
+    
+    async def _register_single_webhook(self, shop: str, access_token: str, topic: str, address: str) -> None:
+        """Register a single webhook with Shopify"""
+        webhook_url = f"https://{shop}/admin/api/{self.api_version}/webhooks.json"
+        
+        headers = {
+            "X-Shopify-Access-Token": access_token,
+            "Content-Type": "application/json"
+        }
+        
+        payload = {
+            "webhook": {
+                "topic": topic,
+                "address": address,
+                "format": "json"
+            }
+        }
+        
+        async with aiohttp.ClientSession() as session:
+            async with session.post(webhook_url, json=payload, headers=headers) as response:
+                if response.status in [200, 201]:
+                    webhook_data = await response.json()
+                    print(f"Registered webhook {topic}: {webhook_data.get('webhook', {}).get('id')}")
+                else:
+                    error_text = await response.text()
+                    print(f"Failed to register webhook {topic}: {error_text}")
+    
+    async def _process_initial_sync(self, tenant_id: str, shop: str, access_token: str) -> None:
+        """Process initial data synchronization in background"""
+        try:
+            print(f"Starting initial sync for {shop}")
+            
+            # Update job status
+            await db.sync_jobs.update_one(
+                {"tenant_id": tenant_id, "job_type": "initial_sync", "status": "queued"},
+                {"$set": {"status": "running", "started_at": datetime.utcnow()}}
+            )
+            
+            # Sync orders (last 90 days)
+            await self._sync_orders(tenant_id, shop, access_token, days_back=90)
+            
+            # Sync products
+            await self._sync_products(tenant_id, shop, access_token)
+            
+            # Update job status
+            await db.sync_jobs.update_one(
+                {"tenant_id": tenant_id, "job_type": "initial_sync", "status": "running"},
+                {
+                    "$set": {
+                        "status": "completed",
+                        "completed_at": datetime.utcnow(),
+                        "message": "Initial sync completed successfully"
+                    }
+                }
+            )
+            
+            # Update tenant sync status
+            await db.tenants.update_one(
+                {"id": tenant_id},
+                {
+                    "$set": {
+                        "shopify_integration.last_sync": datetime.utcnow(),
+                        "shopify_integration.webhook_status": "active"
+                    }
+                }
+            )
+            
+            print(f"Initial sync completed for {shop}")
+            
+        except Exception as e:
+            print(f"Initial sync failed for {shop}: {e}")
+            
+            # Update job status
+            await db.sync_jobs.update_one(
+                {"tenant_id": tenant_id, "job_type": "initial_sync"},
+                {
+                    "$set": {
+                        "status": "failed",
+                        "completed_at": datetime.utcnow(),
+                        "error": str(e)
+                    }
+                }
+            )
+    
+    async def _sync_orders(self, tenant_id: str, shop: str, access_token: str, days_back: int = 90) -> None:
+        """Sync orders from Shopify"""
+        try:
+            # Calculate date range
+            since_date = (datetime.utcnow() - timedelta(days=days_back)).isoformat()
+            
+            # Shopify orders endpoint with cursor pagination
+            orders_url = f"https://{shop}/admin/api/{self.api_version}/orders.json"
+            
+            headers = {
+                "X-Shopify-Access-Token": access_token,
+                "Content-Type": "application/json"
+            }
+            
+            params = {
+                "limit": 50,
+                "created_at_min": since_date,
+                "status": "any"
+            }
+            
+            orders_synced = 0
+            
+            async with aiohttp.ClientSession() as session:
+                while True:
+                    async with session.get(orders_url, headers=headers, params=params) as response:
+                        if response.status == 200:
+                            data = await response.json()
+                            orders = data.get("orders", [])
+                            
+                            if not orders:
+                                break
+                                
+                            # Save orders to database
+                            for order in orders:
+                                await self._save_order(tenant_id, order)
+                                orders_synced += 1
+                            
+                            # Check for pagination
+                            link_header = response.headers.get("Link")
+                            if link_header and "rel=\"next\"" in link_header:
+                                # Extract next page cursor from Link header
+                                # This is a simplified implementation
+                                params["since_id"] = orders[-1]["id"]
+                            else:
+                                break
+                        else:
+                            error_text = await response.text()
+                            print(f"Orders sync failed: {error_text}")
+                            break
+            
+            print(f"Synced {orders_synced} orders for {shop}")
+            
+        except Exception as e:
+            print(f"Orders sync error: {e}")
+    
+    async def _sync_products(self, tenant_id: str, shop: str, access_token: str) -> None:
+        """Sync products from Shopify"""
+        try:
+            products_url = f"https://{shop}/admin/api/{self.api_version}/products.json"
+            
+            headers = {
+                "X-Shopify-Access-Token": access_token,
+                "Content-Type": "application/json"
+            }
+            
+            params = {"limit": 50}
+            products_synced = 0
+            
+            async with aiohttp.ClientSession() as session:
+                while True:
+                    async with session.get(products_url, headers=headers, params=params) as response:
+                        if response.status == 200:
+                            data = await response.json()
+                            products = data.get("products", [])
+                            
+                            if not products:
+                                break
+                                
+                            # Save products to database
+                            for product in products:
+                                await self._save_product(tenant_id, product)
+                                products_synced += 1
+                            
+                            # Check for pagination
+                            link_header = response.headers.get("Link")
+                            if link_header and "rel=\"next\"" in link_header:
+                                params["since_id"] = products[-1]["id"]
+                            else:
+                                break
+                        else:
+                            error_text = await response.text()
+                            print(f"Products sync failed: {error_text}")
+                            break
+            
+            print(f"Synced {products_synced} products for {shop}")
+            
+        except Exception as e:
+            print(f"Products sync error: {e}")
+    
+    async def _save_order(self, tenant_id: str, order_data: Dict[str, Any]) -> None:
+        """Save order to database"""
+        try:
+            # Transform order data for our schema
+            order_doc = {
+                "id": str(order_data["id"]),
+                "tenant_id": tenant_id,
+                "order_number": order_data.get("order_number", order_data.get("name", "")).replace("#", ""),
+                "shopify_order_id": str(order_data["id"]),
+                "customer_email": order_data.get("email", ""),
+                "customer_name": f"{order_data.get('billing_address', {}).get('first_name', '')} {order_data.get('billing_address', {}).get('last_name', '')}".strip(),
+                "financial_status": order_data.get("financial_status", ""),
+                "fulfillment_status": order_data.get("fulfillment_status", ""),
+                "total_price": float(order_data.get("total_price", 0)),
+                "currency": order_data.get("currency", "USD"),
+                "created_at": order_data.get("created_at", datetime.utcnow().isoformat()),
+                "updated_at": order_data.get("updated_at", datetime.utcnow().isoformat()),
+                "line_items": order_data.get("line_items", []),
+                "billing_address": order_data.get("billing_address", {}),
+                "shipping_address": order_data.get("shipping_address", {}),
+                "raw_order_data": order_data,  # Store complete raw data
+                "synced_at": datetime.utcnow()
+            }
+            
+            # Upsert order
+            await db.orders.update_one(
+                {"id": str(order_data["id"]), "tenant_id": tenant_id},
+                {"$set": order_doc},
+                upsert=True
+            )
+            
+        except Exception as e:
+            print(f"Failed to save order {order_data.get('id')}: {e}")
+    
+    async def _save_product(self, tenant_id: str, product_data: Dict[str, Any]) -> None:
+        """Save product to database"""
+        try:
+            # Transform product data for our schema
+            product_doc = {
+                "id": str(product_data["id"]),
+                "tenant_id": tenant_id,
+                "shopify_product_id": str(product_data["id"]),
+                "title": product_data.get("title", ""),
+                "handle": product_data.get("handle", ""),
+                "vendor": product_data.get("vendor", ""),
+                "product_type": product_data.get("product_type", ""),
+                "status": product_data.get("status", ""),
+                "variants": product_data.get("variants", []),
+                "images": product_data.get("images", []),
+                "raw_product_data": product_data,  # Store complete raw data
+                "created_at": product_data.get("created_at", datetime.utcnow().isoformat()),
+                "updated_at": product_data.get("updated_at", datetime.utcnow().isoformat()),
+                "synced_at": datetime.utcnow()
+            }
+            
+            # Upsert product
+            await db.products.update_one(
+                {"id": str(product_data["id"]), "tenant_id": tenant_id},
+                {"$set": product_doc},
+                upsert=True
+            )
+            
+        except Exception as e:
+            print(f"Failed to save product {product_data.get('id')}: {e}")
         
         # Required scopes for Returns Management
         self.scopes = [
