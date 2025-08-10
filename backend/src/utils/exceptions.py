@@ -29,3 +29,15 @@ class InvalidReturnStatusError(HTTPException):
             status_code=400, 
             detail=f"Cannot change status from {current_status} to {new_status}"
         )
+
+
+class AuthenticationError(HTTPException):
+    """Raised when authentication fails"""
+    def __init__(self, detail: str = "Authentication failed"):
+        super().__init__(status_code=401, detail=detail)
+
+
+class ValidationError(HTTPException):
+    """Raised when validation fails"""
+    def __init__(self, detail: str = "Validation failed"):
+        super().__init__(status_code=400, detail=detail)
