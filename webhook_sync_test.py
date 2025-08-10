@@ -17,7 +17,7 @@ import time
 
 # Configuration
 BACKEND_URL = "https://1ce8ef7a-c16d-43a6-b3d4-da8a63312de8.preview.emergentagent.com/api"
-TEST_TENANT_ID = "tenant-rms34"  # Using the real tenant with Shopify integration
+TEST_TENANT_ID = "rms34.myshopify.com"  # Using the real tenant with Shopify integration
 TEST_HEADERS = {
     "Content-Type": "application/json",
     "X-Tenant-Id": TEST_TENANT_ID
