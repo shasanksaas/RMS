@@ -687,6 +687,11 @@ async def get_return_requests(
     
     returns = await returns_cursor.to_list(limit)
     
+    # Convert ObjectId to string for JSON serialization
+    for ret in returns:
+        if '_id' in ret:
+            ret['_id'] = str(ret['_id'])
+    
     return {
         "items": returns,  # Return raw data without model validation
         "pagination": {
