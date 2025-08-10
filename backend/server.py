@@ -14,6 +14,7 @@ from src.modules.auth.controller import router as auth_router
 from src.controllers.webhook_controller import router as webhook_router
 from src.controllers.testing_controller import router as testing_router
 from src.controllers.returns_controller import router as returns_router
+from src.controllers.shopify_test_controller import router as shopify_test_router
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 import uuid
