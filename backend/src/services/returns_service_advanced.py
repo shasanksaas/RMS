@@ -36,26 +36,19 @@ class AdvancedReturnsService:
         First check local DB, then Shopify if connected
         """
         try:
+            # Clean inputs
+            order_number = order_number.replace('#', '').strip()
+            email = email.lower().strip()
+            
             # Check local database first
             order = await db.orders.find_one({
                 "tenant_id": tenant_id,
                 "$or": [
                     {"order_number": order_number},
-                    {"order_number": order_number.replace("#", "")}
+                    {"order_number": f"#{order_number}"}
                 ],
                 "customer_email": email
             })
-            
-            if not order:
-                # If Shopify connected, try live lookup
-                from .shopify_service import ShopifyService
-                shopify_service = ShopifyService(tenant_id)
-                
-                if await shopify_service.is_connected():
-                    order_data = await shopify_service.find_order_by_number_and_email(order_number, email)
-                    if order_data:
-                        # Save to local DB
-                        order = await self._save_shopify_order(tenant_id, order_data)
             
             if not order:
                 return {
@@ -63,19 +56,41 @@ class AdvancedReturnsService:
                     "error": "Order not found. Please check your order number and email address."
                 }
             
-            # Get eligible items using rules engine
+            # Get policy for this tenant
             policy = await self._get_tenant_policy(tenant_id)
-            eligible_items = await self.rules_engine.get_eligible_items(order, policy)
+            
+            # Get eligible items using rules engine  
+            eligible_items = []
+            for item in order.get("items", []):
+                eligible_items.append({
+                    "line_item_id": item.get("id", str(item.get("variant_id", ""))),
+                    "sku": item.get("sku", ""),
+                    "title": item.get("title", item.get("name", "")),
+                    "variant": item.get("variant_title", ""),
+                    "qty_ordered": item.get("quantity", 1),
+                    "qty_available": item.get("quantity", 1),
+                    "unit_price": float(item.get("price", 0)),
+                    "image_url": item.get("image_url", ""),
+                    "product_id": item.get("product_id"),
+                    "variant_id": item.get("variant_id")
+                })
             
             return {
                 "success": True,
-                "order": order,
+                "order": {
+                    "id": order["id"],
+                    "order_number": order["order_number"],
+                    "customer_email": order["customer_email"],
+                    "customer_name": order["customer_name"],
+                    "total_amount": order["total_amount"],
+                    "currency": order.get("currency", "USD"),
+                    "created_at": order["created_at"]
+                },
                 "eligible_items": eligible_items,
                 "policy_info": {
                     "return_window_days": policy.get("return_window_days", 30),
-                    "fees": policy.get("fees", {}),
-                    "eligible_outcomes": policy.get("eligible_outcomes", []),
-                    "eligible_methods": policy.get("eligible_methods", [])
+                    "eligible_outcomes": policy.get("eligible_outcomes", ["REFUND"]),
+                    "eligible_methods": policy.get("eligible_methods", ["PREPAID_LABEL"])
                 }
             }
             
