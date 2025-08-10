@@ -33,6 +33,7 @@ import CustomerSelectItems from './pages/customer/SelectItems';
 import CustomerResolution from './pages/customer/Resolution';
 import CustomerConfirm from './pages/customer/Confirm';
 import CustomerStatus from './pages/customer/Status';
+import ReturnPortal from './pages/customer/ReturnPortal';
 
 // Admin Pages
 import AdminTenants from './pages/admin/Tenants';
