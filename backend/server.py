@@ -413,10 +413,109 @@ async def create_order(order_data: OrderCreate, tenant_id: str = Depends(get_ten
     await db.orders.insert_one(order.dict())
     return order
 
-@api_router.get("/orders", response_model=List[Order])
-async def get_orders(tenant_id: str = Depends(get_tenant_id)):
-    orders = await db.orders.find({"tenant_id": tenant_id}).sort("created_at", -1).to_list(1000)
-    return [Order(**order) for order in orders]
+@api_router.get("/orders")
+async def get_orders(
+    tenant_id: str = Depends(get_tenant_id),
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(20, ge=1, le=100, description="Items per page"),
+    search: Optional[str] = Query(None, description="Search by customer name, email, or order number"),
+    status_filter: Optional[str] = Query(None, description="Filter by order status"),
+    date_from: Optional[str] = Query(None, description="Filter orders from date (YYYY-MM-DD)"),
+    date_to: Optional[str] = Query(None, description="Filter orders to date (YYYY-MM-DD)"),
+    sort_by: str = Query("created_at", description="Sort field"),
+    sort_order: str = Query("desc", description="Sort order (asc/desc)")
+):
+    """Get paginated orders with filtering and search for real Shopify data"""
+    
+    # Build query
+    query = {"tenant_id": tenant_id}
+    
+    # Add search filter
+    if search:
+        search_pattern = {"$regex": search, "$options": "i"}
+        query["$or"] = [
+            {"customer_name": search_pattern},
+            {"customer_email": search_pattern},
+            {"order_number": search_pattern},
+            {"email": search_pattern}
+        ]
+    
+    # Add status filter  
+    if status_filter and status_filter != "all":
+        if status_filter == "paid":
+            query["financial_status"] = "paid"
+        elif status_filter == "fulfilled":
+            query["fulfillment_status"] = "fulfilled"
+        elif status_filter == "unfulfilled":
+            query["fulfillment_status"] = {"$in": ["unfulfilled", "partial"]}
+        elif status_filter == "cancelled":
+            query["financial_status"] = "cancelled"
+    
+    # Add date filters
+    if date_from or date_to:
+        date_query = {}
+        if date_from:
+            try:
+                date_query["$gte"] = datetime.fromisoformat(date_from)
+            except ValueError:
+                pass
+        if date_to:
+            try:
+                date_query["$lte"] = datetime.fromisoformat(date_to + "T23:59:59")
+            except ValueError:
+                pass
+        if date_query:
+            query["created_at"] = date_query
+    
+    # Count total items
+    total_items = await db.orders.count_documents(query)
+    
+    # Calculate pagination
+    total_pages = (total_items + limit - 1) // limit
+    skip = (page - 1) * limit
+    
+    # Build sort
+    sort_direction = 1 if sort_order == "asc" else -1
+    sort_field = sort_by if sort_by in ["created_at", "updated_at", "total_price", "order_number"] else "created_at"
+    
+    # Get orders
+    orders_cursor = db.orders.find(query).sort(sort_field, sort_direction).skip(skip).limit(limit)
+    orders = await orders_cursor.to_list(length=limit)
+    
+    # Transform data for response
+    orders_data = []
+    for order in orders:
+        # Handle both synced order format and legacy format
+        order_data = {
+            "id": order.get("order_id", order.get("id")),
+            "order_number": order.get("order_number", order.get("name")),
+            "customer_name": order.get("customer_name", "Unknown"),
+            "customer_email": order.get("customer_email", order.get("email")),
+            "financial_status": order.get("financial_status", "unknown"),
+            "fulfillment_status": order.get("fulfillment_status", "unfulfilled"),
+            "total_price": float(order.get("total_price", "0") or 0),
+            "currency_code": order.get("currency_code", "USD"),
+            "line_items": order.get("line_items", []),
+            "created_at": order.get("created_at"),
+            "updated_at": order.get("updated_at"),
+            "billing_address": order.get("billing_address"),
+            "shipping_address": order.get("shipping_address"),
+            "fulfillments": order.get("fulfillments", []),
+            "has_returns": False  # TODO: Check for linked returns
+        }
+        orders_data.append(order_data)
+    
+    return {
+        "items": orders_data,
+        "pagination": {
+            "current_page": page,
+            "per_page": limit,
+            "total_items": total_items,
+            "total_pages": total_pages,
+            "has_next": page < total_pages,
+            "has_prev": page > 1
+        }
+    }
 
 @api_router.get("/orders/{order_id}", response_model=Order)
 async def get_order(order_id: str, tenant_id: str = Depends(get_tenant_id)):
