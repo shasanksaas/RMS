@@ -172,6 +172,17 @@ const AllReturns = () => {
       refund_amount: 79.99,
       created_at: '2024-01-13T09:15:00Z',
       items: [{ product_name: 'Summer Dress', quantity: 1 }]
+    },
+    {
+      id: 'RET-004',
+      order_number: 'ORD-12348',
+      customer_name: 'John Smith',
+      customer_email: 'john@example.com',
+      status: 'denied',
+      reason: 'changed_mind',
+      refund_amount: 29.99,
+      created_at: '2024-01-12T14:20:00Z',
+      items: [{ product_name: 'Phone Case', quantity: 1 }]
     }
   ];
 
