@@ -205,10 +205,10 @@ const Integrations = () => {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Integrations</h1>
-        <p className="text-gray-500">Connect your Shopify store and other services</p>
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Integrations</h1>
+        <p className="text-gray-500 text-sm md:text-base">Connect your Shopify store and other services</p>
       </div>
 
       {/* Status Messages */}
@@ -216,9 +216,9 @@ const Integrations = () => {
         <Alert className={`border ${message.type === 'success' ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
           <div className="flex items-center">
             {message.type === 'success' ? (
-              <Check className="h-4 w-4 text-green-600" />
+              <Check className="h-4 w-4 text-green-600 flex-shrink-0" />
             ) : (
-              <AlertCircle className="h-4 w-4 text-red-600" />
+              <AlertCircle className="h-4 w-4 text-red-600 flex-shrink-0" />
             )}
             <AlertDescription className={`ml-2 ${message.type === 'success' ? 'text-green-800' : 'text-red-800'}`}>
               {message.text}
@@ -230,19 +230,19 @@ const Integrations = () => {
       {/* Shopify Integration Section */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <ShoppingBag className="h-8 w-8 text-emerald-600" />
-              <div>
-                <CardTitle className="flex items-center space-x-2">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+            <div className="flex items-start space-x-3">
+              <ShoppingBag className="h-8 w-8 text-emerald-600 flex-shrink-0 mt-1" />
+              <div className="min-w-0 flex-1">
+                <CardTitle className="flex items-center space-x-2 text-lg">
                   <span>Shopify Integration</span>
-                  <Shield className="h-4 w-4 text-blue-500" />
+                  <Shield className="h-4 w-4 text-blue-500 flex-shrink-0" />
                 </CardTitle>
-                <CardDescription>Connect any Shopify store with your own API credentials</CardDescription>
+                <CardDescription className="text-sm">Connect any Shopify store with your own API credentials</CardDescription>
               </div>
             </div>
             {!showConnectionForm && (
-              <Button onClick={() => setShowConnectionForm(true)}>
+              <Button onClick={() => setShowConnectionForm(true)} className="w-full sm:w-auto touch-manipulation">
                 <Plus className="h-4 w-4 mr-2" />
                 Connect Store
               </Button>
@@ -254,16 +254,16 @@ const Integrations = () => {
           {/* Connected Stores */}
           {connectedStores.length > 0 && (
             <div>
-              <h3 className="font-medium mb-3">Connected Stores</h3>
+              <h3 className="font-medium mb-3 text-lg">Connected Stores</h3>
               <div className="space-y-3">
                 {connectedStores.map((store) => (
-                  <div key={store.tenant_id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <Globe className="h-5 w-5 text-gray-500" />
-                      <div>
-                        <p className="font-medium">{store.shop_name}</p>
-                        <p className="text-sm text-gray-500">{store.shop}.myshopify.com</p>
-                        <div className="flex items-center space-x-2 mt-1">
+                  <div key={store.tenant_id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg space-y-3 sm:space-y-0">
+                    <div className="flex items-start space-x-3">
+                      <Globe className="h-5 w-5 text-gray-500 flex-shrink-0 mt-1" />
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium truncate">{store.shop_name}</p>
+                        <p className="text-sm text-gray-500 truncate">{store.shop}.myshopify.com</p>
+                        <div className="flex flex-wrap items-center gap-2 mt-1">
                           <Badge className={store.webhook_status === 'registered' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}>
                             {store.webhook_status}
                           </Badge>
@@ -273,11 +273,12 @@ const Integrations = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2 sm:ml-4">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleDisconnect(store.tenant_id)}
+                        className="touch-manipulation"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -290,9 +291,9 @@ const Integrations = () => {
 
           {/* Connection Form */}
           {showConnectionForm && (
-            <div className="border rounded-lg p-6 bg-gray-50">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-medium">Connect New Shopify Store</h3>
+            <div className="border rounded-lg p-4 md:p-6 bg-gray-50">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 space-y-2 sm:space-y-0">
+                <h3 className="font-medium text-lg">Connect New Shopify Store</h3>
                 <Button 
                   variant="ghost" 
                   size="sm"
@@ -301,6 +302,7 @@ const Integrations = () => {
                     setValidationResults(null);
                     setMessage({ type: '', text: '' });
                   }}
+                  className="touch-manipulation sm:ml-4"
                 >
                   Cancel
                 </Button>
@@ -308,13 +310,13 @@ const Integrations = () => {
 
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="shop">Shop Domain</Label>
+                  <Label htmlFor="shop" className="text-sm font-medium">Shop Domain</Label>
                   <Input
                     id="shop"
                     placeholder="e.g., demo-store or demo-store.myshopify.com"
                     value={connectionForm.shop}
                     onChange={(e) => setConnectionForm({...connectionForm, shop: e.target.value})}
-                    className="mt-1"
+                    className="mt-1 touch-manipulation"
                   />
                   <p className="text-xs text-gray-500 mt-1">
                     Enter your shop's domain name (with or without .myshopify.com)
@@ -322,13 +324,13 @@ const Integrations = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="api_key">API Key</Label>
+                  <Label htmlFor="api_key" className="text-sm font-medium">API Key</Label>
                   <Input
                     id="api_key"
                     placeholder="Your Shopify API Key"
                     value={connectionForm.api_key}
                     onChange={(e) => setConnectionForm({...connectionForm, api_key: e.target.value})}
-                    className="mt-1 font-mono text-sm"
+                    className="mt-1 font-mono text-sm touch-manipulation"
                   />
                   <p className="text-xs text-gray-500 mt-1">
                     From your Shopify Partner Dashboard or private app settings
@@ -336,14 +338,14 @@ const Integrations = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="api_secret">API Secret</Label>
+                  <Label htmlFor="api_secret" className="text-sm font-medium">API Secret</Label>
                   <Input
                     id="api_secret"
                     type="password"
                     placeholder="Your Shopify API Secret"
                     value={connectionForm.api_secret}
                     onChange={(e) => setConnectionForm({...connectionForm, api_secret: e.target.value})}
-                    className="mt-1 font-mono text-sm"
+                    className="mt-1 font-mono text-sm touch-manipulation"
                   />
                   <p className="text-xs text-gray-500 mt-1">
                     Keep this secret secure - it's encrypted in our database
@@ -357,25 +359,25 @@ const Integrations = () => {
                     <div className="space-y-1 text-xs">
                       <div className="flex items-center space-x-2">
                         {validationResults.validations.shop_domain.valid ? (
-                          <Check className="h-3 w-3 text-green-500" />
+                          <Check className="h-3 w-3 text-green-500 flex-shrink-0" />
                         ) : (
-                          <AlertCircle className="h-3 w-3 text-red-500" />
+                          <AlertCircle className="h-3 w-3 text-red-500 flex-shrink-0" />
                         )}
-                        <span>Shop Domain: {validationResults.validations.shop_domain.normalized || 'Invalid'}</span>
+                        <span className="truncate">Shop Domain: {validationResults.validations.shop_domain.normalized || 'Invalid'}</span>
                       </div>
                       <div className="flex items-center space-x-2">
                         {validationResults.validations.api_key.valid ? (
-                          <Check className="h-3 w-3 text-green-500" />
+                          <Check className="h-3 w-3 text-green-500 flex-shrink-0" />
                         ) : (
-                          <AlertCircle className="h-3 w-3 text-red-500" />
+                          <AlertCircle className="h-3 w-3 text-red-500 flex-shrink-0" />
                         )}
                         <span>API Key: {validationResults.validations.api_key.valid ? 'Valid format' : 'Invalid format'}</span>
                       </div>
                       <div className="flex items-center space-x-2">
                         {validationResults.validations.api_secret.valid ? (
-                          <Check className="h-3 w-3 text-green-500" />
+                          <Check className="h-3 w-3 text-green-500 flex-shrink-0" />
                         ) : (
-                          <AlertCircle className="h-3 w-3 text-red-500" />
+                          <AlertCircle className="h-3 w-3 text-red-500 flex-shrink-0" />
                         )}
                         <span>API Secret: {validationResults.validations.api_secret.valid ? 'Valid format' : 'Invalid format'}</span>
                       </div>
@@ -383,19 +385,20 @@ const Integrations = () => {
                   </div>
                 )}
 
-                <div className="flex items-center space-x-2 pt-2">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 pt-2">
                   <Button 
                     onClick={validateCredentials}
                     variant="outline"
                     size="sm"
                     disabled={connecting}
+                    className="touch-manipulation"
                   >
                     Validate
                   </Button>
                   <Button 
                     onClick={handleConnect} 
                     disabled={connecting || !connectionForm.shop || !connectionForm.api_key || !connectionForm.api_secret}
-                    className="flex-1"
+                    className="flex-1 touch-manipulation"
                   >
                     {connecting ? (
                       <>
@@ -429,8 +432,8 @@ const Integrations = () => {
             <div className="text-center py-8">
               <ShoppingBag className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="font-medium text-gray-900 mb-2">No stores connected</h3>
-              <p className="text-gray-500 mb-4">Connect your first Shopify store to start managing returns</p>
-              <Button onClick={() => setShowConnectionForm(true)}>
+              <p className="text-gray-500 mb-4 text-sm">Connect your first Shopify store to start managing returns</p>
+              <Button onClick={() => setShowConnectionForm(true)} className="touch-manipulation">
                 <Plus className="h-4 w-4 mr-2" />
                 Connect Your Store
               </Button>
@@ -441,26 +444,26 @@ const Integrations = () => {
 
       {/* Other Integrations */}
       <div>
-        <h2 className="text-xl font-semibold mb-4">Other Integrations</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <h2 className="text-lg md:text-xl font-semibold mb-4">Other Integrations</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {otherIntegrations.map((integration) => {
             const Icon = integration.icon;
             return (
-              <Card key={integration.name}>
+              <Card key={integration.name} className="hover:shadow-md transition-shadow">
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <Icon className="h-8 w-8 text-gray-600" />
+                    <Icon className="h-8 w-8 text-gray-600 flex-shrink-0" />
                     <Badge className={integration.color}>
                       {integration.status}
                     </Badge>
                   </div>
-                  <CardTitle>{integration.name}</CardTitle>
-                  <CardDescription>{integration.description}</CardDescription>
+                  <CardTitle className="text-lg">{integration.name}</CardTitle>
+                  <CardDescription className="text-sm">{integration.description}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Button 
                     variant="outline"
-                    className="w-full"
+                    className="w-full touch-manipulation"
                     disabled={true}
                   >
                     Coming Soon
