@@ -185,7 +185,7 @@ class RulesAPITester:
             
         headers = {'X-Tenant-Id': self.tenant_id}
         
-        success, response = self.make_request('GET', 'rules/', headers=headers)
+        success, response = self.make_request('GET', 'rules', headers=headers)
         if success and 'items' in response and 'pagination' in response:
             rules_list = response['items']
             pagination = response['pagination']
@@ -318,7 +318,7 @@ class RulesAPITester:
         
         created_count = 0
         for i, rule_data in enumerate(test_rules):
-            success, response = self.make_request('POST', 'rules/', rule_data, headers)
+            success, response = self.make_request('POST', 'rules', rule_data, headers)
             if success and response.get('success') and 'rule_id' in response:
                 rule_id = response['rule_id']
                 self.created_rule_ids.append(rule_id)
@@ -335,7 +335,7 @@ class RulesAPITester:
                          f"Only created {created_count} of {len(test_rules)} rules")
         
         # Verify all rules are retrievable
-        success, response = self.make_request('GET', 'rules/', headers=headers)
+        success, response = self.make_request('GET', 'rules', headers=headers)
         if success and 'items' in response:
             total_rules = response['pagination']['total_count']
             self.log_test("Database Connectivity - Rule persistence verification", True, 
@@ -437,7 +437,7 @@ class RulesAPITester:
             "is_active": True
         }
         
-        success, response = self.make_request('POST', 'rules/', duplicate_rule_data, headers, expected_status=400)
+        success, response = self.make_request('POST', 'rules', duplicate_rule_data, headers, expected_status=400)
         if success:
             self.log_test("Error Handling - Duplicate rule name", True, "Correctly rejected duplicate name")
         else:
@@ -451,7 +451,7 @@ class RulesAPITester:
             self.log_test("Error Handling - Non-existent rule", False, "Should return 404 for missing rule")
         
         # Test 3: Create rule without tenant header
-        success, response = self.make_request('POST', 'rules/', duplicate_rule_data, expected_status=400)
+        success, response = self.make_request('POST', 'rules', duplicate_rule_data, expected_status=400)
         if success:
             self.log_test("Error Handling - Missing tenant header", True, "Correctly rejected missing tenant")
         else:
