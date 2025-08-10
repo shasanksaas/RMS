@@ -1,6 +1,6 @@
 """
 Auth Controller for Shopify OAuth 2.0 Dynamic Connectivity
-Handles authentication endpoints and store management
+Handles authentication endpoints and store management with automatic environment detection
 """
 
 import os
@@ -15,6 +15,7 @@ from .service import auth_service
 from ...utils.exceptions import AuthenticationError, ValidationError
 from ...utils.dependencies import get_current_user
 from ...middleware.security import verify_tenant
+from ...config.environment import env_config
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
