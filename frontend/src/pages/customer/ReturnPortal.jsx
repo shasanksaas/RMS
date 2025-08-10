@@ -217,5 +217,3 @@ const ReturnPortal = () => {
 };
 
 export default ReturnPortal;
-
-export default ReturnPortal;
