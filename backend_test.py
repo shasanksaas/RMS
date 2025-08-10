@@ -78,6 +78,14 @@ class UnifiedReturnsTestSuite:
         """Setup test data for unified returns testing"""
         print("\n🔧 Setting up test data...")
         
+        # First check if backend is accessible
+        success, health_data, status = await self.make_request("GET", "/health", headers={})
+        if not success:
+            self.log_test("Setup: Backend health check", False, f"Backend not accessible: {status}")
+            return False
+        
+        self.log_test("Setup: Backend health check", True, "Backend is healthy")
+        
         # Get existing orders from seeded data
         success, orders_data, status = await self.make_request("GET", "/orders?limit=5")
         
@@ -88,7 +96,7 @@ class UnifiedReturnsTestSuite:
                          f"Using order {self.test_order['order_number']} for testing")
             return True
         else:
-            self.log_test("Setup: Get test order", False, "No orders found in seeded data")
+            self.log_test("Setup: Get test order", False, f"No orders found in seeded data. Status: {status}, Response: {orders_data}")
             return False
     
     async def test_order_lookup_endpoint(self):
