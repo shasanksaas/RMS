@@ -75,22 +75,43 @@ const Integrations = () => {
   };
 
   const loadConnectedStores = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
       const apiUrl = getApiUrl();
-      
-      const response = await fetch(`${apiUrl}/api/auth/stores`, {
+      const response = await fetch(`${apiUrl}/api/integrations/shopify/status`, {
+        method: 'GET',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-Tenant-Id': 'tenant-fashion-store' // TODO: Get from auth context
         }
       });
 
       if (response.ok) {
-        const stores = await response.json();
-        setConnectedStores(stores);
+        const status = await response.json();
+        
+        if (status.connected) {
+          // Convert integration status to store format
+          const store = {
+            id: 'shopify-integration',
+            shop: status.shop,
+            name: status.shop?.replace('.myshopify.com', '') || 'Shopify Store',
+            platform: 'shopify',
+            installed_at: status.installedAt,
+            last_sync: status.lastSyncAt,
+            last_webhook_at: status.lastWebhookAt,
+            order_counts: status.orderCounts,
+            return_counts: status.returnCounts,
+            webhooks: status.webhooks,
+            latest_sync_job: status.latestSyncJob
+          };
+          setConnectedStores([store]);
+        } else {
+          setConnectedStores([]);
+        }
       }
     } catch (error) {
-      console.error('Failed to load connected stores:', error);
+      console.error('Failed to load integration status:', error);
+      setConnectedStores([]);
     } finally {
       setLoading(false);
     }
