@@ -252,9 +252,10 @@ class WebhookSyncTestSuite:
         # Look for the specific test order
         test_order_found = False
         for order in orders_data.get("items", []):
-            # Check by order ID or order number
-            if (str(order.get("id")) == str(self.test_order_id) or 
-                order.get("order_number") == f"#TEST-{self.test_order_id}"):
+            # Check by order number (removing # prefix if present)
+            order_number = order.get("order_number", "").replace("#", "")
+            expected_order_number = f"TEST-{self.test_order_id}"
+            if order_number == expected_order_number:
                 test_order_found = True
                 
                 # Verify order data integrity
