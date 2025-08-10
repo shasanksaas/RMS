@@ -322,10 +322,8 @@ class ShopifyIntegrationTester:
         """Test manual sync trigger /api/test/sync and sync status tracking"""
         print("\n🔄 Testing Sync Service...")
         
-        # Test sync with seeded tenant
-        sync_data = {"sync_type": "manual"}
-        
-        success, response = self.make_request('POST', 'test/sync/tenant-fashion-store.myshopify.com', sync_data)
+        # Test sync with seeded tenant - send string body as expected
+        success, response = self.make_request('POST', 'test/sync/tenant-fashion-store.myshopify.com', "manual")
         if success and response.get('status') == 'success':
             self.log_test("Sync Service - Manual Sync Trigger", True)
             
@@ -339,8 +337,7 @@ class ShopifyIntegrationTester:
             self.log_test("Sync Service - Manual Sync Trigger", False, str(response))
             
         # Test initial sync type
-        initial_sync_data = {"sync_type": "initial"}
-        success, response = self.make_request('POST', 'test/sync/tenant-tech-gadgets.myshopify.com', initial_sync_data)
+        success, response = self.make_request('POST', 'test/sync/tenant-tech-gadgets.myshopify.com', "initial")
         if success and response.get('status') == 'success':
             self.log_test("Sync Service - Initial Sync Type", True)
         else:
