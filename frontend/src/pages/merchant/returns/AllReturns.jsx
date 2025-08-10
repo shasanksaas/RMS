@@ -200,21 +200,29 @@ const AllReturns = () => {
       });
 
       if (response.ok) {
-        // Refresh the returns list
-        await loadReturns();
+        // Update local state optimistically
+        setAllReturns(prevReturns => 
+          prevReturns.map(ret => 
+            ret.id === returnId ? { ...ret, status: newStatus } : ret
+          )
+        );
         setError('');
       } else {
         // Fallback to local state update if API fails
-        setReturns(returns.map(ret => 
-          ret.id === returnId ? { ...ret, status: newStatus } : ret
-        ));
+        setAllReturns(prevReturns => 
+          prevReturns.map(ret => 
+            ret.id === returnId ? { ...ret, status: newStatus } : ret
+          )
+        );
       }
     } catch (err) {
       console.error('Error updating status:', err);
       // Fallback to local state update
-      setReturns(returns.map(ret => 
-        ret.id === returnId ? { ...ret, status: newStatus } : ret
-      ));
+      setAllReturns(prevReturns => 
+        prevReturns.map(ret => 
+          ret.id === returnId ? { ...ret, status: newStatus } : ret
+        )
+      );
     }
   };
 
