@@ -193,6 +193,20 @@ const CustomerStart = () => {
             </div>
           </div>
         </div>
+        <div className="space-y-4 mt-6 pt-6 border-t border-gray-200">
+          <p className="text-center text-gray-600 text-sm">
+            Or use our step-by-step return process
+          </p>
+          <Button
+            onClick={() => navigate('/returns/create')}
+            variant="outline"
+            className="w-full h-12 text-base touch-manipulation border-blue-600 text-blue-600 hover:bg-blue-50"
+          >
+            Start Guided Return Process
+            <ArrowRight className="ml-2 h-5 w-5" />
+          </Button>
+        </div>
+
         <Button variant="outline" className="mt-4 w-full sm:w-auto touch-manipulation">
           Contact Support
         </Button>
