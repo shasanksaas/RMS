@@ -458,11 +458,17 @@ const RuleBuilder = ({ rule = null, onSave, onCancel, isOpen }) => {
                               <SelectValue placeholder="Select operator" />
                             </SelectTrigger>
                             <SelectContent>
-                              {fieldOptions.operators.map((op) => (
-                                <SelectItem key={op.value} value={op.value}>
-                                  {op.label}
+                              {fieldOptions.operators && fieldOptions.operators.length > 0 ? (
+                                fieldOptions.operators.map((op) => (
+                                  <SelectItem key={op.value} value={op.value}>
+                                    {op.label}
+                                  </SelectItem>
+                                ))
+                              ) : (
+                                <SelectItem value="" disabled>
+                                  Loading operators...
                                 </SelectItem>
-                              ))}
+                              )}
                             </SelectContent>
                           </Select>
                         </div>
