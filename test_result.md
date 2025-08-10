@@ -152,15 +152,18 @@ backend:
 
   - task: "Email Service Enhancement for Returns"
     implemented: true
-    working: false
+    working: true
     file: "src/services/email_service.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Added send_return_requested_email and send_return_approved_email methods to email service"
+      - working: true
+        agent: "testing"
+        comment: "✅ EMAIL SERVICE ENHANCED: Email service has been successfully enhanced with return-specific methods. send_return_requested_email and send_return_approved_email methods are implemented with proper HTML templates and SMTP configuration. Service is ready for integration with unified returns."
 
   - task: "File Upload Service for Return Photos"
     implemented: true
