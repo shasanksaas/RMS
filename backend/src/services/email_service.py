@@ -321,6 +321,149 @@ class EmailService:
             print(f"Failed to send email to {to_email}: {e}")
             return False
     
+    async def send_return_requested_email(self, customer_email: str, return_record: Dict, order: Dict) -> bool:
+        """Send email notification when return is requested"""
+        if not self.enabled:
+            print("Email notification skipped - service disabled")
+            return False
+        
+        try:
+            subject = f"Return Request Received - Order #{order['order_number']}"
+            
+            html_content = f"""
+            <html>
+            <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <div style="background-color: #3b82f6; color: white; padding: 20px; text-align: center;">
+                    <h2>Return Request Received</h2>
+                </div>
+                
+                <div style="padding: 20px;">
+                    <h3>Hello {return_record['customer_name']},</h3>
+                    
+                    <p>We have received your return request and will review it shortly.</p>
+                    
+                    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                        <h4>Return Details:</h4>
+                        <p><strong>Return ID:</strong> {return_record['id']}</p>
+                        <p><strong>Order Number:</strong> #{return_record['order_number']}</p>
+                        <p><strong>Status:</strong> {return_record['status'].title()}</p>
+                        <p><strong>Estimated Refund:</strong> ${return_record['estimated_refund']:.2f}</p>
+                    </div>
+                    
+                    <h4>What's Next?</h4>
+                    <p>We will review your request within 1-2 business days and send you an update via email.</p>
+                </div>
+                
+                <div style="background-color: #f1f1f1; padding: 15px; text-align: center; font-size: 12px;">
+                    <p>Thank you for your business!</p>
+                </div>
+            </body>
+            </html>
+            """
+            
+            text_content = f"""
+            Return Request Received
+            
+            Hello {return_record['customer_name']},
+            
+            We have received your return request and will review it shortly.
+            
+            Return Details:
+            - Return ID: {return_record['id']}
+            - Order Number: #{return_record['order_number']}
+            - Status: {return_record['status'].title()}
+            - Estimated Refund: ${return_record['estimated_refund']:.2f}
+            
+            What's Next?
+            We will review your request within 1-2 business days and send you an update via email.
+            
+            Thank you for your business!
+            """
+            
+            return await self._send_email(customer_email, return_record['customer_name'], subject, html_content, text_content)
+            
+        except Exception as e:
+            print(f"Failed to send return requested email: {e}")
+            return False
+
+    async def send_return_approved_email(self, customer_email: str, return_record: Dict, order: Dict, label_url: str = None) -> bool:
+        """Send email notification when return is approved"""
+        if not self.enabled:
+            print("Email notification skipped - service disabled")
+            return False
+        
+        try:
+            subject = f"Return Request Approved - Order #{order['order_number']}"
+            
+            label_section = ""
+            if label_url:
+                label_section = f"""
+                <div style="background-color: #d4edda; padding: 15px; border-radius: 5px; margin: 15px 0;">
+                    <h4 style="color: #155724;">Return Label Ready</h4>
+                    <p>Your prepaid return label is ready! <a href="{label_url}" style="color: #155724; font-weight: bold;">Download Return Label</a></p>
+                </div>
+                """
+            
+            html_content = f"""
+            <html>
+            <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <div style="background-color: #28a745; color: white; padding: 20px; text-align: center;">
+                    <h2>Return Request Approved</h2>
+                </div>
+                
+                <div style="padding: 20px;">
+                    <h3>Great news, {return_record['customer_name']}!</h3>
+                    
+                    <p>Your return request has been approved.</p>
+                    
+                    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                        <h4>Return Details:</h4>
+                        <p><strong>Return ID:</strong> {return_record['id']}</p>
+                        <p><strong>Order Number:</strong> #{return_record['order_number']}</p>
+                        <p><strong>Status:</strong> Approved</p>
+                        <p><strong>Refund Amount:</strong> ${return_record['estimated_refund']:.2f}</p>
+                    </div>
+                    
+                    {label_section}
+                    
+                    <h4>What's Next?</h4>
+                    <p>Pack your items securely and send them back using the return method you selected. We'll process your refund within 3-5 business days after we receive your items.</p>
+                </div>
+                
+                <div style="background-color: #f1f1f1; padding: 15px; text-align: center; font-size: 12px;">
+                    <p>Thank you for your business!</p>
+                </div>
+            </body>
+            </html>
+            """
+            
+            text_content = f"""
+            Return Request Approved
+            
+            Great news, {return_record['customer_name']}!
+            
+            Your return request has been approved.
+            
+            Return Details:
+            - Return ID: {return_record['id']}
+            - Order Number: #{return_record['order_number']}
+            - Status: Approved
+            - Refund Amount: ${return_record['estimated_refund']:.2f}
+            
+            {'Return Label: ' + label_url if label_url else ''}
+            
+            What's Next?
+            Pack your items securely and send them back using the return method you selected. We'll process your refund within 3-5 business days after we receive your items.
+            
+            Thank you for your business!
+            """
+            
+            return await self._send_email(customer_email, return_record['customer_name'], subject, html_content, text_content)
+            
+        except Exception as e:
+            print(f"Failed to send return approved email: {e}")
+            return False
+
     async def send_test_email(self, to_email: str) -> bool:
         """Send a test email to verify SMTP configuration"""
         if not self.enabled:
