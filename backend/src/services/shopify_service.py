@@ -18,9 +18,10 @@ from ..config.database import db
 class ShopifyService:
     """Service for Shopify API interactions with offline fallback"""
     
-    def __init__(self):
+    def __init__(self, tenant_id: str = None):
         self.offline_mode = OFFLINE_MODE
         self.mock_data_path = MOCK_DATA_PATH
+        self.tenant_id = tenant_id
     
     async def is_online(self) -> bool:
         """Check if Shopify API is accessible"""
