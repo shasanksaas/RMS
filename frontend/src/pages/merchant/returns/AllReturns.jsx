@@ -462,6 +462,12 @@ const AllReturns = () => {
         </div>
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 w-full md:w-auto">
+          <Link to="/app/returns/create">
+            <Button className="w-full sm:w-auto touch-manipulation bg-blue-600 hover:bg-blue-700">
+              <Package className="h-4 w-4 mr-2" />
+              Create Return
+            </Button>
+          </Link>
           <Button variant="outline" onClick={handleExport} className="w-full sm:w-auto touch-manipulation">
             <Download className="h-4 w-4 mr-2" />
             Export CSV
