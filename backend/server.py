@@ -24,6 +24,9 @@ from src.controllers.portal_returns_controller import router as portal_returns_r
 from src.controllers.admin_returns_controller import router as admin_returns_router
 from src.controllers.order_lookup_controller import router as order_lookup_router
 from src.controllers.admin_drafts_controller import router as admin_drafts_router
+# Elite-Grade Controllers
+from src.controllers.elite_portal_returns_controller import router as elite_portal_router
+from src.controllers.elite_admin_returns_controller import router as elite_admin_router
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 import uuid
