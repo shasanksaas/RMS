@@ -200,9 +200,13 @@ def get_current_tenant_id() -> str:
     if not tenant_context.tenant_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Tenant context not found"
+            detail="No tenant context available"
         )
     return tenant_context.tenant_id
+
+def verify_tenant() -> str:
+    """FastAPI dependency to verify tenant access"""
+    return get_current_tenant_id()
 
 def require_tenant_context():
     """Dependency to ensure tenant context is set"""
