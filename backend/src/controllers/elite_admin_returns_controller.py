@@ -51,6 +51,24 @@ class ApproveDraftRequest(BaseModel):
 
 
 # Routes
+
+# Health check endpoint (must be first to avoid conflicts)
+@router.get("/health")
+async def health_check():
+    """Health check for elite admin returns API"""
+    return {
+        "status": "healthy",
+        "service": "Elite Admin Returns API",
+        "version": "1.0.0",
+        "features": [
+            "return_management",
+            "draft_approval",
+            "bulk_operations",
+            "audit_logs",
+            "policy_overrides"
+        ]
+    }
+
 @router.get("/")
 async def get_returns(
     tenant_id: str = Depends(get_tenant_id),
