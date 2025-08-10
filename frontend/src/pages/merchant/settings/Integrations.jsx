@@ -299,32 +299,133 @@ const Integrations = () => {
               <h3 className="font-medium mb-3 text-lg">Connected Stores</h3>
               <div className="space-y-3">
                 {connectedStores.map((store) => (
-                  <div key={store.tenant_id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg space-y-3 sm:space-y-0">
-                    <div className="flex items-start space-x-3">
-                      <Globe className="h-5 w-5 text-gray-500 flex-shrink-0 mt-1" />
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium truncate">{store.shop_name}</p>
-                        <p className="text-sm text-gray-500 truncate">{store.shop}.myshopify.com</p>
-                        <div className="flex flex-wrap items-center gap-2 mt-1">
-                          <Badge className={store.webhook_status === 'registered' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}>
-                            {store.webhook_status}
-                          </Badge>
-                          <span className="text-xs text-gray-400">
-                            Connected {new Date(store.connected_at).toLocaleDateString()}
+                  <div key={store.id} className="border rounded-lg p-4 bg-white">
+                    {/* Store Header */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
+                      <div className="flex items-start space-x-3">
+                        <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                          <Check className="h-5 w-5 text-green-600" />
+                        </div>
+                        <div>
+                          <div className="flex items-center space-x-2">
+                            <h4 className="font-medium text-lg">{store.name}</h4>
+                            <Badge className="bg-green-100 text-green-800">Connected</Badge>
+                          </div>
+                          <p className="text-sm text-gray-600">{store.shop}</p>
+                          <p className="text-xs text-gray-500">
+                            Connected {store.installed_at ? new Date(store.installed_at).toLocaleDateString() : 'Recently'}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2 mt-3 sm:mt-0">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleResync}
+                          className="touch-manipulation"
+                        >
+                          <RefreshCw className="h-4 w-4 mr-2" />
+                          Resync
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDisconnect(store.id)}
+                          className="touch-manipulation text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                      <div className="text-center p-3 bg-gray-50 rounded-lg">
+                        <div className="text-2xl font-bold text-blue-600">
+                          {store.order_counts?.total || 0}
+                        </div>
+                        <div className="text-xs text-gray-600">Total Orders</div>
+                      </div>
+                      <div className="text-center p-3 bg-gray-50 rounded-lg">
+                        <div className="text-2xl font-bold text-green-600">
+                          {store.order_counts?.last30d || 0}
+                        </div>
+                        <div className="text-xs text-gray-600">Orders (30d)</div>
+                      </div>
+                      <div className="text-center p-3 bg-gray-50 rounded-lg">
+                        <div className="text-2xl font-bold text-purple-600">
+                          {store.return_counts?.total || 0}
+                        </div>
+                        <div className="text-xs text-gray-600">Total Returns</div>
+                      </div>
+                      <div className="text-center p-3 bg-gray-50 rounded-lg">
+                        <div className="text-2xl font-bold text-orange-600">
+                          {store.return_counts?.last30d || 0}
+                        </div>
+                        <div className="text-xs text-gray-600">Returns (30d)</div>
+                      </div>
+                    </div>
+
+                    {/* Sync Status */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between text-sm">
+                      <div className="space-y-1">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-gray-600">Last Sync:</span>
+                          <span className="font-medium">
+                            {store.last_sync ? new Date(store.last_sync).toLocaleString() : 'Never'}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-gray-600">Last Webhook:</span>
+                          <span className="font-medium">
+                            {store.last_webhook_at ? new Date(store.last_webhook_at).toLocaleString() : 'None'}
                           </span>
                         </div>
                       </div>
+
+                      {/* Webhook Status */}
+                      <div className="mt-2 sm:mt-0">
+                        <div className="text-xs text-gray-600 mb-1">Webhook Health:</div>
+                        <div className="flex flex-wrap gap-1">
+                          {store.webhooks?.slice(0, 3).map((webhook, idx) => (
+                            <Badge key={idx} className="bg-green-100 text-green-800 text-xs">
+                              ✓ {webhook.topic?.split('/')[0]}
+                            </Badge>
+                          ))}
+                          {store.webhooks?.length > 3 && (
+                            <Badge className="bg-gray-100 text-gray-600 text-xs">
+                              +{store.webhooks.length - 3} more
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-center space-x-2 sm:ml-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDisconnect(store.tenant_id)}
-                        className="touch-manipulation"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+
+                    {/* Latest Sync Job */}
+                    {store.latest_sync_job && (
+                      <div className="mt-3 pt-3 border-t border-gray-200">
+                        <div className="flex items-center justify-between text-sm">
+                          <div className="flex items-center space-x-2">
+                            <span className="text-gray-600">Latest Sync Job:</span>
+                            <Badge className={
+                              store.latest_sync_job.status === 'completed' ? 'bg-green-100 text-green-800' :
+                              store.latest_sync_job.status === 'running' ? 'bg-blue-100 text-blue-800' :
+                              store.latest_sync_job.status === 'failed' ? 'bg-red-100 text-red-800' :
+                              'bg-gray-100 text-gray-800'
+                            }>
+                              {store.latest_sync_job.status}
+                            </Badge>
+                          </div>
+                          <span className="text-gray-500 text-xs">
+                            {store.latest_sync_job.startedAt ? 
+                              new Date(store.latest_sync_job.startedAt).toLocaleString() : 
+                              'Unknown'
+                            }
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
