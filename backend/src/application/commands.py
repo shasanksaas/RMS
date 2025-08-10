@@ -94,4 +94,5 @@ class ApproveDraftAndConvert(Command):
     tenant_id: TenantId
     linked_order_id: str
     approver: str
+    correlation_id: Optional[str]
     notes: str = ""
