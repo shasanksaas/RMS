@@ -595,7 +595,7 @@ const AllReturns = () => {
                           <Button 
                             variant="ghost" 
                             size="sm" 
-                            className="text-green-600 hover:text-green-700"
+                            className="text-green-600 hover:text-green-700 touch-manipulation"
                             onClick={() => handleStatusUpdate(returnRequest.id, 'approved')}
                           >
                             <CheckCircle className="h-4 w-4" />
@@ -603,7 +603,7 @@ const AllReturns = () => {
                           <Button 
                             variant="ghost" 
                             size="sm" 
-                            className="text-red-600 hover:text-red-700"
+                            className="text-red-600 hover:text-red-700 touch-manipulation"
                             onClick={() => handleStatusUpdate(returnRequest.id, 'denied')}
                           >
                             <XCircle className="h-4 w-4" />
