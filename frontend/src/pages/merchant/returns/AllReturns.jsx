@@ -24,6 +24,7 @@ const AllReturns = () => {
     page: 1,
     limit: 20
   });
+  const [syncing, setSyncing] = useState(false);
 
   // Get backend URL and tenant from environment
   const backendUrl = process.env.REACT_APP_BACKEND_URL;
