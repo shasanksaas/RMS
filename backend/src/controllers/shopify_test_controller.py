@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/shopify-test", tags=["shopify-test"])
 
-# Real Shopify credentials from your curl command
+# Real Shopify credentials from updated user credentials
 SHOPIFY_STORE = "rms34.myshopify.com"
 SHOPIFY_ACCESS_TOKEN = "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"
 SHOPIFY_API_VERSION = "2025-07"
