@@ -639,8 +639,8 @@ const AllReturns = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {returns.map((returnRequest) => (
-                      <tr key={returnRequest.id} className="hover:bg-gray-50">
+                    {filteredReturns.map((returnRequest, index) => (
+                      <tr key={`${returnRequest.id}-${index}`} className="hover:bg-gray-50">
                         <td className="py-4 px-4">
                           <input
                             type="checkbox"
