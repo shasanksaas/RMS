@@ -57,15 +57,15 @@ class ReturnItemRequest(BaseModel):
 class CreateReturnRequestModel(BaseModel):
     order_id: Optional[str] = None  # For Shopify mode
     order_number: Optional[str] = None  # For fallback mode
-    customer_email: str = Field(..., regex=r'^[^@]+@[^@]+\.[^@]+$')
-    return_method: str = Field(..., regex="^(prepaid_label|qr_dropoff|in_store|customer_ships)$")
+    customer_email: str = Field(..., pattern=r'^[^@]+@[^@]+\.[^@]+$')
+    return_method: str = Field(..., pattern="^(prepaid_label|qr_dropoff|in_store|customer_ships)$")
     items: List[ReturnItemRequest]
     customer_note: Optional[str] = ""
 
 
 class FallbackReturnRequest(BaseModel):
     order_number: str = Field(..., min_length=1)
-    customer_email: str = Field(..., regex=r'^[^@]+@[^@]+\.[^@]+$')
+    customer_email: str = Field(..., pattern=r'^[^@]+@[^@]+\.[^@]+$')
     items: List[Dict[str, Any]]
     photos: List[str] = Field(default_factory=list)
     customer_note: Optional[str] = ""
