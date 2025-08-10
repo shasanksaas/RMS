@@ -11,6 +11,7 @@ from datetime import datetime
 from ..services.returns_service_advanced import advanced_returns_service
 from ..utils.dependencies import get_tenant_id_optional
 from ..middleware.security import rate_limit_by_ip
+from ..config.database import db
 
 router = APIRouter(prefix="/portal/returns", tags=["portal", "returns"])
 logger = logging.getLogger(__name__)
