@@ -20,6 +20,8 @@ from src.controllers.unified_returns_controller import router as unified_returns
 from src.controllers.shopify_integration_controller import router as integration_router
 from src.controllers.orders_controller_enhanced import router as orders_enhanced_router
 from src.controllers.returns_controller_enhanced import router as returns_enhanced_router
+from src.controllers.portal_returns_controller import router as portal_returns_router
+from src.controllers.admin_returns_controller import router as admin_returns_router
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 import uuid
