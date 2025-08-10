@@ -48,19 +48,20 @@ const Integrations = () => {
     
     // Handle OAuth callback parameters
     const connected = searchParams.get('connected');
+    const shop = searchParams.get('shop');
     const error = searchParams.get('error');
     const errorMessage = searchParams.get('message');
     
-    if (connected === 'true') {
-      const tenant = searchParams.get('tenant');
-      const shop = searchParams.get('shop');
+    if (connected === '1' || connected === 'true') {
       setMessage({ 
         type: 'success', 
-        text: `Successfully connected to ${shop || tenant}! Your store is now integrated with EasyReturns.` 
+        text: `Successfully connected to ${shop || 'your store'}! Your store is now integrated and data sync has started.` 
       });
+      // Reload connected stores to show the new connection
+      setTimeout(() => loadConnectedStores(), 1000);
       // Clear URL parameters
       window.history.replaceState({}, document.title, window.location.pathname);
-    } else if (error) {
+    } else if (error === '1' || error) {
       setMessage({ 
         type: 'error', 
         text: errorMessage || 'Connection failed. Please try again.' 
