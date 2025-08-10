@@ -95,6 +95,7 @@ async def security_and_audit_middleware(request: Request, call_next):
         "/api/enhanced/", # Enhanced features
         "/api/shopify/",   # Shopify endpoints
         "/api/shopify-test/",  # Shopify connectivity test endpoints
+        "/api/elite/",   # Elite controllers
         "/api/rules/field-types/options"  # Rules field types endpoint (no tenant needed)
     ]
     
