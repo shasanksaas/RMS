@@ -254,6 +254,10 @@ async def create_rule(
     
     await db.return_rules.insert_one(rule_dict)
     
+    # Convert ObjectId to string for response
+    if '_id' in rule_dict:
+        rule_dict['_id'] = str(rule_dict['_id'])
+    
     return {
         "success": True,
         "message": "Rule created successfully",
