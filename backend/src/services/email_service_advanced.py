@@ -213,7 +213,9 @@ class EmailService:
             "return_approved": f"Return Approved - #{data.get('return_id', '')}",
             "return_declined": f"Return Request Declined - #{data.get('return_id', '')}",
             "label_issued": f"Return Label Ready - #{data.get('return_id', '')}",
-            "refund_processed": f"Refund Processed - #{data.get('return_id', '')}"
+            "refund_processed": f"Refund Processed - #{data.get('return_id', '')}",
+            "draft_approved": f"Return Request Approved - Order #{data.get('order_number', '')}",
+            "draft_rejected": f"Return Request Update - Order #{data.get('order_number', '')}"
         }
         return subjects.get(template, "Return Update")
     
