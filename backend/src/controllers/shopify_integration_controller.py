@@ -137,7 +137,7 @@ async def trigger_shopify_resync(tenant_id: str = Depends(get_tenant_id)):
         
         await db.sync_jobs.insert_one(sync_job)
         
-        # Trigger background sync (in production, this would use a proper job queue)
+        # Start background sync immediately
         shop = tenant.get("shopify_store")
         encrypted_token = tenant["shopify_integration"]["access_token_encrypted"]
         
@@ -151,9 +151,33 @@ async def trigger_shopify_resync(tenant_id: str = Depends(get_tenant_id)):
             cipher = Fernet(encryption_key.encode())
             access_token = cipher.decrypt(encrypted_token.encode()).decode()
             
-            # Start background sync
-            import asyncio
-            asyncio.create_task(auth_service._process_resync(tenant_id, shop, access_token, job_id))
+            # Process sync immediately instead of background task
+            try:
+                await auth_service._sync_orders(tenant_id, shop, access_token, days_back=30)
+                
+                # Update job status to completed
+                await db.sync_jobs.update_one(
+                    {"id": job_id},
+                    {
+                        "$set": {
+                            "status": "completed",
+                            "completed_at": datetime.utcnow(),
+                            "progress": 100,
+                            "message": "Manual resync completed successfully"
+                        }
+                    }
+                )
+            except Exception as e:
+                await db.sync_jobs.update_one(
+                    {"id": job_id},
+                    {
+                        "$set": {
+                            "status": "failed",
+                            "completed_at": datetime.utcnow(),
+                            "error": str(e)
+                        }
+                    }
+                )
         
         return {
             "job_id": job_id,
