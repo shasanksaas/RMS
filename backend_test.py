@@ -1553,7 +1553,7 @@ class ReturnsAPITester:
             "priority": 1
         }
         
-        success, rule_created = self.make_request('POST', 'rules', integration_rule, headers)
+        success, rule_created = self.make_request('POST', 'rules/', integration_rule, headers)
         if not success:
             self.log_test("Rules Integration - Create integration rule", False, str(rule_created))
             return False
