@@ -713,7 +713,7 @@ const AllReturns = () => {
                                 </Button>
                               </>
                             )}
-                            <Button variant="ghost" size="sm">
+                            <Button variant="ghost" size="sm" className="touch-manipulation">
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </div>
