@@ -346,7 +346,7 @@ class EnhancedOrderLookupTestSuite:
         
         # Test 1: Verify tenant with Shopify integration uses Shopify mode
         shopify_data = {
-            "orderNumber": "1001",
+            "order_number": "1001",
             "email": "test@example.com",
             "channel": "customer"
         }
