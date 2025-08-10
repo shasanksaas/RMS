@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from typing import Optional
 import json
 import logging
+import uuid
 from datetime import datetime
 
 from ..services.webhook_handlers import webhook_processor
