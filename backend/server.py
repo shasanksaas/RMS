@@ -78,7 +78,8 @@ async def security_and_audit_middleware(request: Request, call_next):
         "/api/webhooks/", # Webhook endpoints
         "/api/enhanced/", # Enhanced features
         "/api/shopify/",   # Shopify endpoints
-        "/api/shopify-test/"  # Shopify connectivity test endpoints
+        "/api/shopify-test/",  # Shopify connectivity test endpoints
+        "/api/rules/field-types/options"  # Rules field types endpoint (no tenant needed)
     ]
     
     should_skip_tenant = any(request.url.path.startswith(path) for path in skip_tenant_validation)
