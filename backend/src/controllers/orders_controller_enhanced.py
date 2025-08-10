@@ -96,7 +96,7 @@ async def get_orders(
         cursor = db.orders.find(query).sort(sort_field, sort_direction).skip(skip).limit(page_size)
         orders = await cursor.to_list(page_size)
         
-        # Format orders for response
+        # Format orders for response - match frontend expectations
         formatted_orders = []
         for order in orders:
             # Count line items
@@ -104,29 +104,32 @@ async def get_orders(
             item_count = sum(item.get("quantity", 0) for item in line_items)
             
             formatted_orders.append({
-                "id": order["id"],
+                "id": order.get("id"),
+                "order_id": order.get("order_id"),  # Frontend expects this field
                 "order_number": order.get("order_number", ""),
                 "shopify_order_id": order.get("shopify_order_id"),
                 "customer_name": order.get("customer_name", ""),
                 "customer_email": order.get("customer_email", ""),
+                "email": order.get("email", order.get("customer_email", "")),
                 "financial_status": order.get("financial_status", ""),
                 "fulfillment_status": order.get("fulfillment_status", ""),
                 "total_price": order.get("total_price", 0),
-                "currency": order.get("currency", "USD"),
-                "item_count": item_count,
+                "currency_code": order.get("currency_code", "USD"),  # Frontend expects this field
+                "line_items": line_items,
                 "created_at": order.get("created_at", ""),
-                "updated_at": order.get("updated_at", "")
+                "updated_at": order.get("updated_at", ""),
+                "shopify_order_url": order.get("shopify_order_url", "")
             })
         
         return {
-            "orders": formatted_orders,
+            "items": formatted_orders,  # Frontend expects "items"
             "pagination": {
-                "page": page,
-                "pageSize": page_size,
-                "total": total,
-                "totalPages": total_pages,
-                "hasNext": page < total_pages,
-                "hasPrev": page > 1
+                "current_page": page,
+                "per_page": page_size,
+                "total_items": total,
+                "total_pages": total_pages,
+                "has_next_page": page < total_pages,
+                "has_prev_page": page > 1
             },
             "filters": {
                 "search": search,
