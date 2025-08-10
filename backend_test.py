@@ -1483,7 +1483,7 @@ class ReturnsAPITester:
             "priority": 0  # Higher priority (lower number)
         }
         
-        success, high_priority_created = self.make_request('POST', 'rules', high_priority_rule, headers)
+        success, high_priority_created = self.make_request('POST', 'rules/', high_priority_rule, headers)
         if success:
             # Test simulation to see if higher priority rule takes precedence
             success, priority_simulation = self.make_request('POST', 'rules/simulate', simulation_data, headers)
