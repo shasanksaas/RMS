@@ -32,7 +32,7 @@ class ReturnCreated(DomainEvent):
     channel: str
     estimated_refund: Money
     occurred_at: datetime
-    correlation_id: Optional[str] = None
+    correlation_id: Optional[str]
     
     def get_event_type(self) -> str:
         return "return.created"
