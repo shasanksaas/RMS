@@ -431,8 +431,8 @@ const AllReturns = () => {
             <Input
               placeholder="Search customers, orders..."
               value={filters.search}
-              onChange={(e) => handleFilterChange('search', e.target.value)}
-              className="pl-10 w-full sm:w-64"
+              onChange={handleSearchChange}
+              className="pl-10 w-full sm:w-64 touch-manipulation"
             />
           </div>
 
