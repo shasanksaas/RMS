@@ -286,7 +286,8 @@ class ShopifyCredentialsTest:
         
         oauth_data = {
             "shop": "rms34",
-            "scopes": ["read_orders", "write_returns", "read_products"]
+            "api_key": NEW_CREDENTIALS['api_key'],
+            "api_secret": NEW_CREDENTIALS['api_secret']
         }
         
         success, response = self.make_request('POST', 'auth/initiate', oauth_data)
@@ -294,12 +295,14 @@ class ShopifyCredentialsTest:
         if success:
             auth_url = response.get('auth_url', '')
             state = response.get('state', '')
+            shop = response.get('shop', '')
+            scopes_requested = response.get('scopes_requested', [])
             
             if auth_url and 'rms34.myshopify.com' in auth_url:
                 self.log_test(
                     "OAuth Initiation - Auth URL", 
                     True, 
-                    f"OAuth URL generated for rms34.myshopify.com"
+                    f"OAuth URL generated for {shop}"
                 )
             else:
                 self.log_test(
@@ -320,6 +323,19 @@ class ShopifyCredentialsTest:
                     "OAuth Initiation - State Parameter", 
                     False, 
                     "State parameter missing"
+                )
+            
+            if scopes_requested:
+                self.log_test(
+                    "OAuth Initiation - Scopes", 
+                    True, 
+                    f"Scopes requested: {', '.join(scopes_requested)}"
+                )
+            else:
+                self.log_test(
+                    "OAuth Initiation - Scopes", 
+                    False, 
+                    "No scopes requested"
                 )
             
             return True
