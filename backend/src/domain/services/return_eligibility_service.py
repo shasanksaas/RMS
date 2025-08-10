@@ -3,7 +3,7 @@ Domain Service for Return Eligibility
 Pure business logic for determining return eligibility
 """
 
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
 from dataclasses import dataclass
 
