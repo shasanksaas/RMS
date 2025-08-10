@@ -823,6 +823,7 @@ async def root():
 
 # Include routers in the api_router first
 api_router.include_router(auth_router)
+api_router.include_router(webhook_router)
 api_router.include_router(shopify_router)
 api_router.include_router(enhanced_router)
 
