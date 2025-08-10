@@ -14,7 +14,7 @@ from ..domain.entities.return_entity import ReturnChannel, ReturnMethod
 @dataclass
 class Command:
     """Base command class"""
-    correlation_id: Optional[str] = None
+    correlation_id: Optional[str]
 
 
 @dataclass
