@@ -149,7 +149,7 @@ const Integrations = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Tenant-Id': 'tenant-fashion-store' // TODO: Get from auth context
+          'X-Tenant-Id': 'tenant-rms34' // Updated to match connected store
         }
       });
 
