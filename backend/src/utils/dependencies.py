@@ -1,7 +1,8 @@
 """
 FastAPI dependency injection utilities
 """
-from fastapi import Header, HTTPException
+from fastapi import Header, HTTPException, Request
+from typing import Optional
 
 from ..services.tenant_service import TenantService
 from ..services.rules_service import RulesService
@@ -46,3 +47,9 @@ def get_analytics_service() -> AnalyticsService:
 def get_shopify_service() -> ShopifyService:
     """Get Shopify service instance"""
     return ShopifyService()
+
+
+async def get_current_user(request: Request) -> Optional[str]:
+    """Get current user from request (placeholder implementation)"""
+    # In a real implementation, this would extract user from JWT token or session
+    return "system"
