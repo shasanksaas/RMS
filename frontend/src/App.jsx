@@ -78,6 +78,7 @@ const App = () => {
             <Route path="returns" element={<AllReturns />} />
             <Route path="returns/:id" element={<ReturnDetail />} />
             <Route path="orders" element={<Orders />} />
+            <Route path="orders/:orderId" element={<OrderDetail />} />
             <Route path="rules" element={<Rules />} />
             <Route path="workflows" element={<Workflows />} />
             <Route path="analytics" element={<Analytics />} />
