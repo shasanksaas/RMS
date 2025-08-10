@@ -10,8 +10,8 @@ import json
 from datetime import datetime, timedelta
 from typing import Dict, List, Any
 
-# Use the internal backend URL for testing since external routes to frontend
-BACKEND_URL = "http://localhost:8001"
+# Use the external backend URL for testing (from frontend/.env)
+BACKEND_URL = "https://bb5d0b5c-0639-4f12-be95-7ef6a2bfa2ef.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 class ReturnsAPITester:
