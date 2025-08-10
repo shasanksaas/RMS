@@ -74,6 +74,8 @@ class ReturnShipmentCreated(DomainEvent):
     carrier: str
     tracking_number: str
     label_url: str
+    occurred_at: datetime
+    correlation_id: Optional[str] = None
     
     def get_event_type(self) -> str:
         return "return.shipment_created"
@@ -86,6 +88,8 @@ class ReturnReceived(DomainEvent):
     tenant_id: TenantId
     received_by: str
     condition_notes: str
+    occurred_at: datetime
+    correlation_id: Optional[str] = None
     
     def get_event_type(self) -> str:
         return "return.received"
