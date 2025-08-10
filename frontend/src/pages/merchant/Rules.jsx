@@ -20,7 +20,7 @@ const Rules = () => {
     try {
       const url = editingRule 
         ? `${process.env.REACT_APP_BACKEND_URL}/api/rules/${editingRule.id}`
-        : `${process.env.REACT_APP_BACKEND_URL}/api/rules`;
+        : `${process.env.REACT_APP_BACKEND_URL}/api/rules/`;
       
       const method = editingRule ? 'PUT' : 'POST';
       
