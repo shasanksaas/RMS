@@ -462,23 +462,44 @@ class ShopifyAuthService:
     async def _save_order(self, tenant_id: str, order_data: Dict[str, Any]) -> None:
         """Save order to database"""
         try:
-            # Transform order data for our schema
+            # Transform order data for our schema - Frontend expects specific fields
+            customer = order_data.get("customer", {})
+            billing_address = order_data.get("billing_address", {})
+            
+            # Use customer name from customer object first, then billing address
+            customer_name = ""
+            if customer:
+                first_name = customer.get("first_name", "")
+                last_name = customer.get("last_name", "")
+                customer_name = f"{first_name} {last_name}".strip()
+            
+            if not customer_name and billing_address:
+                first_name = billing_address.get("first_name", "")
+                last_name = billing_address.get("last_name", "")
+                customer_name = f"{first_name} {last_name}".strip()
+            
             order_doc = {
-                "id": str(order_data["id"]),
+                "id": str(order_data["id"]),  # Keep for internal use
+                "order_id": str(order_data["id"]),  # Frontend expects this field
                 "tenant_id": tenant_id,
                 "order_number": order_data.get("order_number", order_data.get("name", "")).replace("#", ""),
                 "shopify_order_id": str(order_data["id"]),
-                "customer_email": order_data.get("email", ""),
-                "customer_name": f"{order_data.get('billing_address', {}).get('first_name', '')} {order_data.get('billing_address', {}).get('last_name', '')}".strip(),
+                "email": order_data.get("email", ""),
+                "customer_email": order_data.get("email", customer.get("email", "")),
+                "customer_name": customer_name,
+                "customer_id": str(customer.get("id", "")) if customer else "",
                 "financial_status": order_data.get("financial_status", ""),
                 "fulfillment_status": order_data.get("fulfillment_status", ""),
                 "total_price": float(order_data.get("total_price", 0)),
-                "currency": order_data.get("currency", "USD"),
+                "currency_code": order_data.get("currency", "USD"),
                 "created_at": order_data.get("created_at", datetime.utcnow().isoformat()),
                 "updated_at": order_data.get("updated_at", datetime.utcnow().isoformat()),
+                "processed_at": order_data.get("processed_at"),
                 "line_items": order_data.get("line_items", []),
                 "billing_address": order_data.get("billing_address", {}),
                 "shipping_address": order_data.get("shipping_address", {}),
+                "fulfillments": [f.get("id") for f in order_data.get("fulfillments", [])],
+                "shopify_order_url": f"https://{order_data.get('order_status_url', '').split('/')[-1] if order_data.get('order_status_url') else 'unknown'}.myshopify.com/admin/orders/{order_data['id']}",
                 "raw_order_data": order_data,  # Store complete raw data
                 "synced_at": datetime.utcnow()
             }
