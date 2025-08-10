@@ -226,9 +226,9 @@ const UnifiedReturnForm = ({
       
       if (result.success) {
         updateFormData({
-          verifiedOrder: result,
+          verifiedOrder: result.order,
           eligibleItems: result.eligible_items,
-          orderId: result.order_id
+          orderId: result.order.id
         });
         setCurrentStep(2);
       } else {
