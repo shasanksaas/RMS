@@ -12,6 +12,7 @@ import Dashboard from './pages/merchant/Dashboard';
 import AllReturns from './pages/merchant/returns/AllReturns';
 import ReturnDetail from './pages/merchant/returns/ReturnDetail';
 import Orders from './pages/merchant/Orders';
+import OrderDetail from './pages/merchant/OrderDetail';
 import Rules from './pages/merchant/Rules';
 import Workflows from './pages/merchant/Workflows';
 import Analytics from './pages/merchant/Analytics';
