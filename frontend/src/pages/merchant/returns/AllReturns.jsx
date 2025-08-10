@@ -472,7 +472,7 @@ const AllReturns = () => {
                 variant="outline" 
                 onClick={() => handleBulkStatusUpdate('approved')}
                 disabled={bulkActionLoading}
-                className="text-green-600 hover:text-green-700 w-full sm:w-auto"
+                className="text-green-600 hover:text-green-700 w-full sm:w-auto touch-manipulation"
               >
                 {bulkActionLoading ? (
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600 mr-2" />
