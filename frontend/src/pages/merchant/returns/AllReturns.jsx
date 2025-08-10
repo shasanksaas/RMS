@@ -686,7 +686,7 @@ const AllReturns = () => {
                         </td>
                         <td className="py-4 px-4">
                           <div className="flex items-center space-x-2">
-                            <Button variant="ghost" size="sm" asChild>
+                            <Button variant="ghost" size="sm" asChild className="touch-manipulation">
                               <Link to={`/app/returns/${returnRequest.id}`}>
                                 <Eye className="h-4 w-4" />
                               </Link>
