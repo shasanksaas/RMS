@@ -207,57 +207,71 @@ class ShopifyCredentialsTest:
         success, response = self.make_request('POST', 'auth/test/validate', validation_data)
         
         if success:
-            validation_results = response.get('validation_results', {})
+            overall_valid = response.get('overall_valid', False)
+            validations = response.get('validations', {})
+            ready_for_oauth = response.get('ready_for_oauth', False)
             
-            # Check shop domain validation
-            shop_valid = validation_results.get('shop_domain', {}).get('valid', False)
-            if shop_valid:
+            # Check overall validation
+            if overall_valid:
+                self.log_test(
+                    "Credential Validation - Overall", 
+                    True, 
+                    f"All credentials valid, ready for OAuth: {ready_for_oauth}"
+                )
+            else:
+                self.log_test(
+                    "Credential Validation - Overall", 
+                    False, 
+                    f"Credential validation failed"
+                )
+            
+            # Check individual validations
+            shop_validation = validations.get('shop_domain', {})
+            if shop_validation.get('valid'):
+                normalized_shop = shop_validation.get('normalized', '')
                 self.log_test(
                     "Credential Validation - Shop Domain", 
                     True, 
-                    f"Shop domain validation passed"
+                    f"Shop domain valid, normalized to: {normalized_shop}"
                 )
             else:
-                shop_error = validation_results.get('shop_domain', {}).get('error', 'Unknown error')
                 self.log_test(
                     "Credential Validation - Shop Domain", 
                     False, 
-                    f"Shop domain validation failed: {shop_error}"
+                    f"Shop domain validation failed"
                 )
             
-            # Check API key validation
-            api_key_valid = validation_results.get('api_key', {}).get('valid', False)
-            if api_key_valid:
+            api_key_validation = validations.get('api_key', {})
+            if api_key_validation.get('valid'):
+                key_length = api_key_validation.get('length', 0)
                 self.log_test(
                     "Credential Validation - API Key", 
                     True, 
-                    f"API key validation passed"
+                    f"API key valid, length: {key_length}"
                 )
             else:
-                api_key_error = validation_results.get('api_key', {}).get('error', 'Unknown error')
                 self.log_test(
                     "Credential Validation - API Key", 
                     False, 
-                    f"API key validation failed: {api_key_error}"
+                    f"API key validation failed"
                 )
             
-            # Check API secret validation
-            api_secret_valid = validation_results.get('api_secret', {}).get('valid', False)
-            if api_secret_valid:
+            api_secret_validation = validations.get('api_secret', {})
+            if api_secret_validation.get('valid'):
+                secret_length = api_secret_validation.get('length', 0)
                 self.log_test(
                     "Credential Validation - API Secret", 
                     True, 
-                    f"API secret validation passed"
+                    f"API secret valid, length: {secret_length}"
                 )
             else:
-                api_secret_error = validation_results.get('api_secret', {}).get('error', 'Unknown error')
                 self.log_test(
                     "Credential Validation - API Secret", 
                     False, 
-                    f"API secret validation failed: {api_secret_error}"
+                    f"API secret validation failed"
                 )
             
-            return shop_valid and api_key_valid and api_secret_valid
+            return overall_valid
         else:
             self.log_test(
                 "Credential Validation", 
