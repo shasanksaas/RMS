@@ -42,3 +42,10 @@ async def get_current_user(request: Request) -> Optional[str]:
     """Get current user from request (placeholder implementation)"""
     # In a real implementation, this would extract user from JWT token or session
     return "system"
+
+
+async def get_tenant_id(x_tenant_id: str = Header(None)) -> str:
+    """Get tenant ID from header"""
+    if not x_tenant_id:
+        raise HTTPException(status_code=400, detail="X-Tenant-Id header required")
+    return x_tenant_id
