@@ -77,12 +77,18 @@ class EnvironmentConfig:
             return railway_url.rstrip('/')
         
         # 5. Check for Emergent preview environment
+        emergent_preview = os.environ.get('preview_endpoint')
+        if emergent_preview:
+            print(f"✅ Detected Emergent preview: {emergent_preview}")
+            return emergent_preview.rstrip('/')
+        
+        # 6. Check legacy Emergent variable
         emergent_url = os.environ.get('EMERGENT_PREVIEW_URL')
         if emergent_url:
-            print(f"✅ Detected Emergent preview: {emergent_url}")
+            print(f"✅ Detected Emergent preview (legacy): {emergent_url}")
             return emergent_url.rstrip('/')
         
-        # 6. Try to detect from common environment patterns
+        # 7. Try to detect from common environment patterns
         port = os.environ.get('PORT', '8001')
         host = os.environ.get('HOST', 'localhost')
         
