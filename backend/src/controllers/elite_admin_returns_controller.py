@@ -337,20 +337,3 @@ async def bulk_approve_returns(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
-# Health check endpoint
-@router.get("/health")
-async def health_check():
-    """Health check for elite admin returns API"""
-    return {
-        "status": "healthy",
-        "service": "Elite Admin Returns API",
-        "version": "1.0.0",
-        "features": [
-            "return_management",
-            "draft_approval",
-            "bulk_operations",
-            "audit_logs",
-            "policy_overrides"
-        ]
-    }
