@@ -267,71 +267,94 @@ class ShopifyGraphQLService:
         return await self.execute_query(query, variables)
 
     # ORDERS OPERATIONS
-    async def get_orders(self, limit: int = 50, cursor: str = None, query_filter: str = None) -> Dict[str, Any]:
-        """Get orders with filtering"""
+    async def get_orders_with_returns(self, limit: int = 50, cursor: Optional[str] = None, 
+                                    query_filter: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Get all orders with returns - implements guide requirement
+        Query: GetOrdersWithReturns from Shopify RMS Guide
+        """
         query = """
-        query getOrders($first: Int!, $after: String, $query: String) {
+        query GetOrdersWithReturns($first: Int!, $after: String, $query: String) {
             orders(first: $first, after: $after, query: $query) {
                 edges {
                     node {
                         id
                         name
                         email
+                        displayFinancialStatus
+                        displayFulfillmentStatus
+                        returnStatus
                         createdAt
                         updatedAt
-                        processedAt
-                        financialStatus
-                        fulfillmentStatus
-                        totalPrice
-                        currencyCode
+                        totalPriceSet {
+                            shopMoney {
+                                amount
+                                currencyCode
+                            }
+                        }
                         customer {
                             id
                             email
                             firstName
                             lastName
-                            phone
                         }
-                        billingAddress {
-                            address1
-                            city
-                            country
-                            zip
-                        }
-                        shippingAddress {
-                            address1
-                            city
-                            country
-                            zip
-                        }
-                        lineItems(first: 100) {
+                        lineItems(first: 50) {
                             edges {
                                 node {
                                     id
-                                    name
-                                    sku
+                                    title
                                     quantity
-                                    price
+                                    sku
                                     product {
                                         id
                                         title
-                                        handle
-                                    }
-                                    variant {
-                                        id
-                                        title
-                                        sku
                                     }
                                 }
                             }
                         }
-                        fulfillments {
-                            id
-                            status
-                            createdAt
-                            updatedAt
-                            trackingNumber
-                            trackingCompany
-                            trackingUrls
+                        returns(first: 10) {
+                            edges {
+                                node {
+                                    id
+                                    status
+                                    name
+                                    totalQuantity
+                                    returnLineItems(first: 25) {
+                                        edges {
+                                            node {
+                                                ... on ReturnLineItem {
+                                                    id
+                                                    quantity
+                                                    refundableQuantity
+                                                    refundedQuantity
+                                                    returnReason
+                                                    returnReasonNote
+                                                    customerNote
+                                                    fulfillmentLineItem {
+                                                        lineItem {
+                                                            id
+                                                            title
+                                                            sku
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    exchangeLineItems(first: 10) {
+                                        edges {
+                                            node {
+                                                lineItem {
+                                                    id
+                                                    title
+                                                    sku
+                                                    quantity
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -343,12 +366,254 @@ class ShopifyGraphQLService:
         }
         """
         
-        variables = {"first": limit}
-        if cursor:
-            variables["after"] = cursor
-        if query_filter:
-            variables["query"] = query_filter
-            
+        # Use return status filter if no custom query provided
+        if not query_filter:
+            query_filter = "returnStatus:IN_PROGRESS,RETURNED,REQUESTED"
+        
+        variables = {
+            "first": limit,
+            "after": cursor,
+            "query": query_filter
+        }
+        
+        return await self.execute_query(query, variables)
+
+    async def get_returnable_fulfillments(self, order_id: str, limit: int = 50) -> Dict[str, Any]:
+        """
+        Get returnable fulfillments for an order - implements guide requirement
+        Query: GetReturnableFulfillments from Shopify RMS Guide
+        """
+        query = """
+        query GetReturnableFulfillments($orderId: ID!, $first: Int!) {
+            returnableFulfillments(orderId: $orderId, first: $first) {
+                edges {
+                    node {
+                        id
+                        fulfillment {
+                            id
+                            displayStatus
+                            status
+                            name
+                            originAddress {
+                                address1
+                                city
+                                province
+                                country
+                                zip
+                            }
+                        }
+                        returnableFulfillmentLineItems(first: 50) {
+                            edges {
+                                node {
+                                    fulfillmentLineItem {
+                                        id
+                                        lineItem {
+                                            id
+                                            title
+                                            sku
+                                            product {
+                                                id
+                                                title
+                                            }
+                                        }
+                                    }
+                                    quantity
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        """
+        
+        variables = {
+            "orderId": order_id,
+            "first": limit
+        }
+        
+        return await self.execute_query(query, variables)
+
+    async def get_return_details(self, return_id: str) -> Dict[str, Any]:
+        """
+        Get specific return details - implements guide requirement
+        Query: GetReturn from Shopify RMS Guide
+        """
+        query = """
+        query GetReturn($id: ID!) {
+            return(id: $id) {
+                id
+                status
+                name
+                totalQuantity
+                order {
+                    id
+                    name
+                }
+                returnLineItems(first: 50) {
+                    edges {
+                        node {
+                            ... on ReturnLineItem {
+                                id
+                                quantity
+                                processableQuantity
+                                processedQuantity
+                                refundableQuantity
+                                refundedQuantity
+                                returnReason
+                                returnReasonNote
+                                customerNote
+                                fulfillmentLineItem {
+                                    id
+                                    lineItem {
+                                        id
+                                        title
+                                        sku
+                                        variant {
+                                            id
+                                            title
+                                            price
+                                        }
+                                        product {
+                                            id
+                                            title
+                                        }
+                                    }
+                                }
+                                restockingFee {
+                                    amountSet {
+                                        shopMoney {
+                                            amount
+                                            currencyCode
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                exchangeLineItems(first: 10) {
+                    edges {
+                        node {
+                            id
+                            lineItem {
+                                id
+                                title
+                                sku
+                                quantity
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        """
+        
+        variables = {"id": return_id}
+        return await self.execute_query(query, variables)
+
+    async def create_return_request(self, order_id: str, return_line_items: List[Dict]) -> Dict[str, Any]:
+        """
+        Create a return request - implements guide requirement
+        Mutation: CreateReturnRequest from Shopify RMS Guide
+        """
+        query = """
+        mutation CreateReturnRequest($orderId: ID!, $returnLineItems: [ReturnRequestLineItemInput!]!) {
+            returnRequest(orderId: $orderId, returnLineItems: $returnLineItems) {
+                return {
+                    id
+                    status
+                    name
+                    returnLineItems(first: 10) {
+                        edges {
+                            node {
+                                ... on ReturnLineItem {
+                                    id
+                                    quantity
+                                    returnReason
+                                    returnReasonNote
+                                    customerNote
+                                }
+                            }
+                        }
+                    }
+                }
+                userErrors {
+                    field
+                    message
+                }
+            }
+        }
+        """
+        
+        variables = {
+            "orderId": order_id,
+            "returnLineItems": return_line_items
+        }
+        
+        return await self.execute_query(query, variables)
+
+    async def approve_return_request(self, return_id: str) -> Dict[str, Any]:
+        """
+        Approve a return request - implements guide requirement
+        Mutation: ApproveReturn from Shopify RMS Guide
+        """
+        query = """
+        mutation ApproveReturn($id: ID!) {
+            returnApproveRequest(id: $id) {
+                return {
+                    id
+                    status
+                    name
+                }
+                userErrors {
+                    field
+                    message
+                }
+            }
+        }
+        """
+        
+        variables = {"id": return_id}
+        return await self.execute_query(query, variables)
+
+    async def process_return_with_refund(self, return_id: str, refund_input: Dict, 
+                                       return_line_items: List[Dict]) -> Dict[str, Any]:
+        """
+        Process return with refund - implements guide requirement
+        Mutation: ProcessReturn from Shopify RMS Guide
+        """
+        query = """
+        mutation ProcessReturn($id: ID!, $refund: RefundInput, $returnLineItems: [ProcessReturnLineItemInput!]!) {
+            returnProcess(id: $id, refund: $refund, returnLineItems: $returnLineItems) {
+                return {
+                    id
+                    status
+                }
+                refund {
+                    id
+                    createdAt
+                    totalRefundedSet {
+                        shopMoney {
+                            amount
+                            currencyCode
+                        }
+                    }
+                }
+                userErrors {
+                    field
+                    message
+                }
+            }
+        }
+        """
+        
+        variables = {
+            "id": return_id,
+            "refund": refund_input,
+            "returnLineItems": return_line_items
+        }
+        
         return await self.execute_query(query, variables)
 
     async def get_order_by_id(self, order_id: str) -> Dict[str, Any]:
