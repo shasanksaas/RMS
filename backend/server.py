@@ -517,12 +517,100 @@ async def get_orders(
         }
     }
 
-@api_router.get("/orders/{order_id}", response_model=Order)
+@api_router.get("/orders/{order_id}")
 async def get_order(order_id: str, tenant_id: str = Depends(get_tenant_id)):
-    order = await db.orders.find_one({"id": order_id, "tenant_id": tenant_id})
+    """Get single order details with real Shopify data"""
+    
+    # Find order by either order_id or id field
+    order = await db.orders.find_one({
+        "$or": [
+            {"order_id": order_id, "tenant_id": tenant_id},
+            {"id": order_id, "tenant_id": tenant_id}
+        ]
+    })
+    
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
-    return Order(**order)
+    
+    # Get related returns for this order
+    returns_cursor = db.return_requests.find({
+        "order_id": order_id,
+        "tenant_id": tenant_id
+    })
+    returns = await returns_cursor.to_list(length=100)
+    
+    # Transform order data
+    order_data = {
+        "id": order.get("order_id", order.get("id")),
+        "order_number": order.get("order_number", order.get("name")),
+        "customer_name": order.get("customer_name", "Unknown"),
+        "customer_email": order.get("customer_email", order.get("email")),
+        "customer_id": order.get("customer_id"),
+        "financial_status": order.get("financial_status", "unknown"),
+        "fulfillment_status": order.get("fulfillment_status", "unfulfilled"),
+        "total_price": float(order.get("total_price", "0") or 0),
+        "currency_code": order.get("currency_code", "USD"),
+        "line_items": order.get("line_items", []),
+        "created_at": order.get("created_at"),
+        "updated_at": order.get("updated_at"),
+        "processed_at": order.get("processed_at"),
+        "billing_address": order.get("billing_address"),
+        "shipping_address": order.get("shipping_address"),
+        "fulfillments": order.get("fulfillments", []),
+        "returns": returns,
+        "shopify_order_url": f"https://{tenant_id.replace('.myshopify.com', '')}.myshopify.com/admin/orders/{order.get('order_id', order.get('id'))}"
+    }
+    
+    return order_data
+
+@api_router.post("/orders/lookup")
+async def lookup_order(
+    order_lookup: Dict[str, str],
+    tenant_id: str = Header(None, alias="X-Tenant-Id")
+):
+    """Lookup order for customer return portal - no tenant validation needed"""
+    
+    order_number = order_lookup.get("order_number", "").strip()
+    email = order_lookup.get("email", "").strip().lower()
+    
+    if not order_number or not email:
+        raise HTTPException(status_code=400, detail="Order number and email are required")
+    
+    # If no tenant provided, search across all tenants
+    query = {
+        "customer_email": {"$regex": f"^{email}$", "$options": "i"},
+        "$or": [
+            {"order_number": order_number},
+            {"name": order_number}
+        ]
+    }
+    
+    if tenant_id:
+        query["tenant_id"] = tenant_id
+    
+    order = await db.orders.find_one(query)
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    # Verify email matches (case insensitive)
+    order_email = order.get("customer_email", "").lower()
+    if order_email != email:
+        raise HTTPException(status_code=403, detail="Email does not match order records")
+    
+    # Return order data for return portal
+    return {
+        "id": order.get("order_id", order.get("id")),
+        "order_number": order.get("order_number", order.get("name")),
+        "customer_name": order.get("customer_name", "Unknown"),
+        "customer_email": order.get("customer_email"),
+        "created_at": order.get("created_at"),
+        "total_price": float(order.get("total_price", "0") or 0),
+        "currency_code": order.get("currency_code", "USD"),
+        "line_items": order.get("line_items", []),
+        "tenant_id": order.get("tenant_id"),
+        "eligible_for_return": True  # TODO: Add return eligibility logic
+    }
 
 # Return Rules Engine
 @api_router.post("/return-rules", response_model=ReturnRule)
