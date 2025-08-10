@@ -14,6 +14,7 @@ router = APIRouter(prefix="/orders", tags=["orders"])
 
 
 @router.get("/")
+@router.get("")  # Handle both /orders/ and /orders
 async def get_orders(
     tenant_id: str = Depends(get_tenant_id),
     search: Optional[str] = Query(None, description="Search in order number, customer email, or SKU"),
