@@ -1235,7 +1235,7 @@ class ReturnsAPITester:
         
         print("\n🔧 Testing Enhanced Rules API Endpoints...")
         
-        # Test 1: Get field types and operators options
+        # Test 1: Get field types and operators options (no tenant required)
         success, options = self.make_request('GET', 'rules/field-types/options')
         if success and 'field_types' in options and 'operators' in options and 'actions' in options:
             self.log_test("Rules API - Field types/operators options", True)
