@@ -118,8 +118,13 @@ async def shopify_oauth_install(
         # Required scopes for MVP (exactly as specified)
         scopes = "read_orders,read_fulfillments,read_products,read_customers,read_returns,write_returns"
         
-        # Exact redirect URI as whitelisted in Shopify
-        redirect_uri = "https://733d44a0-d288-43eb-83ff-854115be232e.preview.emergentagent.com/api/auth/shopify/callback"
+        # Get APP_URL from environment for consistent redirect URI
+        app_url = os.environ.get('APP_URL')
+        if not app_url:
+            raise HTTPException(status_code=500, detail="APP_URL not configured")
+        
+        # Build redirect URI from APP_URL
+        redirect_uri = f"{app_url}/api/auth/shopify/callback"
         
         # Generate and store CSRF state token
         state = auth_service.generate_oauth_state()
