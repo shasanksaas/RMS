@@ -1229,6 +1229,390 @@ class ReturnsAPITester:
             
         return True
 
+    def test_enhanced_rules_api_endpoints(self, tenant_id: str):
+        """Test the new enhanced Rules API endpoints"""
+        headers = {'X-Tenant-Id': tenant_id}
+        
+        print("\n🔧 Testing Enhanced Rules API Endpoints...")
+        
+        # Test 1: Get field types and operators options
+        success, options = self.make_request('GET', 'rules/field-types/options')
+        if success and 'field_types' in options and 'operators' in options and 'actions' in options:
+            self.log_test("Rules API - Field types/operators options", True)
+            
+            # Verify comprehensive field types
+            field_types = [ft['value'] for ft in options['field_types']]
+            expected_fields = ['order_amount', 'return_reason', 'days_since_order', 'product_category', 'customer_location']
+            if all(field in field_types for field in expected_fields):
+                self.log_test("Rules API - Comprehensive field types", True)
+            else:
+                self.log_test("Rules API - Comprehensive field types", False, f"Missing fields: {set(expected_fields) - set(field_types)}")
+            
+            # Verify operators
+            operators = [op['value'] for op in options['operators']]
+            expected_ops = ['equals', 'greater_than', 'contains', 'in', 'regex']
+            if all(op in operators for op in expected_ops):
+                self.log_test("Rules API - Comprehensive operators", True)
+            else:
+                self.log_test("Rules API - Comprehensive operators", False, f"Missing operators: {set(expected_ops) - set(operators)}")
+        else:
+            self.log_test("Rules API - Field types/operators options", False, str(options))
+            return False
+        
+        # Test 2: Create complex rule with multiple condition groups
+        complex_rule_data = {
+            "name": "Complex Multi-Condition Rule",
+            "description": "Test rule with AND/OR logic and multiple condition groups",
+            "condition_groups": [
+                {
+                    "conditions": [
+                        {
+                            "field": "return_reason",
+                            "operator": "in",
+                            "value": ["defective", "damaged_in_shipping"]
+                        },
+                        {
+                            "field": "order_amount",
+                            "operator": "greater_than",
+                            "value": 50.0
+                        }
+                    ],
+                    "logic_operator": "and"
+                },
+                {
+                    "conditions": [
+                        {
+                            "field": "days_since_order",
+                            "operator": "less_equal",
+                            "value": 30
+                        }
+                    ],
+                    "logic_operator": "and"
+                }
+            ],
+            "actions": [
+                {
+                    "action_type": "auto_approve_return",
+                    "parameters": {}
+                },
+                {
+                    "action_type": "send_email_notification",
+                    "parameters": {
+                        "template": "auto_approval_notification"
+                    }
+                }
+            ],
+            "priority": 1,
+            "tags": ["auto-approval", "high-value"]
+        }
+        
+        success, created_rule = self.make_request('POST', 'rules', complex_rule_data, headers)
+        if success and created_rule.get('success') and 'rule_id' in created_rule:
+            rule_id = created_rule['rule_id']
+            self.log_test("Rules API - Create complex rule", True)
+        else:
+            self.log_test("Rules API - Create complex rule", False, str(created_rule))
+            return False
+        
+        # Test 3: Get specific rule
+        success, rule_detail = self.make_request('GET', f'rules/{rule_id}', headers=headers)
+        if success and rule_detail.get('success') and 'rule' in rule_detail:
+            rule = rule_detail['rule']
+            if rule['name'] == complex_rule_data['name'] and len(rule.get('condition_groups', [])) == 2:
+                self.log_test("Rules API - Get specific rule", True)
+            else:
+                self.log_test("Rules API - Get specific rule", False, "Rule data mismatch")
+        else:
+            self.log_test("Rules API - Get specific rule", False, str(rule_detail))
+        
+        # Test 4: Get rules with pagination and filtering
+        success, rules_list = self.make_request('GET', 'rules?page=1&limit=10&search=Complex&status_filter=active', headers=headers)
+        if success and 'items' in rules_list and 'pagination' in rules_list:
+            pagination = rules_list['pagination']
+            if all(key in pagination for key in ['current_page', 'total_pages', 'total_count', 'per_page']):
+                self.log_test("Rules API - Paginated rules list", True)
+                
+                # Check if our created rule is in the list
+                rule_names = [rule['name'] for rule in rules_list['items']]
+                if complex_rule_data['name'] in rule_names:
+                    self.log_test("Rules API - Search functionality", True)
+                else:
+                    self.log_test("Rules API - Search functionality", False, "Created rule not found in search results")
+            else:
+                self.log_test("Rules API - Paginated rules list", False, "Missing pagination fields")
+        else:
+            self.log_test("Rules API - Paginated rules list", False, str(rules_list))
+        
+        # Test 5: Rule simulation with complex data
+        simulation_data = {
+            "order_data": {
+                "total_amount": 75.50,
+                "order_date": (datetime.utcnow() - timedelta(days=15)).isoformat(),
+                "customer_email": "test@example.com",
+                "items": [
+                    {
+                        "product_name": "Premium Headphones",
+                        "category": "Electronics",
+                        "sku": "HEADPHONES-001",
+                        "price": 75.50,
+                        "quantity": 1
+                    }
+                ]
+            },
+            "return_data": {
+                "reason": "defective",
+                "refund_amount": 75.50,
+                "items_to_return": [
+                    {
+                        "product_name": "Premium Headphones",
+                        "sku": "HEADPHONES-001",
+                        "price": 75.50,
+                        "quantity": 1
+                    }
+                ]
+            }
+        }
+        
+        success, simulation_result = self.make_request('POST', 'rules/simulate', simulation_data, headers)
+        if success and simulation_result.get('success') and 'result' in simulation_result:
+            result = simulation_result['result']
+            if 'total_rules_evaluated' in result and 'final_status' in result:
+                self.log_test("Rules API - Rule simulation", True)
+                
+                # Check if simulation provides detailed steps
+                if 'detailed_results' in result and len(result['detailed_results']) > 0:
+                    detailed_result = result['detailed_results'][0]
+                    if 'steps' in detailed_result and len(detailed_result['steps']) > 0:
+                        self.log_test("Rules API - Simulation step-by-step details", True)
+                    else:
+                        self.log_test("Rules API - Simulation step-by-step details", False, "No detailed steps provided")
+                
+                # Check if rule matched and auto-approved
+                if result.get('final_status') == 'approved':
+                    self.log_test("Rules API - Auto-approval logic", True)
+                else:
+                    self.log_test("Rules API - Auto-approval logic", False, f"Expected 'approved', got '{result.get('final_status')}'")
+            else:
+                self.log_test("Rules API - Rule simulation", False, "Missing simulation result fields")
+        else:
+            self.log_test("Rules API - Rule simulation", False, str(simulation_result))
+        
+        # Test 6: Test specific conditions
+        condition_test_data = {
+            "conditions": [
+                {
+                    "conditions": [
+                        {
+                            "field": "order_amount",
+                            "operator": "greater_than",
+                            "value": 100.0
+                        }
+                    ],
+                    "logic_operator": "and"
+                }
+            ],
+            "test_data": {
+                "order_data": {"total_amount": 150.0},
+                "return_data": {"reason": "defective"}
+            }
+        }
+        
+        success, condition_result = self.make_request('POST', 'rules/test-conditions', condition_test_data, headers)
+        if success and condition_result.get('success') and 'result' in condition_result:
+            result = condition_result['result']
+            if 'rule_matched' in result and result['rule_matched']:
+                self.log_test("Rules API - Test conditions", True)
+                
+                # Check for detailed step explanations
+                if 'steps' in result and len(result['steps']) > 0:
+                    step = result['steps'][0]
+                    if 'explanation' in step and step['condition_met']:
+                        self.log_test("Rules API - Condition explanations", True)
+                    else:
+                        self.log_test("Rules API - Condition explanations", False, "Missing or incorrect explanations")
+                else:
+                    self.log_test("Rules API - Condition explanations", False, "No steps provided")
+            else:
+                self.log_test("Rules API - Test conditions", False, "Condition should have matched")
+        else:
+            self.log_test("Rules API - Test conditions", False, str(condition_result))
+        
+        # Test 7: Update rule
+        update_data = {
+            "description": "Updated description for complex rule",
+            "priority": 2,
+            "tags": ["auto-approval", "high-value", "updated"]
+        }
+        
+        success, update_result = self.make_request('PUT', f'rules/{rule_id}', update_data, headers)
+        if success and update_result.get('success'):
+            self.log_test("Rules API - Update rule", True)
+            
+            # Verify update was applied
+            success, updated_rule = self.make_request('GET', f'rules/{rule_id}', headers=headers)
+            if success and updated_rule['rule']['description'] == update_data['description']:
+                self.log_test("Rules API - Update persistence", True)
+            else:
+                self.log_test("Rules API - Update persistence", False, "Update not persisted")
+        else:
+            self.log_test("Rules API - Update rule", False, str(update_result))
+        
+        # Test 8: Test rule priority ordering
+        # Create a higher priority rule
+        high_priority_rule = {
+            "name": "High Priority Rule",
+            "description": "Rule with higher priority",
+            "condition_groups": [
+                {
+                    "conditions": [
+                        {
+                            "field": "return_reason",
+                            "operator": "equals",
+                            "value": "defective"
+                        }
+                    ],
+                    "logic_operator": "and"
+                }
+            ],
+            "actions": [
+                {
+                    "action_type": "auto_decline_return",
+                    "parameters": {}
+                }
+            ],
+            "priority": 0  # Higher priority (lower number)
+        }
+        
+        success, high_priority_created = self.make_request('POST', 'rules', high_priority_rule, headers)
+        if success:
+            # Test simulation to see if higher priority rule takes precedence
+            success, priority_simulation = self.make_request('POST', 'rules/simulate', simulation_data, headers)
+            if success and priority_simulation.get('result', {}).get('final_status') == 'denied':
+                self.log_test("Rules API - Rule priority ordering", True)
+            else:
+                self.log_test("Rules API - Rule priority ordering", False, "Higher priority rule should take precedence")
+        
+        # Test 9: Test tenant isolation for rules
+        # Try to access rule with different tenant ID
+        different_tenant_headers = {'X-Tenant-Id': 'different-tenant-id'}
+        success, isolated_result = self.make_request('GET', f'rules/{rule_id}', headers=different_tenant_headers, expected_status=404)
+        if success:
+            self.log_test("Rules API - Tenant isolation", True)
+        else:
+            self.log_test("Rules API - Tenant isolation", False, "Should block cross-tenant access")
+        
+        # Test 10: Delete rule
+        success, delete_result = self.make_request('DELETE', f'rules/{rule_id}', headers=headers)
+        if success and delete_result.get('success'):
+            self.log_test("Rules API - Delete rule", True)
+            
+            # Verify rule is deleted
+            success, deleted_check = self.make_request('GET', f'rules/{rule_id}', headers=headers, expected_status=404)
+            if success:
+                self.log_test("Rules API - Delete verification", True)
+            else:
+                self.log_test("Rules API - Delete verification", False, "Rule should be deleted")
+        else:
+            self.log_test("Rules API - Delete rule", False, str(delete_result))
+        
+        return True
+
+    def test_rules_integration_with_returns(self, tenant_id: str):
+        """Test that rules integrate properly with return request processing"""
+        headers = {'X-Tenant-Id': tenant_id}
+        
+        print("\n🔗 Testing Rules Integration with Returns Processing...")
+        
+        # Create a rule that should auto-approve certain returns
+        integration_rule = {
+            "name": "Integration Test Rule",
+            "description": "Rule for testing integration with returns",
+            "condition_groups": [
+                {
+                    "conditions": [
+                        {
+                            "field": "return_reason",
+                            "operator": "in",
+                            "value": ["defective", "damaged_in_shipping"]
+                        },
+                        {
+                            "field": "order_amount",
+                            "operator": "greater_equal",
+                            "value": 25.0
+                        }
+                    ],
+                    "logic_operator": "and"
+                }
+            ],
+            "actions": [
+                {
+                    "action_type": "auto_approve_return",
+                    "parameters": {}
+                }
+            ],
+            "priority": 1
+        }
+        
+        success, rule_created = self.make_request('POST', 'rules', integration_rule, headers)
+        if not success:
+            self.log_test("Rules Integration - Create integration rule", False, str(rule_created))
+            return False
+        
+        # Create an order for testing
+        order_data = {
+            "customer_email": "integration@example.com",
+            "customer_name": "Integration Test Customer",
+            "order_number": f"INT-{datetime.now().strftime('%H%M%S')}",
+            "items": [
+                {
+                    "product_id": "int-product-1",
+                    "product_name": "Integration Test Product",
+                    "quantity": 1,
+                    "price": 50.0,
+                    "sku": "INT-001"
+                }
+            ],
+            "total_amount": 50.0,
+            "order_date": (datetime.utcnow() - timedelta(days=5)).isoformat()
+        }
+        
+        success, order = self.make_request('POST', 'orders', order_data, headers)
+        if not success:
+            self.log_test("Rules Integration - Create test order", False, str(order))
+            return False
+        
+        # Create return request that should trigger the rule
+        return_data = {
+            "order_id": order['id'],
+            "reason": "defective",  # Should match rule condition
+            "items_to_return": order['items'],
+            "notes": "Testing rules integration"
+        }
+        
+        success, return_request = self.make_request('POST', 'returns', return_data, headers)
+        if success and return_request.get('status') == 'approved':
+            self.log_test("Rules Integration - Auto-approval via rules", True)
+        else:
+            self.log_test("Rules Integration - Auto-approval via rules", False, 
+                         f"Expected 'approved', got '{return_request.get('status')}'")
+        
+        # Test with return that should NOT match rule
+        non_matching_return = {
+            "order_id": order['id'],
+            "reason": "changed_mind",  # Should NOT match rule condition
+            "items_to_return": order['items'],
+            "notes": "Testing non-matching rule"
+        }
+        
+        success, non_matching_request = self.make_request('POST', 'returns', non_matching_return, headers)
+        if success and non_matching_request.get('status') == 'requested':
+            self.log_test("Rules Integration - Non-matching rule handling", True)
+        else:
+            self.log_test("Rules Integration - Non-matching rule handling", False,
+                         f"Expected 'requested', got '{non_matching_request.get('status')}'")
+        
+        return True
+
     def test_shopify_integration_comprehensive(self):
         """Comprehensive test of all Shopify integration components"""
         print("\n🛍️ Testing Shopify Integration Components...")
