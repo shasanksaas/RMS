@@ -24,6 +24,8 @@ const Rules = () => {
       
       const method = editingRule ? 'PUT' : 'POST';
       
+      console.log('Saving rule:', { url, method, ruleData });
+      
       const response = await fetch(url, {
         method,
         headers: {
@@ -33,17 +35,22 @@ const Rules = () => {
         body: JSON.stringify(ruleData)
       });
 
+      console.log('Response status:', response.status);
+      const responseData = await response.json();
+      console.log('Response data:', responseData);
+
       if (!response.ok) {
-        throw new Error('Failed to save rule');
+        throw new Error(responseData.detail || 'Failed to save rule');
       }
 
       setShowRuleBuilder(false);
       setEditingRule(null);
       
-      // Trigger refresh of rules list
+      // Force refresh the page to reload rules list
       window.location.reload();
     } catch (error) {
       console.error('Error saving rule:', error);
+      alert(`Failed to save rule: ${error.message}`);
       throw error;
     }
   };
