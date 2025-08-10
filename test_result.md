@@ -583,12 +583,20 @@ infrastructure:
 
 metadata:
   created_by: "main_agent"
-  version: "2.1"
-  test_sequence: 4
+  version: "3.0"
+  test_sequence: 5
   run_ui: false
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Unified Returns Controller Implementation"
+    - "Unified Returns Service Implementation"
+    - "Unified Return Repository Implementation"
+    - "Unified Return Form Component"
+    - "Return Form Step Components"
+    - "Admin Create Return Route"
+    - "Customer Create Return Route"
+    - "App.jsx Route Integration"
   stuck_tasks: 
     - "GraphQL Service for Returns Operations"
     - "Sync Service with Initial Backfill"
