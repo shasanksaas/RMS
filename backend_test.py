@@ -1215,8 +1215,8 @@ class ReturnsAPITester:
         return True
 
     def run_all_tests(self):
-        """Run comprehensive test suite focusing on 10 end-to-end capabilities"""
-        print("🚀 Starting Returns Management SaaS API Tests - 10 End-to-End Capabilities")
+        """Run comprehensive test suite focusing on 10 end-to-end capabilities + Shopify Integration"""
+        print("🚀 Starting Returns Management SaaS API Tests - 10 End-to-End Capabilities + Shopify Integration")
         print("=" * 80)
         
         # Basic connectivity
@@ -1233,6 +1233,11 @@ class ReturnsAPITester:
         print("6. Audit Log Timeline")
         print("7. Multi-Tenant Isolation")
         print("8. Seeded Data Verification")
+        print("9. 🆕 GraphQL Service for Returns Operations")
+        print("10. 🆕 Webhook Processing with Idempotency")
+        print("11. 🆕 Sync Service with Initial Backfill")
+        print("12. 🆕 Auth Service Enhancement with OAuth")
+        print("13. 🆕 Testing Endpoints for Development")
         print("=" * 80)
         
         # Test seeded data first
@@ -1242,6 +1247,10 @@ class ReturnsAPITester:
         # Test multi-tenant isolation (critical security)
         print("\n🔒 Testing Multi-Tenant Isolation...")
         self.test_multi_tenant_isolation()
+        
+        # NEW: Test Shopify Integration Components
+        print("\n🛍️ Testing Shopify Integration...")
+        self.test_shopify_integration_comprehensive()
         
         # Create a test tenant for other tests
         print("\n🏢 Creating Test Tenant...")
