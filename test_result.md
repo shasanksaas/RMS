@@ -607,7 +607,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Enhanced Order Lookup System with Dual-Mode Support"
+    - "Elite-Grade Returns Creation System with Hexagonal Architecture"
+    - "CQRS Command/Query Handlers"
+    - "Elite Portal and Admin Controllers"
   stuck_tasks: 
     - "GraphQL Service for Returns Operations"
     - "Sync Service with Initial Backfill"
