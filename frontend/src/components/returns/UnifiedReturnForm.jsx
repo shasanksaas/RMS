@@ -305,11 +305,11 @@ const UnifiedReturnForm = ({
         manual_fee_override: role === 'admin' ? formData.manualFeeOverride : undefined
       };
 
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/unified-returns/create`, {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/portal/returns/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Tenant-Id': localStorage.getItem('currentTenant') || 'tenant-fashion-store'
+          'X-Tenant-Id': 'tenant-rms34'
         },
         body: JSON.stringify(submissionData)
       });
