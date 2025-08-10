@@ -167,7 +167,15 @@ async def lookup_order(
             )
         
         # Check if order is returnable
-        order_date = datetime.fromisoformat(order['created_at'].replace('Z', '+00:00'))
+        created_at_str = order['created_at']
+        if isinstance(created_at_str, str):
+            # Handle both ISO formats (with and without 'Z')
+            if created_at_str.endswith('Z'):
+                created_at_str = created_at_str.replace('Z', '+00:00')
+            order_date = datetime.fromisoformat(created_at_str)
+        else:
+            # Handle datetime objects
+            order_date = created_at_str
         days_since_order = (datetime.utcnow() - order_date).days
         
         # Get return policy for tenant
