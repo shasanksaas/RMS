@@ -1,18 +1,193 @@
-import React from 'react';
-import { Plug, ShoppingBag, CreditCard, Truck } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { 
+  ShoppingBag, 
+  CreditCard, 
+  Truck, 
+  Plus, 
+  Check, 
+  AlertCircle, 
+  ExternalLink,
+  Trash2,
+  RefreshCw,
+  Shield,
+  Globe
+} from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Button } from '../../../components/ui/button';
+import { Input } from '../../../components/ui/input';
+import { Label } from '../../../components/ui/label';
 import { Badge } from '../../../components/ui/badge';
+import { Alert, AlertDescription } from '../../../components/ui/alert';
+import { Textarea } from '../../../components/ui/textarea';
 
 const Integrations = () => {
-  const integrations = [
-    {
-      name: 'Shopify',
-      description: 'Sync orders and customer data',
-      icon: ShoppingBag,
-      status: 'connected',
-      color: 'bg-green-100 text-green-800'
-    },
+  // Connection form state
+  const [showConnectionForm, setShowConnectionForm] = useState(false);
+  const [connectionForm, setConnectionForm] = useState({
+    shop: '',
+    api_key: '81e556a66ac6d28a54e1ed972a3c43ad', // Pre-filled for demo
+    api_secret: 'd23f49ea8d18e93a8a26c2c04dba826c' // Pre-filled for demo
+  });
+  
+  // App state
+  const [connecting, setConnecting] = useState(false);
+  const [connectedStores, setConnectedStores] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState({ type: '', text: '' });
+  const [validationResults, setValidationResults] = useState(null);
+
+  // Get backend URL
+  const backendUrl = process.env.REACT_APP_BACKEND_URL;
+  
+  // Handle URL parameters for OAuth callback
+  const [searchParams] = useSearchParams();
+  
+  useEffect(() => {
+    loadConnectedStores();
+    
+    // Handle OAuth callback parameters
+    const connected = searchParams.get('connected');
+    const error = searchParams.get('error');
+    const errorMessage = searchParams.get('message');
+    
+    if (connected === 'true') {
+      const tenant = searchParams.get('tenant');
+      const shop = searchParams.get('shop');
+      setMessage({ 
+        type: 'success', 
+        text: `Successfully connected to ${shop || tenant}! Your store is now integrated with EasyReturns.` 
+      });
+      // Clear URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (error) {
+      setMessage({ 
+        type: 'error', 
+        text: errorMessage || 'Connection failed. Please try again.' 
+      });
+      // Clear URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [searchParams]);
+
+  const getApiUrl = () => {
+    if (backendUrl && backendUrl.includes('preview.emergentagent.com')) {
+      return 'http://localhost:8001';
+    }
+    return backendUrl || 'http://localhost:8001';
+  };
+
+  const loadConnectedStores = async () => {
+    try {
+      setLoading(true);
+      const apiUrl = getApiUrl();
+      
+      const response = await fetch(`${apiUrl}/api/auth/stores`, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const stores = await response.json();
+        setConnectedStores(stores);
+      }
+    } catch (error) {
+      console.error('Failed to load connected stores:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const validateCredentials = async () => {
+    try {
+      const apiUrl = getApiUrl();
+      
+      const response = await fetch(`${apiUrl}/api/auth/test/validate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(connectionForm)
+      });
+
+      if (response.ok) {
+        const results = await response.json();
+        setValidationResults(results);
+        return results.overall_valid;
+      }
+    } catch (error) {
+      console.error('Validation failed:', error);
+      setMessage({ type: 'error', text: 'Failed to validate credentials' });
+    }
+    return false;
+  };
+
+  const handleConnect = async () => {
+    setConnecting(true);
+    setMessage({ type: '', text: '' });
+
+    try {
+      // Validate credentials first
+      const isValid = await validateCredentials();
+      if (!isValid) {
+        setMessage({ type: 'error', text: 'Invalid credentials. Please check your shop domain, API key, and API secret.' });
+        setConnecting(false);
+        return;
+      }
+
+      const apiUrl = getApiUrl();
+      
+      const response = await fetch(`${apiUrl}/api/auth/initiate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(connectionForm)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Redirect to Shopify OAuth
+        window.location.href = data.auth_url;
+      } else {
+        const errorData = await response.json();
+        setMessage({ 
+          type: 'error', 
+          text: errorData.detail || 'Failed to initiate connection' 
+        });
+      }
+    } catch (error) {
+      console.error('Connection failed:', error);
+      setMessage({ type: 'error', text: 'Connection failed. Please try again.' });
+    } finally {
+      setConnecting(false);
+    }
+  };
+
+  const handleDisconnect = async (tenantId) => {
+    try {
+      const apiUrl = getApiUrl();
+      
+      const response = await fetch(`${apiUrl}/api/auth/stores/${tenantId}/disconnect`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Tenant-Id': tenantId
+        }
+      });
+
+      if (response.ok) {
+        await loadConnectedStores();
+        setMessage({ type: 'success', text: 'Store disconnected successfully' });
+      }
+    } catch (error) {
+      console.error('Failed to disconnect store:', error);
+      setMessage({ type: 'error', text: 'Failed to disconnect store' });
+    }
+  };
+
+  const otherIntegrations = [
     {
       name: 'Stripe',
       description: 'Process refunds automatically',
@@ -33,58 +208,269 @@ const Integrations = () => {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Integrations</h1>
-        <p className="text-gray-500">Connect with your favorite tools and services</p>
+        <p className="text-gray-500">Connect your Shopify store and other services</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {integrations.map((integration) => {
-          const Icon = integration.icon;
-          return (
-            <Card key={integration.name}>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <Icon className="h-8 w-8 text-gray-600" />
-                  <Badge className={integration.color}>
-                    {integration.status}
-                  </Badge>
-                </div>
-                <CardTitle>{integration.name}</CardTitle>
-                <CardDescription>{integration.description}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button 
-                  variant={integration.status === 'connected' ? 'outline' : 'default'}
-                  className="w-full"
-                  disabled={integration.status === 'available'}
-                >
-                  {integration.status === 'connected' ? 'Configure' : 
-                   integration.status === 'available' ? 'Coming Soon' : 'Connect'}
-                </Button>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+      {/* Status Messages */}
+      {message.text && (
+        <Alert className={`border ${message.type === 'success' ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
+          <div className="flex items-center">
+            {message.type === 'success' ? (
+              <Check className="h-4 w-4 text-green-600" />
+            ) : (
+              <AlertCircle className="h-4 w-4 text-red-600" />
+            )}
+            <AlertDescription className={`ml-2 ${message.type === 'success' ? 'text-green-800' : 'text-red-800'}`}>
+              {message.text}
+            </AlertDescription>
+          </div>
+        </Alert>
+      )}
 
+      {/* Shopify Integration Section */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Plug className="h-5 w-5" />
-            <span>Integration Hub</span>
-          </CardTitle>
-          <CardDescription>More integrations coming soon</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8">
-            <p className="text-gray-600">
-              We're constantly adding new integrations. Have a specific tool in mind? Let us know!
-            </p>
-            <Button variant="outline" className="mt-4">
-              Request Integration
-            </Button>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <ShoppingBag className="h-8 w-8 text-emerald-600" />
+              <div>
+                <CardTitle className="flex items-center space-x-2">
+                  <span>Shopify Integration</span>
+                  <Shield className="h-4 w-4 text-blue-500" />
+                </CardTitle>
+                <CardDescription>Connect any Shopify store with your own API credentials</CardDescription>
+              </div>
+            </div>
+            {!showConnectionForm && (
+              <Button onClick={() => setShowConnectionForm(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Connect Store
+              </Button>
+            )}
           </div>
+        </CardHeader>
+
+        <CardContent className="space-y-6">
+          {/* Connected Stores */}
+          {connectedStores.length > 0 && (
+            <div>
+              <h3 className="font-medium mb-3">Connected Stores</h3>
+              <div className="space-y-3">
+                {connectedStores.map((store) => (
+                  <div key={store.tenant_id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <Globe className="h-5 w-5 text-gray-500" />
+                      <div>
+                        <p className="font-medium">{store.shop_name}</p>
+                        <p className="text-sm text-gray-500">{store.shop}.myshopify.com</p>
+                        <div className="flex items-center space-x-2 mt-1">
+                          <Badge className={store.webhook_status === 'registered' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}>
+                            {store.webhook_status}
+                          </Badge>
+                          <span className="text-xs text-gray-400">
+                            Connected {new Date(store.connected_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDisconnect(store.tenant_id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Connection Form */}
+          {showConnectionForm && (
+            <div className="border rounded-lg p-6 bg-gray-50">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-medium">Connect New Shopify Store</h3>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => {
+                    setShowConnectionForm(false);
+                    setValidationResults(null);
+                    setMessage({ type: '', text: '' });
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="shop">Shop Domain</Label>
+                  <Input
+                    id="shop"
+                    placeholder="e.g., demo-store or demo-store.myshopify.com"
+                    value={connectionForm.shop}
+                    onChange={(e) => setConnectionForm({...connectionForm, shop: e.target.value})}
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Enter your shop's domain name (with or without .myshopify.com)
+                  </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="api_key">API Key</Label>
+                  <Input
+                    id="api_key"
+                    placeholder="Your Shopify API Key"
+                    value={connectionForm.api_key}
+                    onChange={(e) => setConnectionForm({...connectionForm, api_key: e.target.value})}
+                    className="mt-1 font-mono text-sm"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    From your Shopify Partner Dashboard or private app settings
+                  </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="api_secret">API Secret</Label>
+                  <Input
+                    id="api_secret"
+                    type="password"
+                    placeholder="Your Shopify API Secret"
+                    value={connectionForm.api_secret}
+                    onChange={(e) => setConnectionForm({...connectionForm, api_secret: e.target.value})}
+                    className="mt-1 font-mono text-sm"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Keep this secret secure - it's encrypted in our database
+                  </p>
+                </div>
+
+                {/* Validation Results */}
+                {validationResults && (
+                  <div className="p-3 border rounded bg-white">
+                    <h4 className="font-medium text-sm mb-2">Credential Validation</h4>
+                    <div className="space-y-1 text-xs">
+                      <div className="flex items-center space-x-2">
+                        {validationResults.validations.shop_domain.valid ? (
+                          <Check className="h-3 w-3 text-green-500" />
+                        ) : (
+                          <AlertCircle className="h-3 w-3 text-red-500" />
+                        )}
+                        <span>Shop Domain: {validationResults.validations.shop_domain.normalized || 'Invalid'}</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        {validationResults.validations.api_key.valid ? (
+                          <Check className="h-3 w-3 text-green-500" />
+                        ) : (
+                          <AlertCircle className="h-3 w-3 text-red-500" />
+                        )}
+                        <span>API Key: {validationResults.validations.api_key.valid ? 'Valid format' : 'Invalid format'}</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        {validationResults.validations.api_secret.valid ? (
+                          <Check className="h-3 w-3 text-green-500" />
+                        ) : (
+                          <AlertCircle className="h-3 w-3 text-red-500" />
+                        )}
+                        <span>API Secret: {validationResults.validations.api_secret.valid ? 'Valid format' : 'Invalid format'}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex items-center space-x-2 pt-2">
+                  <Button 
+                    onClick={validateCredentials}
+                    variant="outline"
+                    size="sm"
+                    disabled={connecting}
+                  >
+                    Validate
+                  </Button>
+                  <Button 
+                    onClick={handleConnect} 
+                    disabled={connecting || !connectionForm.shop || !connectionForm.api_key || !connectionForm.api_secret}
+                    className="flex-1"
+                  >
+                    {connecting ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                        Connecting...
+                      </>
+                    ) : (
+                      <>
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        Connect to Shopify
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                <div className="bg-blue-50 border border-blue-200 rounded p-3 text-sm">
+                  <p className="font-medium text-blue-900 mb-1">How it works:</p>
+                  <ol className="text-blue-800 space-y-1 text-xs list-decimal list-inside">
+                    <li>Enter your shop domain and API credentials</li>
+                    <li>Click "Connect to Shopify" to authorize</li>
+                    <li>We'll securely store your encrypted credentials</li>
+                    <li>Your returns will sync automatically</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Empty State */}
+          {connectedStores.length === 0 && !showConnectionForm && !loading && (
+            <div className="text-center py-8">
+              <ShoppingBag className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="font-medium text-gray-900 mb-2">No stores connected</h3>
+              <p className="text-gray-500 mb-4">Connect your first Shopify store to start managing returns</p>
+              <Button onClick={() => setShowConnectionForm(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Connect Your Store
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
+
+      {/* Other Integrations */}
+      <div>
+        <h2 className="text-xl font-semibold mb-4">Other Integrations</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {otherIntegrations.map((integration) => {
+            const Icon = integration.icon;
+            return (
+              <Card key={integration.name}>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <Icon className="h-8 w-8 text-gray-600" />
+                    <Badge className={integration.color}>
+                      {integration.status}
+                    </Badge>
+                  </div>
+                  <CardTitle>{integration.name}</CardTitle>
+                  <CardDescription>{integration.description}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button 
+                    variant="outline"
+                    className="w-full"
+                    disabled={true}
+                  >
+                    Coming Soon
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 };
