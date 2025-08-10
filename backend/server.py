@@ -22,6 +22,8 @@ from src.controllers.orders_controller_enhanced import router as orders_enhanced
 from src.controllers.returns_controller_enhanced import router as returns_enhanced_router
 from src.controllers.portal_returns_controller import router as portal_returns_router
 from src.controllers.admin_returns_controller import router as admin_returns_router
+from src.controllers.order_lookup_controller import router as order_lookup_router
+from src.controllers.admin_drafts_controller import router as admin_drafts_router
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 import uuid
