@@ -1326,7 +1326,7 @@ class ReturnsAPITester:
             self.log_test("Rules API - Get specific rule", False, str(rule_detail))
         
         # Test 4: Get rules with pagination and filtering
-        success, rules_list = self.make_request('GET', 'rules?page=1&limit=10&search=Complex&status_filter=active', headers=headers)
+        success, rules_list = self.make_request('GET', 'rules/?page=1&limit=10&search=Complex&status_filter=active', headers=headers)
         if success and 'items' in rules_list and 'pagination' in rules_list:
             pagination = rules_list['pagination']
             if all(key in pagination for key in ['current_page', 'total_pages', 'total_count', 'per_page']):
