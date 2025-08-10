@@ -7,6 +7,7 @@ import logging
 import os
 from typing import Dict, Any, Optional
 from datetime import datetime
+import uuid
 
 from ..config.database import db
 
