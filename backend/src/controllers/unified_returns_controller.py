@@ -159,7 +159,8 @@ async def lookup_order(
             )
         
         # Verify email matches
-        if order.get('email', '').lower() != lookup_request.email.lower():
+        order_email = order.get('email') or order.get('customer_email', '')
+        if order_email.lower() != lookup_request.email.lower():
             return OrderVerificationResponse(
                 success=False,
                 error="Email does not match order records."
