@@ -193,29 +193,52 @@ class ShopifyRMSCoverageTester:
         
         # Test GraphQL service endpoints that should map to the 6 operations
         graphql_endpoints = [
-            ("returns/orders-with-returns", "GetOrdersWithReturns query"),
-            ("returns/returnable-fulfillments/test-order-123", "GetReturnableFulfillments query"),
-            ("returns/test-return-123", "GetReturn query"),
-            ("returns/request", "CreateReturnRequest mutation"),
-            ("returns/test-return-123/approve", "ApproveReturn mutation"),
-            ("returns/test-return-123/process", "ProcessReturn mutation")
+            ("returns/orders-with-returns", "GetOrdersWithReturns query", "GET"),
+            ("returns/returnable-fulfillments/test-order-123", "GetReturnableFulfillments query", "GET"),
+            ("returns/test-return-123", "GetReturn query", "GET"),
+            ("returns/request", "CreateReturnRequest mutation", "POST"),
+            ("returns/test-return-123/approve", "ApproveReturn mutation", "POST"),
+            ("returns/test-return-123/process", "ProcessReturn mutation", "POST")
         ]
         
         # Test with seeded tenant
         headers = {'X-Tenant-Id': 'tenant-fashion-store'}
         
-        for endpoint, operation_name in graphql_endpoints:
-            if "request" in endpoint:
-                # Test POST for mutations
-                test_data = {
-                    "order_id": "test-order-123",
-                    "reason": "defective",
-                    "items": [{"product_id": "test-1", "quantity": 1}]
-                }
-                success, response = self.make_request('POST', endpoint, test_data, headers, expected_status=200)
-            elif "approve" in endpoint or "process" in endpoint:
-                # Test POST for mutations
-                success, response = self.make_request('POST', endpoint, {}, headers, expected_status=200)
+        for endpoint, operation_name, method in graphql_endpoints:
+            if method == "POST":
+                if "request" in endpoint:
+                    # Test POST for return request creation
+                    test_data = {
+                        "orderId": "test-order-123",
+                        "returnLineItems": [
+                            {
+                                "fulfillmentLineItemId": "gid://shopify/FulfillmentLineItem/123",
+                                "quantity": 1,
+                                "returnReason": "DEFECTIVE",
+                                "returnReasonNote": "Item was defective",
+                                "customerNote": "Product arrived damaged"
+                            }
+                        ]
+                    }
+                    success, response = self.make_request('POST', endpoint, test_data, headers)
+                elif "approve" in endpoint:
+                    # Test POST for return approval
+                    success, response = self.make_request('POST', endpoint, {}, headers)
+                elif "process" in endpoint:
+                    # Test POST for return processing
+                    test_data = {
+                        "refund": {
+                            "note": "Processing return with refund",
+                            "notify": True
+                        },
+                        "returnLineItems": [
+                            {
+                                "returnLineItemId": "gid://shopify/ReturnLineItem/123",
+                                "quantity": 1
+                            }
+                        ]
+                    }
+                    success, response = self.make_request('POST', endpoint, test_data, headers)
             else:
                 # Test GET for queries
                 success, response = self.make_request('GET', endpoint, headers=headers)
@@ -225,7 +248,7 @@ class ShopifyRMSCoverageTester:
                             f"Endpoint {endpoint} responding", "graphql_operations")
             else:
                 # Some operations may fail due to test data, but endpoint should exist
-                if "404" not in str(response):
+                if "404" not in str(response) and "405" not in str(response):
                     self.log_test(f"GraphQL Operation: {operation_name}", True, 
                                 f"Endpoint {endpoint} exists (expected data error)", "graphql_operations")
                 else:
