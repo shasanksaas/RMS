@@ -279,7 +279,7 @@ const RulesList = ({ onCreateRule, onEditRule, onDeleteRule }) => {
                 <SelectValue placeholder="Filter by tag" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Tags</SelectItem>
+                <SelectItem value="all">All Tags</SelectItem>
                 {availableTags.map((tag) => (
                   <SelectItem key={tag} value={tag}>
                     {tag}
