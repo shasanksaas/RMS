@@ -18,7 +18,6 @@ from shopify import Session
 
 from ...config.database import db
 from ...utils.exceptions import AuthenticationError, ValidationError
-from ...repositories import TenantScopedRepository
 
 
 class ShopifyAuthService:
