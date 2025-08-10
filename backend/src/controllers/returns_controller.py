@@ -14,7 +14,7 @@ from ..config.database import db
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/returns", tags=["returns"])
+router = APIRouter(prefix="/returns-legacy", tags=["returns-legacy"])
 
 # Return Status Constants per Shopify RMS Guide
 RETURN_STATUS = {
