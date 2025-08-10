@@ -584,7 +584,7 @@ const AllReturns = () => {
                     </div>
 
                     <div className="flex items-center justify-between pt-2 border-t">
-                      <Button variant="ghost" size="sm" asChild>
+                      <Button variant="ghost" size="sm" asChild className="touch-manipulation">
                         <Link to={`/app/returns/${returnRequest.id}`}>
                           <Eye className="h-4 w-4 mr-1" />
                           View
