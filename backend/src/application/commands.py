@@ -26,6 +26,7 @@ class CreateReturnRequest(Command):
     channel: ReturnChannel
     return_method: ReturnMethod
     line_items: List[Dict[str, Any]]
+    correlation_id: Optional[str]
     customer_note: str = ""
     submitted_by: Optional[str] = None
 
