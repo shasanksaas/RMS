@@ -3,6 +3,8 @@ Auth Controller for Shopify OAuth 2.0 Dynamic Connectivity
 Handles authentication endpoints and store management
 """
 
+import os
+import urllib.parse
 from fastapi import APIRouter, HTTPException, Request, Depends, Query, Body
 from fastapi.responses import RedirectResponse, JSONResponse
 from pydantic import BaseModel, Field
