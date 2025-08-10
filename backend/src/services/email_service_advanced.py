@@ -243,6 +243,26 @@ Next Steps: {data.get('next_steps', 'We will send you a prepaid return label sho
 
 Thank you for your business!
             """
+        elif template == "draft_approved":
+            return f"""
+Great news! Your return request for Order #{data.get('order_number')} has been approved.
+
+Return ID: #{data.get('return_id')}
+
+{data.get('message', 'Your return is now being processed.')}
+
+Thank you for your business!
+            """
+        elif template == "draft_rejected":
+            return f"""
+We've reviewed your return request for Order #{data.get('order_number')}.
+
+Unfortunately, we're unable to process this return at this time.
+
+Reason: {data.get('reason', 'Unable to verify order details')}
+
+If you have any questions, please contact our support team.
+            """
         # Add more templates as needed
         return f"Return update for #{data.get('return_id', '')}"
 
