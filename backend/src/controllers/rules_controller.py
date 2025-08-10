@@ -123,6 +123,10 @@ async def get_rules(
     # Transform for response
     rules_data = []
     for rule in rules:
+        # Convert ObjectId to string if present
+        if '_id' in rule:
+            rule['_id'] = str(rule['_id'])
+        
         # Convert legacy format if needed
         if "conditions" in rule and "condition_groups" not in rule:
             rule["condition_groups"] = [{"conditions": [], "logic_operator": "and"}]
