@@ -1047,6 +1047,13 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+@app.on_event("startup")
+async def startup_event():
+    """Initialize dependency container on startup"""
+    from src.infrastructure.services.dependency_container import initialize_container
+    initialize_container(db)
+    logger.info("✅ Dependency container initialized with Elite-Grade architecture")
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
