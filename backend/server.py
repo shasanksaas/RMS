@@ -425,14 +425,15 @@ async def get_products(tenant_id: str = Depends(get_tenant_id)):
     products = await db.products.find({"tenant_id": tenant_id}).to_list(1000)
     return [Product(**product) for product in products]
 
-# Orders Management
-@api_router.post("/orders", response_model=Order)
-async def create_order(order_data: OrderCreate, tenant_id: str = Depends(get_tenant_id)):
-    order = Order(**order_data.dict(), tenant_id=tenant_id)
-    await db.orders.insert_one(order.dict())
-    return order
+# Orders Management - MOVED TO orders_controller_enhanced.py
+# @api_router.post("/orders", response_model=Order)
+# async def create_order(order_data: OrderCreate, tenant_id: str = Depends(get_tenant_id)):
+#     order = Order(**order_data.dict(), tenant_id=tenant_id)
+#     await db.orders.insert_one(order.dict())
+#     return order
 
-@api_router.get("/orders")
+# @api_router.get("/orders")
+# Moved to orders_controller_enhanced.py for better organization
 async def get_orders(
     tenant_id: str = Depends(get_tenant_id),
     page: int = Query(1, ge=1, description="Page number"),
