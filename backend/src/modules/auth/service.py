@@ -469,8 +469,8 @@ class ShopifyAuthService:
         """Save order to database"""
         try:
             # Transform order data for our schema - Frontend expects specific fields
-            customer = order_data.get("customer", {})
-            billing_address = order_data.get("billing_address", {})
+            customer = order_data.get("customer") or {}
+            billing_address = order_data.get("billing_address") or {}
             
             # Use customer name from customer object first, then billing address
             customer_name = ""
