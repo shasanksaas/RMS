@@ -315,6 +315,56 @@ class WebhookProcessor:
         
         return {"action": "return_cancelled", "return_id": return_id}
 
+    async def handle_return_reopen(self, shop_domain: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle return reopen - Shopify RMS Guide requirement"""
+        return_id = str(payload.get("id"))
+        tenant_id = f"{shop_domain.replace('.myshopify.com', '')}.myshopify.com"
+        
+        await db.return_requests.update_one(
+            {"return_id": return_id, "tenant_id": tenant_id},
+            {
+                "$set": {
+                    "status": "open",
+                    "reopened_at": datetime.utcnow(),
+                    "synced_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        return {"action": "return_reopened", "return_id": return_id}
+
+    async def handle_return_close(self, shop_domain: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle return close - Shopify RMS Guide requirement"""
+        return_id = str(payload.get("id"))
+        tenant_id = f"{shop_domain.replace('.myshopify.com', '')}.myshopify.com"
+        
+        await db.return_requests.update_one(
+            {"return_id": return_id, "tenant_id": tenant_id},
+            {
+                "$set": {
+                    "status": "closed",
+                    "closed_at": datetime.utcnow(),
+                    "synced_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        return {"action": "return_closed", "return_id": return_id}
+
+    async def handle_return_update(self, shop_domain: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle return update - Shopify RMS Guide requirement"""
+        return_data = self._transform_return_payload(payload)
+        tenant_id = f"{shop_domain.replace('.myshopify.com', '')}.myshopify.com"
+        
+        # Update return with new data
+        await db.return_requests.update_one(
+            {"return_id": return_data["return_id"], "tenant_id": tenant_id},
+            {"$set": {**return_data, "tenant_id": tenant_id, "synced_at": datetime.utcnow()}},
+            upsert=True
+        )
+        
+        return {"action": "return_updated", "return_id": return_data["return_id"]}
+
     # REFUND HANDLERS
     async def handle_refund_created(self, shop_domain: str, payload: Dict[str, Any]) -> Dict[str, Any]:
         """Handle refund creation"""
