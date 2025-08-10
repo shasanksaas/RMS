@@ -20,14 +20,32 @@ logger = logging.getLogger(__name__)
 @router.post("/shopify/orders_create")
 async def handle_shopify_orders_create(
     request: Request,
-    x_shopify_topic: str = Header(None, alias="X-Shopify-Topic"),
-    x_shopify_shop_domain: str = Header(None, alias="X-Shopify-Shop-Domain"),
-    x_shopify_hmac_sha256: str = Header(None, alias="X-Shopify-Hmac-Sha256")
+    x_shopify_shop_domain: str = Header(None, alias="X-Shopify-Shop-Domain")
 ):
-    """Handle Shopify orders/create webhook"""
-    return await process_shopify_webhook(
-        request, "orders/create", x_shopify_shop_domain, x_shopify_hmac_sha256
-    )
+    """Handle Shopify orders/create webhook - simplified version"""
+    try:
+        # Get request body
+        body = await request.body()
+        order_data = json.loads(body)
+        
+        # Extract shop domain
+        if not x_shopify_shop_domain:
+            logger.error("Missing shop domain in webhook")
+            return {"status": "error", "message": "Missing shop domain"}
+        
+        # Convert shop domain to tenant ID
+        tenant_id = f"tenant-{x_shopify_shop_domain.replace('.myshopify.com', '')}"
+        
+        # Save order directly using auth service
+        await auth_service._save_order(tenant_id, order_data)
+        
+        logger.info(f"Webhook: Synced order {order_data.get('name', order_data.get('id'))} for {tenant_id}")
+        
+        return {"status": "success", "message": "Order synced"}
+        
+    except Exception as e:
+        logger.error(f"Webhook error: {e}")
+        return {"status": "error", "message": str(e)}
 
 
 @router.post("/shopify/orders_updated")
