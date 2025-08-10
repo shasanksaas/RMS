@@ -234,7 +234,8 @@ class ShopifyAuthService:
             "connected_at": datetime.utcnow(),
             "last_sync": None,
             "is_active": True,
-            "webhook_status": "pending"
+            "webhook_status": "pending",
+            "sync_status": "pending"
         }
         
         # Upsert store configuration
