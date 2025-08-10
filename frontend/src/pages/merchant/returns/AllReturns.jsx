@@ -117,7 +117,7 @@ const AllReturns = () => {
       
       const apiUrl = getApiUrl();
       
-      const response = await fetch(`${apiUrl}/api/returns`, {
+      const response = await fetch(`${apiUrl}/api/returns-enhanced`, {
         headers: {
           'Content-Type': 'application/json',
           'X-Tenant-Id': tenantId
