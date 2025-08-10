@@ -210,15 +210,15 @@ const UnifiedReturnForm = ({
   const handleOrderLookup = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/unified-returns/order/lookup`, {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/portal/returns/lookup-order`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Tenant-Id': localStorage.getItem('currentTenant') || 'tenant-fashion-store'
+          'X-Tenant-Id': 'tenant-rms34'
         },
         body: JSON.stringify({
-          order_number: formData.orderNumber,
-          email: formData.email
+          orderNumber: formData.orderNumber.replace('#', ''),
+          email: formData.email.toLowerCase()
         })
       });
 
