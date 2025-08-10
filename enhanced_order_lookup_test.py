@@ -317,7 +317,7 @@ class EnhancedOrderLookupTestSuite:
         
         # Test order lookup controller endpoints
         endpoints_to_test = [
-            ("/returns/order-lookup", "POST", {"orderNumber": "test", "email": "test@example.com", "channel": "customer"}),
+            ("/returns/order-lookup", "POST", {"order_number": "test", "email": "test@example.com", "channel": "customer"}),
             ("/returns/policy-preview", "POST", {"items": [], "orderMeta": {}}),
             ("/admin/returns/pending", "GET", None)
         ]
