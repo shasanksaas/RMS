@@ -646,7 +646,7 @@ const AllReturns = () => {
                             type="checkbox"
                             checked={selectedReturns.includes(returnRequest.id)}
                             onChange={() => handleSelectReturn(returnRequest.id)}
-                            className="rounded"
+                            className="rounded touch-manipulation"
                           />
                         </td>
                         <td className="py-4 px-4">
