@@ -368,7 +368,7 @@ class EnhancedOrderLookupTestSuite:
         
         # Test 2: Verify tenant without Shopify integration uses fallback mode
         fallback_data = {
-            "orderNumber": "FB-2001",
+            "order_number": "FB-2001",
             "email": "fallback2@example.com",
             "channel": "customer"
         }
