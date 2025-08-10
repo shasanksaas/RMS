@@ -40,6 +40,7 @@ class CreateReturnDraft(Command):
     channel: ReturnChannel
     items: List[Dict[str, Any]]
     photos: List[str]
+    correlation_id: Optional[str]
     customer_note: str = ""
 
 
@@ -49,6 +50,7 @@ class ApproveReturn(Command):
     return_id: str
     tenant_id: TenantId
     approver: str
+    correlation_id: Optional[str]
     override_policy: bool = False
     notes: str = ""
 
