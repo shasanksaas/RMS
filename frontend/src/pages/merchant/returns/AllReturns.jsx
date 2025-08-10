@@ -485,7 +485,7 @@ const AllReturns = () => {
                 variant="outline" 
                 onClick={() => handleBulkStatusUpdate('denied')}
                 disabled={bulkActionLoading}
-                className="text-red-600 hover:text-red-700 w-full sm:w-auto"
+                className="text-red-600 hover:text-red-700 w-full sm:w-auto touch-manipulation"
               >
                 <XCircle className="h-4 w-4 mr-2" />
                 Deny ({selectedReturns.length})
