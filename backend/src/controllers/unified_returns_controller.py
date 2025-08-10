@@ -113,13 +113,13 @@ class EligibleItem(BaseModel):
 
 class OrderVerificationResponse(BaseModel):
     success: bool
-    order_id: str
-    order_number: str
-    customer_name: str
-    order_date: datetime
-    total_amount: float
-    eligible_items: List[EligibleItem]
-    policy_preview: PolicyPreview
+    order_id: Optional[str] = None
+    order_number: Optional[str] = None
+    customer_name: Optional[str] = None
+    order_date: Optional[datetime] = None
+    total_amount: Optional[float] = None
+    eligible_items: Optional[List[EligibleItem]] = None
+    policy_preview: Optional[PolicyPreview] = None
     error: Optional[str] = None
 
 class CreateReturnResponse(BaseModel):
