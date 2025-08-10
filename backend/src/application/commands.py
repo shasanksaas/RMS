@@ -62,6 +62,7 @@ class RejectReturn(Command):
     tenant_id: TenantId
     rejector: str
     reason: str
+    correlation_id: Optional[str]
 
 
 @dataclass
@@ -72,6 +73,7 @@ class ProcessRefund(Command):
     refund_amount: float
     refund_method: str
     processed_by: str
+    correlation_id: Optional[str]
 
 
 @dataclass
@@ -81,6 +83,7 @@ class GenerateReturnLabel(Command):
     tenant_id: TenantId
     from_address: Dict[str, str]
     to_address: Dict[str, str]
+    correlation_id: Optional[str]
     service_type: str = "ground"
 
 
