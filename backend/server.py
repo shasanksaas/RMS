@@ -67,9 +67,21 @@ async def security_and_audit_middleware(request: Request, call_next):
         response = await call_next(request)
         return response
     
+    # Skip tenant validation for certain endpoints
+    skip_tenant_validation = [
+        "/api/tenants",  # Tenant creation/listing
+        "/api/auth/",    # Auth endpoints
+        "/api/test/",    # Testing endpoints
+        "/api/webhooks/", # Webhook endpoints
+        "/api/enhanced/", # Enhanced features
+        "/api/shopify/"   # Shopify endpoints
+    ]
+    
+    should_skip_tenant = any(request.url.path.startswith(path) for path in skip_tenant_validation)
+    
     try:
-        # Validate tenant access for API endpoints
-        if request.url.path.startswith("/api"):
+        # Validate tenant access for API endpoints (except those that should skip)
+        if request.url.path.startswith("/api") and not should_skip_tenant:
             tenant_id = await security_middleware.validate_tenant_access(request)
             
             # Check rate limits
