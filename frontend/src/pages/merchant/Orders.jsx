@@ -27,7 +27,7 @@ const Orders = () => {
 
   // Get backend URL and tenant from environment
   const backendUrl = process.env.REACT_APP_BACKEND_URL;
-  const tenantId = 'tenant-fashion-store.myshopify.com'; // TODO: Get from auth context
+  const tenantId = 'tenant-rms34'; // Updated to match connected store
 
   useEffect(() => {
     loadOrders();
