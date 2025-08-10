@@ -1086,10 +1086,13 @@ async def get_configuration():
 
 # Include routers in the api_router first
 api_router.include_router(auth_router)
+api_router.include_router(integration_router)
 api_router.include_router(webhook_router)
 api_router.include_router(testing_router)
 api_router.include_router(shopify_router)
 api_router.include_router(enhanced_router)
+api_router.include_router(orders_enhanced_router)
+api_router.include_router(returns_enhanced_router)
 api_router.include_router(returns_router)
 api_router.include_router(shopify_test_router)
 api_router.include_router(rules_router)
