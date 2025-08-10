@@ -681,9 +681,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Elite-Grade Returns Creation System with Hexagonal Architecture"
-    - "CQRS Command/Query Handlers"
-    - "Elite Portal and Admin Controllers"
+    - "All Elite-Grade Returns Creation System components tested and verified"
   stuck_tasks: 
     - "GraphQL Service for Returns Operations"
     - "Sync Service with Initial Backfill"
