@@ -280,6 +280,45 @@ async def get_rule(
     if '_id' in rule:
         rule['_id'] = str(rule['_id'])
     
+    # Handle legacy format conversion for detailed view
+    if rule.get("condition_groups") is None:
+        old_conditions = rule.get("conditions", {})
+        if old_conditions:
+            rule["condition_groups"] = [{
+                "conditions": [],
+                "logic_operator": "and"
+            }]
+            if old_conditions.get("auto_approve_reasons"):
+                for reason in old_conditions["auto_approve_reasons"]:
+                    rule["condition_groups"][0]["conditions"].append({
+                        "field": "return_reason",
+                        "operator": "equals",
+                        "value": reason
+                    })
+        else:
+            rule["condition_groups"] = []
+    
+    # Handle legacy actions format
+    if isinstance(rule.get("actions"), dict):
+        old_actions = rule["actions"]
+        new_actions = []
+        if old_actions.get("auto_approve"):
+            new_actions.append({
+                "action_type": "auto_approve_return",
+                "parameters": {}
+            })
+        if old_actions.get("manual_review"):
+            new_actions.append({
+                "action_type": "require_manual_review",
+                "parameters": {}
+            })
+        if old_actions.get("generate_label"):
+            new_actions.append({
+                "action_type": "generate_return_label",
+                "parameters": {}
+            })
+        rule["actions"] = new_actions
+    
     return {
         "success": True,
         "rule": rule
