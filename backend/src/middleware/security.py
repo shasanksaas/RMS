@@ -236,3 +236,9 @@ def require_tenant_context():
 security_middleware = SecurityMiddleware()
 rate_limiting_middleware = RateLimitingMiddleware()
 audit_middleware = AuditMiddleware()
+
+# Additional utility functions
+async def rate_limit_by_ip(max_requests: int = 10, window_minutes: int = 5):
+    """Rate limiting by IP address (placeholder)"""
+    # TODO: Implement proper IP-based rate limiting
+    pass
