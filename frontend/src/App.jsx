@@ -11,6 +11,7 @@ import AdminLayout from './components/layout/AdminLayout';
 import Dashboard from './pages/merchant/Dashboard';
 import AllReturns from './pages/merchant/returns/AllReturns';
 import ReturnDetail from './pages/merchant/returns/ReturnDetail';
+import CreateReturnMerchant from './pages/merchant/returns/CreateReturn';
 import Orders from './pages/merchant/Orders';
 import OrderDetail from './pages/merchant/OrderDetail';
 import Rules from './pages/merchant/Rules';
@@ -26,6 +27,8 @@ import OnboardingWizard from './pages/merchant/Onboarding';
 
 // Customer Portal Pages
 import CustomerStart from './pages/customer/Start';
+import CustomerCreateReturn from './pages/customer/CreateReturn';
+import CustomerReturnConfirmation from './pages/customer/ReturnConfirmation';
 import CustomerSelectItems from './pages/customer/SelectItems';
 import CustomerResolution from './pages/customer/Resolution';
 import CustomerConfirm from './pages/customer/Confirm';
