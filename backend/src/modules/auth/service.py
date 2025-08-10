@@ -547,6 +547,74 @@ class ShopifyAuthService:
             
         except Exception as e:
             print(f"Failed to save product {product_data.get('id')}: {e}")
+
+    async def _process_resync(self, tenant_id: str, shop: str, access_token: str, job_id: str) -> None:
+        """Process manual resync job"""
+        try:
+            print(f"Starting manual resync job {job_id} for {shop}")
+            
+            # Update job status
+            await db.sync_jobs.update_one(
+                {"id": job_id},
+                {"$set": {"status": "running", "started_at": datetime.utcnow(), "progress": 10}}
+            )
+            
+            # Sync orders (last 90 days)
+            await self._sync_orders(tenant_id, shop, access_token, days_back=90)
+            
+            await db.sync_jobs.update_one(
+                {"id": job_id},
+                {"$set": {"progress": 70}}
+            )
+            
+            # Sync products
+            await self._sync_products(tenant_id, shop, access_token)
+            
+            await db.sync_jobs.update_one(
+                {"id": job_id},
+                {"$set": {"progress": 90}}
+            )
+            
+            # Update job status
+            await db.sync_jobs.update_one(
+                {"id": job_id},
+                {
+                    "$set": {
+                        "status": "completed",
+                        "completed_at": datetime.utcnow(),
+                        "progress": 100,
+                        "message": "Manual resync completed successfully"
+                    }
+                }
+            )
+            
+            # Update tenant sync status
+            await db.tenants.update_one(
+                {"id": tenant_id},
+                {
+                    "$set": {
+                        "shopify_integration.last_sync": datetime.utcnow()
+                    }
+                }
+            )
+            
+            print(f"Manual resync job {job_id} completed for {shop}")
+            
+        except Exception as e:
+            print(f"Manual resync job {job_id} failed for {shop}: {e}")
+            
+            # Update job status
+            await db.sync_jobs.update_one(
+                {"id": job_id},
+                {
+                    "$set": {
+                        "status": "failed",
+                        "completed_at": datetime.utcnow(),
+                        "error": str(e),
+                        "message": f"Resync failed: {str(e)}"
+                    }
+                }
+            )
         
         # Required scopes for Returns Management
         self.scopes = [
