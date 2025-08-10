@@ -262,9 +262,14 @@ class ShopifyAuthService:
         # Trigger initial sync in background
         try:
             from ...services.sync_service import sync_service
-            await sync_service.perform_initial_sync(tenant_id)
+            # Don't await this - let it run in background
+            asyncio.create_task(sync_service.perform_initial_sync(tenant_id))
+            await db.stores.update_one(
+                {"tenant_id": tenant_id},
+                {"$set": {"sync_status": "in_progress"}}
+            )
         except Exception as e:
-            print(f"⚠️ Initial sync failed for {shop}: {e}")
+            print(f"⚠️ Initial sync trigger failed for {shop}: {e}")
             await db.stores.update_one(
                 {"tenant_id": tenant_id},
                 {"$set": {"sync_status": "failed", "sync_error": str(e)}}
