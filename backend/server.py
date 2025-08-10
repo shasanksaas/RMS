@@ -1047,6 +1047,7 @@ async def root():
 @api_router.get("/health")  
 async def api_health():
     """API health check endpoint for deployment verification"""
+    from datetime import datetime
     return {"status": "ok", "timestamp": datetime.now().isoformat()}
 
 # Include routers in the api_router first
