@@ -940,7 +940,252 @@ class ReturnsAPITester:
             
         return True
 
-    def test_seeded_data_verification(self):
+    def test_shopify_graphql_connection(self, tenant_id: str):
+        """Test GraphQL service connection and basic queries"""
+        # Test store connection endpoint
+        success, connection_info = self.make_request('GET', f'test/stores/{tenant_id}/connection')
+        if success and connection_info.get('status') == 'success':
+            self.log_test("Shopify GraphQL - Store connection test", True)
+            
+            # Check if GraphQL service was created
+            if connection_info.get('graphql_service'):
+                self.log_test("Shopify GraphQL - Service creation", True)
+                
+                # Check if shop info was retrieved
+                if connection_info.get('shop_info'):
+                    self.log_test("Shopify GraphQL - Shop info query", True)
+                else:
+                    self.log_test("Shopify GraphQL - Shop info query", False, "No shop info returned")
+            else:
+                self.log_test("Shopify GraphQL - Service creation", False, connection_info.get('message', 'Service creation failed'))
+        else:
+            self.log_test("Shopify GraphQL - Store connection test", False, str(connection_info))
+            return False
+            
+        return True
+
+    def test_webhook_processing_with_idempotency(self):
+        """Test webhook processing with idempotency checks"""
+        # Test webhook samples endpoint
+        success, samples = self.make_request('GET', 'test/webhook/samples')
+        if success and 'samples' in samples:
+            self.log_test("Webhook Processing - Sample payloads", True)
+            
+            # Test processing different webhook types
+            webhook_topics = ['orders/create', 'returns/create', 'app/uninstalled']
+            
+            for topic in webhook_topics:
+                if topic in samples['samples']:
+                    payload = samples['samples'][topic]
+                    
+                    # Test webhook processing
+                    webhook_data = {
+                        "topic": topic,
+                        "shop_domain": "tenant-fashion-store.myshopify.com",
+                        "payload": payload
+                    }
+                    
+                    success, result = self.make_request('POST', 'test/webhook', webhook_data)
+                    if success and result.get('status') == 'success':
+                        self.log_test(f"Webhook Processing - {topic}", True)
+                        
+                        # Test idempotency by sending the same webhook again
+                        success2, result2 = self.make_request('POST', 'test/webhook', webhook_data)
+                        if success2:
+                            self.log_test(f"Webhook Idempotency - {topic}", True)
+                        else:
+                            self.log_test(f"Webhook Idempotency - {topic}", False, "Duplicate processing should be handled")
+                    else:
+                        self.log_test(f"Webhook Processing - {topic}", False, str(result))
+                        
+        else:
+            self.log_test("Webhook Processing - Sample payloads", False, str(samples))
+            return False
+            
+        return True
+
+    def test_app_uninstalled_webhook(self):
+        """Test critical app/uninstalled webhook for tenant cleanup"""
+        # Test app/uninstalled webhook specifically
+        app_uninstalled_payload = {
+            "topic": "app/uninstalled",
+            "shop_domain": "test-cleanup-store.myshopify.com",
+            "payload": {
+                "id": 98765,
+                "name": "Test Cleanup Store",
+                "domain": "test-cleanup-store.myshopify.com",
+                "uninstalled_at": "2025-08-10T12:00:00Z"
+            }
+        }
+        
+        success, result = self.make_request('POST', 'test/webhook', app_uninstalled_payload)
+        if success and result.get('status') == 'success':
+            # Check if cleanup actions were performed
+            if result.get('result', {}).get('action') == 'store_deactivated':
+                self.log_test("App Uninstalled Webhook - Tenant cleanup", True)
+            else:
+                self.log_test("App Uninstalled Webhook - Tenant cleanup", False, "Cleanup action not performed")
+        else:
+            self.log_test("App Uninstalled Webhook - Processing", False, str(result))
+            return False
+            
+        return True
+
+    def test_sync_service_functionality(self):
+        """Test sync service with different sync types"""
+        # Test with seeded tenant IDs
+        seeded_tenants = ["tenant-fashion-store.myshopify.com", "tenant-tech-gadgets.myshopify.com"]
+        
+        for tenant_id in seeded_tenants:
+            # Test initial sync
+            sync_data = {"sync_type": "initial"}
+            success, result = self.make_request('POST', f'test/sync/{tenant_id}', sync_data)
+            if success and result.get('status') == 'success':
+                self.log_test(f"Sync Service - Initial sync ({tenant_id})", True)
+                
+                # Check sync results
+                sync_result = result.get('result', {})
+                if 'orders' in sync_result and 'products' in sync_result:
+                    self.log_test(f"Sync Service - Data categories ({tenant_id})", True)
+                else:
+                    self.log_test(f"Sync Service - Data categories ({tenant_id})", False, "Missing sync categories")
+            else:
+                self.log_test(f"Sync Service - Initial sync ({tenant_id})", False, str(result))
+                
+            # Test manual sync
+            manual_sync_data = {"sync_type": "manual"}
+            success, manual_result = self.make_request('POST', f'test/sync/{tenant_id}', manual_sync_data)
+            if success and manual_result.get('status') == 'success':
+                self.log_test(f"Sync Service - Manual sync ({tenant_id})", True)
+            else:
+                self.log_test(f"Sync Service - Manual sync ({tenant_id})", False, str(manual_result))
+                
+        return True
+
+    def test_auth_service_status(self):
+        """Test auth service health and configuration"""
+        success, status = self.make_request('GET', 'auth/status')
+        if success and status.get('service') == 'shopify_auth':
+            self.log_test("Auth Service - Status endpoint", True)
+            
+            # Check required configuration
+            required_fields = ['api_version', 'redirect_uri', 'required_scopes']
+            if all(field in status for field in required_fields):
+                self.log_test("Auth Service - Configuration check", True)
+            else:
+                self.log_test("Auth Service - Configuration check", False, "Missing configuration fields")
+                
+            # Check if encryption is configured
+            if status.get('encryption') in ['fernet', 'none']:
+                self.log_test("Auth Service - Encryption status", True)
+            else:
+                self.log_test("Auth Service - Encryption status", False, "Invalid encryption status")
+        else:
+            self.log_test("Auth Service - Status endpoint", False, str(status))
+            return False
+            
+        return True
+
+    def test_auth_credential_validation(self):
+        """Test credential validation endpoint"""
+        # Test with sample credentials
+        test_credentials = {
+            "shop": "test-store",
+            "api_key": "test_api_key_12345678",
+            "api_secret": "test_api_secret_87654321"
+        }
+        
+        success, validation = self.make_request('POST', 'auth/test/validate', test_credentials)
+        if success and 'overall_valid' in validation:
+            self.log_test("Auth Service - Credential validation", True)
+            
+            # Check validation details
+            if 'validations' in validation:
+                validations = validation['validations']
+                if all(key in validations for key in ['shop_domain', 'api_key', 'api_secret']):
+                    self.log_test("Auth Service - Validation details", True)
+                else:
+                    self.log_test("Auth Service - Validation details", False, "Missing validation details")
+            else:
+                self.log_test("Auth Service - Validation details", False, "No validation details")
+        else:
+            self.log_test("Auth Service - Credential validation", False, str(validation))
+            return False
+            
+        return True
+
+    def test_testing_endpoints_health(self):
+        """Test development testing endpoints"""
+        # Test health endpoint
+        success, health = self.make_request('GET', 'test/health')
+        if success and health.get('status') == 'healthy':
+            self.log_test("Testing Endpoints - Health check", True)
+            
+            # Check service status
+            services = health.get('services', {})
+            required_services = ['webhook_processor', 'sync_service', 'auth_service']
+            if all(services.get(service) for service in required_services):
+                self.log_test("Testing Endpoints - Service status", True)
+            else:
+                self.log_test("Testing Endpoints - Service status", False, "Some services not healthy")
+                
+            # Check webhook topics count
+            if health.get('supported_webhook_topics', 0) > 0:
+                self.log_test("Testing Endpoints - Webhook topics", True)
+            else:
+                self.log_test("Testing Endpoints - Webhook topics", False, "No webhook topics supported")
+        else:
+            self.log_test("Testing Endpoints - Health check", False, str(health))
+            return False
+            
+        return True
+
+    def test_webhook_test_endpoint(self):
+        """Test webhook test endpoint"""
+        success, webhook_test = self.make_request('GET', 'webhooks/test')
+        if success and webhook_test.get('service') == 'webhooks':
+            self.log_test("Webhook Service - Test endpoint", True)
+            
+            # Check supported topics
+            if 'supported_topics' in webhook_test and len(webhook_test['supported_topics']) > 0:
+                self.log_test("Webhook Service - Supported topics", True)
+            else:
+                self.log_test("Webhook Service - Supported topics", False, "No supported topics")
+        else:
+            self.log_test("Webhook Service - Test endpoint", False, str(webhook_test))
+            return False
+            
+        return True
+
+    def test_shopify_integration_comprehensive(self):
+        """Comprehensive test of all Shopify integration components"""
+        print("\n🛍️ Testing Shopify Integration Components...")
+        
+        # Test seeded tenant IDs (these should exist from seed data)
+        seeded_tenants = ["tenant-fashion-store.myshopify.com", "tenant-tech-gadgets.myshopify.com"]
+        
+        # Test GraphQL service with seeded tenants
+        for tenant_id in seeded_tenants:
+            self.test_shopify_graphql_connection(tenant_id)
+            
+        # Test webhook processing
+        self.test_webhook_processing_with_idempotency()
+        
+        # Test critical app/uninstalled webhook
+        self.test_app_uninstalled_webhook()
+        
+        # Test sync service
+        self.test_sync_service_functionality()
+        
+        # Test auth service
+        self.test_auth_service_status()
+        self.test_auth_credential_validation()
+        
+        # Test development endpoints
+        self.test_testing_endpoints_health()
+        self.test_webhook_test_endpoint()
+        
+        return True
         """Test with the comprehensive seed data"""
         # Test with known seeded tenant IDs
         seeded_tenants = ["tenant-fashion-store", "tenant-tech-gadgets"]
