@@ -247,17 +247,25 @@ const AllReturns = () => {
 
       await Promise.all(promises);
       
-      // Clear selection and refresh
+      // Update local state
+      setAllReturns(prevReturns => 
+        prevReturns.map(ret => 
+          selectedReturns.includes(ret.id) ? { ...ret, status: newStatus } : ret
+        )
+      );
+      
+      // Clear selection
       setSelectedReturns([]);
-      await loadReturns();
       setError('');
       
     } catch (err) {
       console.error('Error with bulk action:', err);
       // Fallback to local state update
-      setReturns(returns.map(ret => 
-        selectedReturns.includes(ret.id) ? { ...ret, status: newStatus } : ret
-      ));
+      setAllReturns(prevReturns => 
+        prevReturns.map(ret => 
+          selectedReturns.includes(ret.id) ? { ...ret, status: newStatus } : ret
+        )
+      );
       setSelectedReturns([]);
     } finally {
       setBulkActionLoading(false);
