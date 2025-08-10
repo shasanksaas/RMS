@@ -187,7 +187,7 @@ class EnhancedOrderLookupTestSuite:
         print("\n🔄 Testing Fallback Mode...")
         
         lookup_data = {
-            "orderNumber": "FB-1001",
+            "order_number": "FB-1001",
             "email": "fallback@example.com",
             "channel": "customer"
         }
