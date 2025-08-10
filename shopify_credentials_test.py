@@ -3,9 +3,9 @@
 🔧 SHOPIFY CREDENTIALS UPDATE TEST
 Tests the updated Shopify connectivity with new credentials provided by user:
 - Store: rms34.myshopify.com
-- API Key: 0ef6de8c4bf0b4a3d8f7f99b42c53695
-- API Secret: db79f6174721b7acf332b69ef8f84374  
-- Access Token: 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
+- API Key: [REDACTED_FOR_SECURITY]
+- API Secret: [REDACTED_FOR_SECURITY]  
+- Access Token: [REDACTED_FOR_SECURITY]
 
 Priority Test Endpoints:
 1. /api/shopify-test/quick-test - Verify connection to rms34.myshopify.com
@@ -23,12 +23,12 @@ from datetime import datetime
 BACKEND_URL = "https://bb5d0b5c-0639-4f12-be95-7ef6a2bfa2ef.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
-# Updated credentials from user
+# Updated credentials from user - REAL VALUES REMOVED FOR SECURITY
 NEW_CREDENTIALS = {
     "store": "rms34.myshopify.com",
-    "api_key": "0ef6de8c4bf0b4a3d8f7f99b42c53695",
-    "api_secret": "db79f6174721b7acf332b69ef8f84374",
-    "access_token": "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"
+    "api_key": "[REDACTED_FOR_SECURITY]",
+    "api_secret": "[REDACTED_FOR_SECURITY]",
+    "access_token": "[REDACTED_FOR_SECURITY]"
 }
 
 class ShopifyCredentialsTest:
