@@ -246,6 +246,17 @@ class ShopifyAuthService:
                 {"$set": {"webhook_status": "failed", "webhook_error": str(e)}}
             )
         
+        # Trigger initial sync in background
+        try:
+            from ...services.sync_service import sync_service
+            await sync_service.perform_initial_sync(tenant_id)
+        except Exception as e:
+            print(f"⚠️ Initial sync failed for {shop}: {e}")
+            await db.stores.update_one(
+                {"tenant_id": tenant_id},
+                {"$set": {"sync_status": "failed", "sync_error": str(e)}}
+            )
+        
         return {
             "success": True,
             "tenant_id": tenant_id,
