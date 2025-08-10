@@ -236,6 +236,10 @@ async def get_rule(
     if not rule:
         raise HTTPException(status_code=404, detail="Rule not found")
     
+    # Convert ObjectId to string if present
+    if '_id' in rule:
+        rule['_id'] = str(rule['_id'])
+    
     return {
         "success": True,
         "rule": rule
