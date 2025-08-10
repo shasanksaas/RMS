@@ -104,7 +104,7 @@ class ReturnRefunded(DomainEvent):
     refund_method: str
     processed_by: str
     occurred_at: datetime
-    correlation_id: Optional[str] = None
+    correlation_id: Optional[str]
     
     def get_event_type(self) -> str:
         return "return.refunded"
@@ -119,7 +119,7 @@ class DraftCreated(DomainEvent):
     customer_email: Email
     channel: str
     occurred_at: datetime
-    correlation_id: Optional[str] = None
+    correlation_id: Optional[str]
     
     def get_event_type(self) -> str:
         return "draft.created"
@@ -133,7 +133,7 @@ class DraftApproved(DomainEvent):
     return_id: ReturnId
     approved_by: str
     occurred_at: datetime
-    correlation_id: Optional[str] = None
+    correlation_id: Optional[str]
     
     def get_event_type(self) -> str:
         return "draft.approved"
@@ -147,7 +147,7 @@ class DraftLinkedToOrder(DomainEvent):
     order_id: OrderId
     linked_by: str
     occurred_at: datetime
-    correlation_id: Optional[str] = None
+    correlation_id: Optional[str]
     
     def get_event_type(self) -> str:
         return "draft.linked_to_order"
