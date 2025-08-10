@@ -364,9 +364,11 @@ metadata:
 
 test_plan:
   current_focus:
-    - "All major frontend functionality completed and working!"
-    - "Ready for advanced integrations (Shopify, AI, Email, Stripe)"
-    - "Consider implementing third-party integrations"
+    - "GraphQL Service for Returns Operations"
+    - "Webhook Processing with Idempotency"
+    - "Sync Service with Initial Backfill"
+    - "Auth Service Enhancement with OAuth"
+    - "Testing Endpoints for Development"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
