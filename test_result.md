@@ -234,6 +234,66 @@ backend:
         agent: "testing"
         comment: "✅ VERIFIED: Analytics endpoint working correctly. Fixed enum issue with exchange rate calculation. Both 30-day and 7-day analytics work properly with accurate return counts, refund totals, and return reason analysis."
 
+  - task: "GraphQL Service for Returns Operations"
+    implemented: true
+    working: "NA"
+    file: "src/services/shopify_graphql.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented comprehensive GraphQL service with returns, orders, products, and customers operations. Includes factory pattern for service creation."
+
+  - task: "Webhook Processing with Idempotency"
+    implemented: true
+    working: "NA"
+    file: "src/services/webhook_handlers.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented webhook processor with idempotency checks, HMAC verification, and handlers for all Shopify webhook topics including app/uninstalled."
+
+  - task: "Sync Service with Initial Backfill"
+    implemented: true
+    working: "NA"
+    file: "src/services/sync_service.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented sync service with initial backfill (90 days), incremental sync, and proper data transformation for orders, products, and returns."
+
+  - task: "Auth Service Enhancement with OAuth"
+    implemented: true
+    working: "NA"
+    file: "src/modules/auth/controller.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Enhanced auth service with dynamic OAuth, webhook registration including app/uninstalled, and comprehensive store management."
+
+  - task: "Testing Endpoints for Development"
+    implemented: true
+    working: "NA"
+    file: "src/controllers/testing_controller.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented testing endpoints for webhook simulation, sync testing, store connection testing, and sample payload generation."
+
 frontend:
   - task: "Frontend Routing Structure & Navigation"
     implemented: true
