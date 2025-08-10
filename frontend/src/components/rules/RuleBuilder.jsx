@@ -393,10 +393,15 @@ const RuleBuilder = ({ rule = null, onSave, onCancel, isOpen }) => {
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-medium text-gray-900">Conditions</h3>
-                <Button onClick={testRule} variant="outline" size="sm" disabled={isLoading}>
-                  <TestTube2 className="h-4 w-4 mr-2" />
-                  Test Conditions
-                </Button>
+                <div className="flex items-center space-x-2">
+                  {isLoadingFieldOptions && (
+                    <div className="text-sm text-gray-500">Loading options...</div>
+                  )}
+                  <Button onClick={testRule} variant="outline" size="sm" disabled={isLoading}>
+                    <TestTube2 className="h-4 w-4 mr-2" />
+                    Test Conditions
+                  </Button>
+                </div>
               </div>
 
               {ruleData.condition_groups.map((group, groupIndex) => (
