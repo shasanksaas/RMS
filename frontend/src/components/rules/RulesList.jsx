@@ -107,6 +107,28 @@ const RulesList = ({ onCreateRule, onEditRule, onDeleteRule }) => {
     loadRules();
   }, [loadRules]);
 
+  // Add a refresh function that can be called from parent
+  useEffect(() => {
+    // Listen for rule changes in localStorage
+    const handleStorageChange = () => {
+      loadRules();
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also refresh every 5 seconds if no user interaction
+    const refreshInterval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        loadRules();
+      }
+    }, 5000);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(refreshInterval);
+    };
+  }, [loadRules]);
+
   // Toggle rule status
   const toggleRuleStatus = async (ruleId, currentStatus) => {
     try {
