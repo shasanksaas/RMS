@@ -1044,6 +1044,11 @@ async def health_check():
 async def root():
     return {"message": "Returns Management SaaS API", "version": "1.0.0"}
 
+@api_router.get("/health")  
+async def api_health():
+    """API health check endpoint for deployment verification"""
+    return {"status": "ok", "timestamp": datetime.now().isoformat()}
+
 # Include routers in the api_router first
 api_router.include_router(auth_router)
 api_router.include_router(webhook_router)
