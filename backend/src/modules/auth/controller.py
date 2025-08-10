@@ -87,6 +87,132 @@ async def initiate_oauth(request: InitiateOAuthRequest):
         raise HTTPException(status_code=500, detail=f"OAuth initiation failed: {str(e)}")
 
 
+@router.get("/shopify/install")
+async def shopify_oauth_install(
+    shop: str = Query(..., description="Shop domain (e.g., rms34.myshopify.com)")
+):
+    """
+    Shopify OAuth Install Route
+    Initiates the OAuth flow by redirecting to Shopify authorization
+    
+    Usage: GET /api/auth/shopify/install?shop=rms34.myshopify.com
+    """
+    try:
+        # Validate shop domain
+        if not shop:
+            raise HTTPException(status_code=400, detail="Shop domain is required")
+            
+        # Normalize shop domain to ensure it ends with .myshopify.com
+        if not shop.endswith('.myshopify.com'):
+            shop = f"{shop}.myshopify.com"
+        
+        # Validate shop domain format
+        if not shop.replace('.myshopify.com', '').replace('-', '').replace('_', '').isalnum():
+            raise HTTPException(status_code=400, detail="Invalid shop domain format")
+        
+        # Get Shopify credentials from environment
+        api_key = os.environ.get('SHOPIFY_API_KEY')
+        if not api_key:
+            raise HTTPException(status_code=500, detail="Shopify API key not configured")
+        
+        # Required scopes for MVP (exactly as specified)
+        scopes = "read_orders,read_fulfillments,read_products,read_customers,read_returns,write_returns"
+        
+        # Exact redirect URI as whitelisted in Shopify
+        redirect_uri = "https://733d44a0-d288-43eb-83ff-854115be232e.preview.emergentagent.com/api/auth/shopify/callback"
+        
+        # Generate and store CSRF state token
+        state = auth_service.generate_oauth_state()
+        await auth_service.store_oauth_state(shop, state)
+        
+        # Build Shopify authorization URL
+        auth_url = f"https://{shop}/admin/oauth/authorize"
+        params = {
+            "client_id": api_key,
+            "scope": scopes,
+            "redirect_uri": redirect_uri,
+            "state": state,
+            "grant_options[]": "offline"  # Request offline access
+        }
+        
+        # Build query string
+        query_params = "&".join([f"{k}={urllib.parse.quote(str(v))}" for k, v in params.items()])
+        full_auth_url = f"{auth_url}?{query_params}"
+        
+        # 302 redirect to Shopify authorize URL
+        return RedirectResponse(url=full_auth_url, status_code=302)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"OAuth installation failed: {str(e)}")
+
+
+@router.get("/shopify/callback")
+async def shopify_oauth_callback(
+    shop: str = Query(..., description="Shop domain"),
+    code: str = Query(..., description="Authorization code from Shopify"),
+    state: str = Query(..., description="State parameter for CSRF protection"),
+    hmac: Optional[str] = Query(None, description="HMAC signature from Shopify"),
+    timestamp: Optional[str] = Query(None, description="Request timestamp")
+):
+    """
+    Shopify OAuth Callback Route
+    Processes the callback after user authorizes the app
+    
+    Usage: This is called automatically by Shopify after user approval
+    """
+    try:
+        # Verify HMAC signature for security
+        if hmac:
+            await auth_service.verify_shopify_hmac(shop, code, state, hmac, timestamp)
+        
+        # Verify CSRF state token
+        if not await auth_service.verify_oauth_state(shop, state):
+            raise HTTPException(status_code=400, detail="Invalid state parameter - CSRF protection")
+        
+        # Exchange code for access token
+        access_token = await auth_service.exchange_code_for_token(shop, code)
+        
+        # Get shop information using the access token
+        shop_info = await auth_service.get_shop_info(shop, access_token)
+        
+        # Persist credentials by tenant (encrypted)
+        tenant_data = {
+            "shop": shop,
+            "access_token": access_token,  # Will be encrypted by service
+            "scopes": "read_orders,read_fulfillments,read_products,read_customers,read_returns,write_returns",
+            "installed_at": datetime.utcnow().isoformat(),
+            "provider": "shopify",
+            "shop_info": shop_info
+        }
+        
+        tenant_id = await auth_service.save_shop_credentials(tenant_data)
+        
+        # Clean up state token
+        await auth_service.cleanup_oauth_state(shop, state)
+        
+        # Immediate data bootstrap - enqueue background job
+        await auth_service.enqueue_initial_data_sync(tenant_id, shop, access_token)
+        
+        # Register webhooks
+        await auth_service.register_shopify_webhooks(shop, access_token)
+        
+        # 302 redirect to integrations page with success
+        success_url = f"/app/settings/integrations?connected=1&shop={shop}"
+        full_success_url = f"https://733d44a0-d288-43eb-83ff-854115be232e.preview.emergentagent.com{success_url}"
+        
+        return RedirectResponse(url=full_success_url, status_code=302)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"OAuth callback error: {e}")  # Log for debugging, don't expose sensitive info
+        error_url = "/app/settings/integrations?error=1&message=Connection failed"
+        full_error_url = f"https://733d44a0-d288-43eb-83ff-854115be232e.preview.emergentagent.com{error_url}"
+        return RedirectResponse(url=full_error_url, status_code=302)
+
+
 @router.get("/callback")
 async def oauth_callback(
     shop: str = Query(..., description="Shop domain"),
@@ -96,34 +222,20 @@ async def oauth_callback(
     timestamp: Optional[str] = Query(None, description="Request timestamp")
 ):
     """
-    Handle OAuth callback from Shopify
-    
-    This endpoint processes the callback after user authorizes the app,
-    exchanges the code for an access token, and sets up the store.
+    Legacy OAuth callback - redirects to new Shopify callback
+    Maintains backward compatibility
     """
-    try:
-        result = await auth_service.handle_oauth_callback(
-            shop=shop,
-            code=code,
-            state=state
-        )
+    # Redirect to the new Shopify-specific callback
+    query_params = f"?shop={shop}&code={code}&state={state}"
+    if hmac:
+        query_params += f"&hmac={hmac}"
+    if timestamp:
+        query_params += f"&timestamp={timestamp}"
         
-        # Redirect to success page with tenant info
-        tenant_id = result["tenant_id"]
-        shop_name = result["shop_info"].get("name", result["shop"])
-        
-        # In production, redirect to frontend success page
-        success_url = f"https://733d44a0-d288-43eb-83ff-854115be232e.preview.emergentagent.com/app/settings/integrations?connected=true&tenant={tenant_id}&shop={shop_name}"
-        
-        return RedirectResponse(url=success_url, status_code=302)
-        
-    except AuthenticationError as e:
-        # Redirect to error page
-        error_url = f"https://733d44a0-d288-43eb-83ff-854115be232e.preview.emergentagent.com/app/settings/integrations?error=auth&message={str(e)}"
-        return RedirectResponse(url=error_url, status_code=302)
-    except Exception as e:
-        error_url = f"https://733d44a0-d288-43eb-83ff-854115be232e.preview.emergentagent.com/app/settings/integrations?error=system&message=Connection failed"
-        return RedirectResponse(url=error_url, status_code=302)
+    callback_url = f"/api/auth/shopify/callback{query_params}"
+    full_callback_url = f"https://733d44a0-d288-43eb-83ff-854115be232e.preview.emergentagent.com{callback_url}"
+    
+    return RedirectResponse(url=full_callback_url, status_code=302)
 
 
 @router.get("/callback/json", response_model=CallbackResponse)
