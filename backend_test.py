@@ -732,15 +732,13 @@ class UnifiedReturnsTestSuite:
         
         # Analyze results by category
         categories = {
-            "Order Lookup": [r for r in self.test_results if "Order Lookup" in r["test"]],
-            "Eligible Items": [r for r in self.test_results if "Eligible Items" in r["test"]],
-            "Photo Upload": [r for r in self.test_results if "Photo Upload" in r["test"]],
-            "Policy Preview": [r for r in self.test_results if "Policy Preview" in r["test"]],
-            "Create Return": [r for r in self.test_results if "Create Return" in r["test"]],
-            "Policy Enforcement": [r for r in self.test_results if "Policy Enforcement" in r["test"]],
-            "Integration": [r for r in self.test_results if "Integration" in r["test"]],
-            "Data Validation": [r for r in self.test_results if "Data Validation" in r["test"]],
-            "Error Handling": [r for r in self.test_results if "Error Handling" in r["test"]]
+            "Unified Returns Endpoints": [r for r in self.test_results if "Unified Returns:" in r["test"]],
+            "Backend Infrastructure": [r for r in self.test_results if "Backend Infrastructure:" in r["test"]],
+            "Return Creation": [r for r in self.test_results if "Return Creation:" in r["test"]],
+            "Integration Services": [r for r in self.test_results if "Integration Services:" in r["test"]],
+            "Data Validation": [r for r in self.test_results if "Data Validation:" in r["test"]],
+            "Error Handling": [r for r in self.test_results if "Error Handling:" in r["test"]],
+            "Setup": [r for r in self.test_results if "Setup:" in r["test"]]
         }
         
         for category, tests in categories.items():
