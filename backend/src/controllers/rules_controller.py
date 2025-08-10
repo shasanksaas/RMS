@@ -132,15 +132,15 @@ async def get_rules(
             rule["condition_groups"] = [{"conditions": [], "logic_operator": "and"}]
         
         rule_summary = {
-            "id": rule["id"],
-            "name": rule["name"],
-            "description": rule["description"],
+            "id": rule.get("id", str(rule.get("_id", ""))),
+            "name": rule.get("name", ""),
+            "description": rule.get("description", ""),
             "conditions_summary": _get_conditions_summary(rule.get("condition_groups", [])),
             "actions_summary": _get_actions_summary(rule.get("actions", [])),
-            "priority": rule["priority"],
+            "priority": rule.get("priority", 1),
             "is_active": rule.get("is_active", True),
-            "created_at": rule["created_at"],
-            "updated_at": rule.get("updated_at", rule["created_at"]),
+            "created_at": rule.get("created_at"),
+            "updated_at": rule.get("updated_at", rule.get("created_at")),
             "tags": rule.get("tags", [])
         }
         rules_data.append(rule_summary)
