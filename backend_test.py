@@ -1306,7 +1306,7 @@ class ReturnsAPITester:
             "tags": ["auto-approval", "high-value"]
         }
         
-        success, created_rule = self.make_request('POST', 'rules', complex_rule_data, headers)
+        success, created_rule = self.make_request('POST', 'rules/', complex_rule_data, headers)
         if success and created_rule.get('success') and 'rule_id' in created_rule:
             rule_id = created_rule['rule_id']
             self.log_test("Rules API - Create complex rule", True)
