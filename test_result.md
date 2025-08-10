@@ -607,7 +607,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Customer Returns Portal Backend APIs"
+    - "Enhanced Order Lookup System with Dual-Mode Support"
   stuck_tasks: 
     - "GraphQL Service for Returns Operations"
     - "Sync Service with Initial Backfill"
