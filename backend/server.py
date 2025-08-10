@@ -576,12 +576,19 @@ async def lookup_order(
     if not order_number or not email:
         raise HTTPException(status_code=400, detail="Order number and email are required")
     
-    # If no tenant provided, search across all tenants
+    # Search across all tenants if no specific tenant provided
     query = {
-        "customer_email": {"$regex": f"^{email}$", "$options": "i"},
         "$or": [
-            {"order_number": order_number},
-            {"name": order_number}
+            {"customer_email": {"$regex": f"^{email}$", "$options": "i"}},
+            {"email": {"$regex": f"^{email}$", "$options": "i"}}
+        ],
+        "$and": [
+            {
+                "$or": [
+                    {"order_number": order_number},
+                    {"name": order_number}
+                ]
+            }
         ]
     }
     
@@ -594,7 +601,7 @@ async def lookup_order(
         raise HTTPException(status_code=404, detail="Order not found")
     
     # Verify email matches (case insensitive)
-    order_email = order.get("customer_email", "").lower()
+    order_email = (order.get("customer_email") or order.get("email", "")).lower()
     if order_email != email:
         raise HTTPException(status_code=403, detail="Email does not match order records")
     
@@ -603,7 +610,7 @@ async def lookup_order(
         "id": order.get("order_id", order.get("id")),
         "order_number": order.get("order_number", order.get("name")),
         "customer_name": order.get("customer_name", "Unknown"),
-        "customer_email": order.get("customer_email"),
+        "customer_email": order.get("customer_email", order.get("email")),
         "created_at": order.get("created_at"),
         "total_price": float(order.get("total_price", "0") or 0),
         "currency_code": order.get("currency_code", "USD"),
