@@ -1048,6 +1048,7 @@ api_router.include_router(enhanced_router)
 api_router.include_router(returns_router)
 api_router.include_router(shopify_test_router)
 api_router.include_router(rules_router)
+api_router.include_router(unified_returns_router)
 
 # Then include the api_router in the main app
 app.include_router(api_router)
