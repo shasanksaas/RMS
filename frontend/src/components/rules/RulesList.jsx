@@ -72,7 +72,7 @@ const RulesList = ({ onCreateRule, onEditRule, onDeleteRule }) => {
       if (tagFilter && tagFilter !== 'all') params.append('tag_filter', tagFilter);
 
       const response = await fetch(
-        `${process.env.REACT_APP_BACKEND_URL}/api/rules/?${params}`,
+        `${process.env.REACT_APP_BACKEND_URL}/api/rules?${params}`,
         {
           headers: {
             'X-Tenant-Id': localStorage.getItem('currentTenant') || 'tenant-fashion-store'
