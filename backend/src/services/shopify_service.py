@@ -23,6 +23,20 @@ class ShopifyService:
         self.mock_data_path = MOCK_DATA_PATH
         self.tenant_id = tenant_id
     
+    async def is_connected(self) -> bool:
+        """Check if this tenant has a connected Shopify integration"""
+        if not self.tenant_id:
+            return False
+            
+        try:
+            integration = await db.integrations_shopify.find_one({
+                "tenant_id": self.tenant_id,
+                "status": "connected"
+            })
+            return integration is not None
+        except:
+            return False
+    
     async def is_online(self) -> bool:
         """Check if Shopify API is accessible"""
         if self.offline_mode:
