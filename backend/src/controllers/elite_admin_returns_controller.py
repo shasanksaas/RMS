@@ -27,7 +27,7 @@ from ..domain.value_objects import TenantId
 from ..infrastructure.services.dependency_container import get_container
 
 
-router = APIRouter(prefix="/api/elite/admin/returns", tags=["Elite Admin Returns"])
+router = APIRouter(prefix="/elite/admin/returns", tags=["Elite Admin Returns"])
 
 
 # Request/Response Models
