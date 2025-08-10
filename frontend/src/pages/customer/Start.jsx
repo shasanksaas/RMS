@@ -76,28 +76,28 @@ const CustomerStart = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8">
+    <div className="max-w-2xl mx-auto space-y-6 md:space-y-8 px-4 sm:px-0">
       {/* Hero Section */}
       <div className="text-center space-y-4">
-        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
-          <Package className="h-8 w-8 text-blue-600" />
+        <div className="w-12 h-12 md:w-16 md:h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
+          <Package className="h-6 w-6 md:h-8 md:w-8 text-blue-600" />
         </div>
         <div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Start Your Return</h1>
-          <p className="text-xl text-gray-600">
+          <h1 className="text-2xl md:text-4xl font-bold text-gray-900 mb-2">Start Your Return</h1>
+          <p className="text-lg md:text-xl text-gray-600">
             We'll help you return or exchange your items quickly and easily
           </p>
         </div>
       </div>
 
       {/* Order Lookup Form */}
-      <Card>
+      <Card className="hover:shadow-md transition-shadow">
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Search className="h-5 w-5" />
+          <CardTitle className="flex items-center space-x-2 text-lg md:text-xl">
+            <Search className="h-5 w-5 flex-shrink-0" />
             <span>Find Your Order</span>
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-sm md:text-base">
             Enter your order number and email address to get started
           </CardDescription>
         </CardHeader>
@@ -105,14 +105,14 @@ const CustomerStart = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
               <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
+                <AlertCircle className="h-4 w-4 flex-shrink-0" />
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
 
             <div className="space-y-4">
               <div>
-                <Label htmlFor="orderNumber" className="text-base font-medium">
+                <Label htmlFor="orderNumber" className="text-sm md:text-base font-medium">
                   Order Number
                 </Label>
                 <Input
@@ -122,16 +122,16 @@ const CustomerStart = () => {
                   value={formData.orderNumber}
                   onChange={(e) => handleInputChange('orderNumber', e.target.value)}
                   required
-                  className="mt-2 h-12 text-lg"
+                  className="mt-2 h-12 text-base md:text-lg touch-manipulation"
                   disabled={loading}
                 />
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-xs md:text-sm text-gray-500 mt-1">
                   Check your email confirmation or receipt for your order number
                 </p>
               </div>
 
               <div>
-                <Label htmlFor="email" className="text-base font-medium">
+                <Label htmlFor="email" className="text-sm md:text-base font-medium">
                   Email Address
                 </Label>
                 <Input
@@ -141,10 +141,10 @@ const CustomerStart = () => {
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
                   required
-                  className="mt-2 h-12 text-lg"
+                  className="mt-2 h-12 text-base md:text-lg touch-manipulation"
                   disabled={loading}
                 />
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-xs md:text-sm text-gray-500 mt-1">
                   Use the same email address you used when placing the order
                 </p>
               </div>
@@ -152,7 +152,7 @@ const CustomerStart = () => {
 
             <Button
               type="submit"
-              className="w-full h-12 text-lg"
+              className="w-full h-12 text-base md:text-lg touch-manipulation"
               disabled={loading || !formData.orderNumber || !formData.email}
             >
               {loading ? (
@@ -172,40 +172,40 @@ const CustomerStart = () => {
       </Card>
 
       {/* Help Section */}
-      <div className="bg-gray-50 rounded-lg p-6">
-        <h3 className="font-semibold text-gray-900 mb-3">Need Help?</h3>
-        <div className="space-y-3 text-sm text-gray-600">
+      <div className="bg-gray-50 rounded-lg p-4 md:p-6">
+        <h3 className="font-semibold text-gray-900 mb-3 text-lg">Need Help?</h3>
+        <div className="space-y-3 text-sm md:text-base text-gray-600">
           <div className="flex items-start space-x-3">
-            <div className="w-2 h-2 bg-blue-600 rounded-full mt-2" />
-            <div>
+            <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0" />
+            <div className="min-w-0 flex-1">
               <p className="font-medium">Can't find your order number?</p>
               <p>Check your email for the order confirmation or receipt</p>
             </div>
           </div>
           <div className="flex items-start space-x-3">
-            <div className="w-2 h-2 bg-blue-600 rounded-full mt-2" />
-            <div>
+            <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0" />
+            <div className="min-w-0 flex-1">
               <p className="font-medium">Email doesn't match?</p>
               <p>Make sure you're using the same email address from your order</p>
             </div>
           </div>
           <div className="flex items-start space-x-3">
-            <div className="w-2 h-2 bg-blue-600 rounded-full mt-2" />
-            <div>
+            <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0" />
+            <div className="min-w-0 flex-1">
               <p className="font-medium">Still having trouble?</p>
               <p>Contact our support team and we'll help you out</p>
             </div>
           </div>
         </div>
-        <Button variant="outline" className="mt-4">
+        <Button variant="outline" className="mt-4 w-full sm:w-auto touch-manipulation">
           Contact Support
         </Button>
       </div>
 
       {/* Demo Instructions */}
       <Alert>
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription>
+        <AlertCircle className="h-4 w-4 flex-shrink-0" />
+        <AlertDescription className="text-sm">
           <strong>Demo Mode:</strong> Try using order number "ORD-12345" with email "sarah.johnson@example.com", 
           or order number "ORD-12346" with email "mike.chen@example.com" to test with real seeded data.
         </AlertDescription>
