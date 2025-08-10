@@ -296,13 +296,13 @@ const AllReturns = () => {
         document.body.removeChild(a);
       } else {
         // Fallback CSV generation
-        const csvContent = generateCSV(returns);
+        const csvContent = generateCSV(filteredReturns);
         downloadCSV(csvContent, `returns_export_${new Date().toISOString().split('T')[0]}.csv`);
       }
     } catch (err) {
       console.error('Export error:', err);
       // Fallback CSV generation
-      const csvContent = generateCSV(returns);
+      const csvContent = generateCSV(filteredReturns);
       downloadCSV(csvContent, `returns_export_${new Date().toISOString().split('T')[0]}.csv`);
     }
   };
