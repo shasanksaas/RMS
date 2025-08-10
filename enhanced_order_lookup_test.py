@@ -79,7 +79,7 @@ class EnhancedOrderLookupTestSuite:
         
         # Test data as specified in the review request
         lookup_data = {
-            "orderNumber": "1001",
+            "order_number": "1001",
             "email": "customer@example.com",
             "channel": "customer"
         }
