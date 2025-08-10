@@ -623,9 +623,9 @@ const AllReturns = () => {
                       <th className="py-3 px-4 text-left">
                         <input
                           type="checkbox"
-                          checked={selectedReturns.length === returns.length && returns.length > 0}
+                          checked={selectedReturns.length === filteredReturns.length && filteredReturns.length > 0}
                           onChange={handleSelectAll}
-                          className="rounded"
+                          className="rounded touch-manipulation"
                         />
                       </th>
                       <th className="py-3 px-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Customer</th>
