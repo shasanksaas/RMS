@@ -10,7 +10,7 @@ import json
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://1ce8ef7a-c16d-43a6-b3d4-da8a63312de8.preview.emergentagent.com"
+BACKEND_URL = "https://f4ede537-31b1-4ba8-b14e-a9ada50dbb28.preview.emergentagent.com"
 TEST_SHOP = "rms34"
 
 class IntegrationOAuthTest:
@@ -219,7 +219,7 @@ async def main():
         if success:
             print("\n" + "=" * 60)
             print("🎯 NEXT STEPS:")
-            print("1. Go to: https://1ce8ef7a-c16d-43a6-b3d4-da8a63312de8.preview.emergentagent.com/app/settings/integrations")
+            print("1. Go to: https://f4ede537-31b1-4ba8-b14e-a9ada50dbb28.preview.emergentagent.com/app/settings/integrations")
             print("2. Click 'Connect Store'")
             print("3. Enter shop domain: rms34")
             print("4. Click 'Connect to Shopify'")

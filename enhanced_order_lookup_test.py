@@ -14,7 +14,7 @@ from typing import Dict, List, Any, Optional
 import uuid
 
 # Configuration
-BACKEND_URL = "https://1ce8ef7a-c16d-43a6-b3d4-da8a63312de8.preview.emergentagent.com/api"
+BACKEND_URL = "https://f4ede537-31b1-4ba8-b14e-a9ada50dbb28.preview.emergentagent.com/api"
 
 # Test tenants - one with Shopify integration, one without
 SHOPIFY_TENANT_ID = "tenant-rms34"  # Has Shopify integration
