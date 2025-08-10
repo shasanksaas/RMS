@@ -29,7 +29,7 @@ const RulesList = ({ onCreateRule, onEditRule, onDeleteRule }) => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [tagFilter, setTagFilter] = useState('');
+  const [tagFilter, setTagFilter] = useState('all');
   const [sortBy, setSortBy] = useState('priority');
   const [sortOrder, setSortOrder] = useState('asc');
   const [currentPage, setCurrentPage] = useState(1);
