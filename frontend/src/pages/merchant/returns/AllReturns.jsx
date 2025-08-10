@@ -450,7 +450,7 @@ const AllReturns = () => {
           </Select>
 
           <Select value={filters.sortBy} onValueChange={(value) => handleFilterChange('sortBy', value)}>
-            <SelectTrigger className="w-full sm:w-40">
+            <SelectTrigger className="w-full sm:w-40 touch-manipulation">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
