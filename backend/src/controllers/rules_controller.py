@@ -127,16 +127,56 @@ async def get_rules(
         if '_id' in rule:
             rule['_id'] = str(rule['_id'])
         
-        # Convert legacy format if needed
-        if "conditions" in rule and "condition_groups" not in rule:
-            rule["condition_groups"] = [{"conditions": [], "logic_operator": "and"}]
+        # Handle legacy format conversion
+        condition_groups = rule.get("condition_groups")
+        if condition_groups is None:
+            # Legacy format - convert old conditions to new format
+            old_conditions = rule.get("conditions", {})
+            if old_conditions:
+                # Convert old format to new condition_groups format
+                condition_groups = [{
+                    "conditions": [],
+                    "logic_operator": "and"
+                }]
+                # Add basic conditions based on old format
+                if old_conditions.get("auto_approve_reasons"):
+                    for reason in old_conditions["auto_approve_reasons"]:
+                        condition_groups[0]["conditions"].append({
+                            "field": "return_reason",
+                            "operator": "equals", 
+                            "value": reason
+                        })
+            else:
+                condition_groups = []
+        
+        # Handle legacy actions format
+        actions = rule.get("actions", [])
+        if isinstance(actions, dict):
+            # Legacy format - convert to new format
+            new_actions = []
+            if actions.get("auto_approve"):
+                new_actions.append({
+                    "action_type": "auto_approve_return",
+                    "parameters": {}
+                })
+            if actions.get("manual_review"):
+                new_actions.append({
+                    "action_type": "require_manual_review", 
+                    "parameters": {}
+                })
+            if actions.get("generate_label"):
+                new_actions.append({
+                    "action_type": "generate_return_label",
+                    "parameters": {}
+                })
+            actions = new_actions
         
         rule_summary = {
             "id": rule.get("id", str(rule.get("_id", ""))),
             "name": rule.get("name", ""),
             "description": rule.get("description", ""),
-            "conditions_summary": _get_conditions_summary(rule.get("condition_groups", [])),
-            "actions_summary": _get_actions_summary(rule.get("actions", [])),
+            "conditions_summary": _get_conditions_summary(condition_groups),
+            "actions_summary": _get_actions_summary(actions),
             "priority": rule.get("priority", 1),
             "is_active": rule.get("is_active", True),
             "created_at": rule.get("created_at"),
