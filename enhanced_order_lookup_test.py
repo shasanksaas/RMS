@@ -401,7 +401,7 @@ class EnhancedOrderLookupTestSuite:
         print("\n🚨 Testing Error Handling and Edge Cases...")
         
         # Test 1: Missing required fields
-        invalid_data = {"orderNumber": "1001"}  # Missing email
+        invalid_data = {"order_number": "1001"}  # Missing email
         
         success, response, status = await self.make_request(
             "POST", "/returns/order-lookup", invalid_data,
