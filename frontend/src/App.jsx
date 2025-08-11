@@ -98,6 +98,10 @@ const App = () => {
               } />
               <Route path="/auth/google/callback" element={<GoogleCallback />} />
 
+              {/* Public Merchant Signup Routes */}
+              <Route path="/signup" element={<MerchantSignup />} />
+              <Route path="/signup/:tenantId" element={<MerchantSignup />} />
+
               {/* Customer Portal Routes (Some Public, Some Protected) */}
               <Route path="/returns" element={<CustomerLayout />}>
                 <Route path="start" element={<CustomerStart />} />
