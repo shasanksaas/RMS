@@ -576,8 +576,8 @@ const AllReturns = () => {
             <>
               {/* Mobile Card View */}
               <div className="md:hidden space-y-4 p-4">
-                {filteredReturns.map((returnRequest, index) => (
-                  <div key={`${returnRequest.id}-${index}`} className="border rounded-lg p-4 space-y-3">
+                {filteredReturns.map((returnRequest) => (
+                  <div key={returnRequest.id} className="border rounded-lg p-4 space-y-3">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center space-x-3">
                         <input
