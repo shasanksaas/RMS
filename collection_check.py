@@ -76,7 +76,7 @@ async def check_collections():
         print("❓ NO RETURN DATA FOUND!")
         print("   Need to seed the database first.")
     
-    await client.close()
+    client.close()
 
 if __name__ == "__main__":
     asyncio.run(check_collections())
