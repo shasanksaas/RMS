@@ -226,7 +226,7 @@ const ReturnDetail = () => {
   const handleIssueLabel = async () => {
     setActionLoading(true);
     try {
-      const response = await fetch(buildApiUrl(`/api/returns/${id}/label`), {
+      const response = await fetch(buildApiUrl(`/api/returns/${id}/label/`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
