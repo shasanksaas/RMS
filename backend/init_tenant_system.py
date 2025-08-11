@@ -78,10 +78,10 @@ async def create_tenant_indexes():
         
         # Enhanced integrations indexes for tenant isolation
         integrations_indexes = [
-            IndexModel([("tenant_id",)], unique=True),
-            IndexModel([("tenant_id", "shop")]),
-            IndexModel([("tenant_id", "created_at")]),
-            IndexModel([("tenant_id", "last_sync")]),
+            IndexModel([("tenant_id", 1)], unique=True),
+            IndexModel([("tenant_id", 1), ("shop", 1)]),
+            IndexModel([("tenant_id", 1), ("created_at", 1)]),
+            IndexModel([("tenant_id", 1), ("last_sync", 1)]),
         ]
         
         await db.integrations_shopify.create_indexes(integrations_indexes)
