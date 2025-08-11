@@ -80,8 +80,8 @@ async def query_shopify_order():
             }
             createdAt
             updatedAt
-            fulfillmentStatus
-            financialStatus
+            displayFulfillmentStatus
+            displayFinancialStatus
         }
     }
     """
