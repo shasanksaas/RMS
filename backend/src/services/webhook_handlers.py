@@ -489,7 +489,7 @@ class WebhookProcessor:
                 {"id": current_return["id"], "tenant_id": tenant_id},
                 {
                     "$set": {
-                        "status": "cancelled",
+                        "status": "CANCELLED",  # Store uppercase for consistency
                         "shopify_return_id": return_id,
                         "cancelled_at": datetime.utcnow(),
                         "synced_at": datetime.utcnow(),
