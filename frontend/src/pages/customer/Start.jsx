@@ -231,8 +231,9 @@ const CustomerStart = () => {
       <Alert>
         <AlertCircle className="h-4 w-4 flex-shrink-0" />
         <AlertDescription className="text-sm">
-          <strong>Demo Mode:</strong> Try using order number <strong>"ORD-0001"</strong> with email <strong>"m.brown@email.com"</strong>, 
-          or order number <strong>"ORD-0003"</strong> with email <strong>"john.smith@email.com"</strong> to test with real seeded data.
+          <strong>Shopify Integration Active:</strong> This portal is connected to <strong>rms34.myshopify.com</strong>. 
+          Create a test order in your Shopify store with a customer email to test the live integration, 
+          or try demo data: <strong>"ORD-0001"</strong> with <strong>"m.brown@email.com"</strong>.
         </AlertDescription>
       </Alert>
     </div>
