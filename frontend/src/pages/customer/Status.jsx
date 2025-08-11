@@ -72,7 +72,7 @@ const Status = () => {
     }
   };
 
-  const generateTimelineFromAuditLog = (auditLog, currentStatus) => {
+  const generateTimelineFromStatus = (currentStatus, auditLog) => {
     const timeline = [
       {
         id: 1,
