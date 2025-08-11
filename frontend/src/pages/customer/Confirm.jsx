@@ -38,24 +38,26 @@ const Confirm = () => {
 
       // Prepare return request data using the real order ID
       const returnRequestData = {
-        order_id: order.id || order._id, // Use the real order ID from database
+        order_id: order.id, // Use the UUID order ID (not MongoDB _id)
         customer_email: email,
-        return_method: 'prepaid_label', // Default method
+        return_method: 'prepaid_label',
         items: selectedItems.map(item => ({
           line_item_id: item.id || item.sku,
           sku: item.sku,
-          title: item.name,
+          title: item.name || item.title,
           variant_title: item.variant || null,
           quantity: item.quantity,
           unit_price: item.price,
-          reason: item.reason || 'other',
+          reason: item.reason || 'wrong_size',
           reason_description: item.reasonDetails || '',
-          condition: 'used', // Default condition
+          condition: 'used',
           photos: item.photos || [],
           notes: item.notes || ''
         })),
         customer_note: `Selected resolution: ${resolution.title}`
       };
+
+      console.log('Sending return request data:', JSON.stringify(returnRequestData, null, 2));
 
       // Call Elite Portal Returns API to create return
       const response = await fetch(`${backendUrl}/api/elite/portal/returns/create`, {
