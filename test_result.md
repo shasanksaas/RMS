@@ -504,7 +504,19 @@ backend:
     status_history:
       - working: true
         agent: "testing"
-        comment: "✅ VERIFIED: New Shopify connectivity test endpoints working perfectly! All 3 endpoints operational: (1) Quick Test - basic shop info and products query working, connects to rms34.myshopify.com successfully ✅ (2) Raw Query Test - executes exact GraphQL query from user's curl command, returns proper data structure ✅ (3) Full Connectivity Test - comprehensive test suite with 100% success rate, all 5 GraphQL operations (shop_info, products_query, orders_query, returns_query, customers_query) working correctly ✅ Real credentials integration confirmed: Store rms34.myshopify.com, Access Token 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, API Version 2025-07. Fixed middleware issue by adding /api/shopify-test/ to skip tenant validation list. Endpoints now production-ready for testing Shopify connectivity."
+        comment: "✅ VERIFIED: New Shopify connectivity test endpoints working perfectly! All 3 endpoints operational: (1) Quick Test - basic shop info and products query working, connects to rms34.myshopify.com successfully ✅ (2) Raw Query Test - executes exact GraphQL query from user's curl command, returns proper data structure ✅ (3) Full Connectivity Test - comprehensive test suite with 100% success rate, all 5 GraphQL operations (shop_info, products_query, orders_query, customers_query) working correctly ✅ Real credentials integration confirmed: Store rms34.myshopify.com, Access Token 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, API Version 2025-07. Fixed middleware issue by adding /api/shopify-test/ to skip tenant validation list. Endpoints now production-ready for testing Shopify connectivity."
+
+  - task: "Duplicate Returns Issue Investigation"
+    implemented: false
+    working: false
+    file: "src/controllers/returns_controller_enhanced.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "User reported 'lot of duplicates' on AllReturns.jsx page. Need to investigate if duplicates are coming from backend API (/api/returns/) or frontend rendering logic. Will test backend response structure first to identify root cause."
 
 frontend:
   - task: "Unified Return Form Component"
