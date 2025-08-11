@@ -25,6 +25,7 @@ const SelectItems = () => {
     // Use real order data from API response
     if (orderData && orderData.line_items) {
       const realOrder = {
+        id: orderData.id, // CRITICAL: Keep the original order ID
         orderNumber: orderData.order_number || orderNumber,
         customerEmail: orderData.customer_email || email,
         orderDate: orderData.created_at,
