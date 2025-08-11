@@ -150,12 +150,11 @@ const Status = () => {
 
     // Add timestamps from audit log if available
     auditLog.forEach(entry => {
-      const matchingStep = timeline.find(step => 
-        entry.action?.includes('status_updated') || 
-        (entry.action === 'return_created' && step.id === 1)
-      );
-      if (matchingStep && entry.timestamp) {
-        matchingStep.timestamp = entry.timestamp;
+      if (entry.action === 'return_created' && timeline[0]) {
+        timeline[0].timestamp = entry.timestamp;
+      }
+      if (entry.action?.includes('status_updated') && entry.details?.new_status === 'APPROVED' && timeline[1]) {
+        timeline[1].timestamp = entry.timestamp;
       }
     });
 
