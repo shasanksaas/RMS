@@ -64,7 +64,7 @@ const TenantManager = () => {
     loadTenants();
   }, [pagination.page, statusFilter]);
 
-  const loadTenants = async () => {
+  const loadTenants = useCallback(async () => {
     try {
       setLoading(true);
       const response = await tenantService.listTenants(
@@ -73,11 +73,11 @@ const TenantManager = () => {
         statusFilter === 'all' ? null : statusFilter
       );
 
-      setTenants(response.tenants);
+      setTenants(response.tenants || []);
       setPagination(prev => ({
         ...prev,
-        total: response.total,
-        totalPages: response.total_pages
+        total: response.total || 0,
+        totalPages: response.total_pages || 0
       }));
     } catch (error) {
       console.error('Failed to load tenants:', error);
@@ -86,10 +86,17 @@ const TenantManager = () => {
         description: error.message || "Please try again",
         variant: "destructive"
       });
+      // Set empty state on error
+      setTenants([]);
+      setPagination(prev => ({
+        ...prev,
+        total: 0,
+        totalPages: 0
+      }));
     } finally {
       setLoading(false);
     }
-  };
+  }, [pagination.page, pagination.pageSize, statusFilter, toast]);
 
   const handleCreateTenant = async (tenantData) => {
     try {
