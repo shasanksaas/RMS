@@ -19,38 +19,23 @@ const ReturnDetail = () => {
   const [error, setError] = useState('');
   const [newComment, setNewComment] = useState('');
 
-  // Get backend URL and tenant from environment
+  // Get backend URL and tenant from environment  
   const backendUrl = process.env.REACT_APP_BACKEND_URL;
-  const tenantId = 'tenant-rms34'; // Updated to match connected Shopify store
-
-  const getApiUrl = () => {
-    // Force HTTPS to prevent mixed content issues
-    let url = backendUrl;
-    if (url && url.startsWith('http://')) {
-      url = url.replace('http://', 'https://');
-    }
-    return url;
-  };
+  const tenantId = 'tenant-rms34';
 
   const buildApiUrl = (endpoint) => {
-    const apiUrl = getApiUrl();
-    let fullUrl = `${apiUrl}${endpoint}`;
-    
-    // Force HTTPS to prevent mixed content errors
-    if (fullUrl.startsWith('http://')) {
-      fullUrl = fullUrl.replace('http://', 'https://');
-    }
-    return fullUrl;
+    const apiUrl = backendUrl || 'http://localhost:8001';
+    return `${apiUrl}${endpoint}`;
   };
 
   useEffect(() => {
     loadReturnDetails();
-    loadTimeline();
   }, [id]);
 
   const loadReturnDetails = async () => {
     try {
       setLoading(true);
+      setError('');
       
       const response = await fetch(buildApiUrl(`/api/returns/${id}`), {
         headers: {
@@ -62,39 +47,16 @@ const ReturnDetail = () => {
       if (response.ok) {
         const data = await response.json();
         setReturnRequest(data);
-        setError('');
       } else if (response.status === 404) {
-        setReturnRequest(null);
+        setError('Return request not found');
       } else {
-        // Fallback to mock data
-        setReturnRequest(getMockReturnData());
+        setError(`Failed to load return details: ${response.statusText}`);
       }
     } catch (err) {
       console.error('Error loading return details:', err);
-      setReturnRequest(getMockReturnData());
+      setError('Unable to connect to server. Please check your connection.');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const loadTimeline = async () => {
-    try {
-      const response = await fetch(buildApiUrl(`/api/returns/${id}/timeline`), {
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Tenant-Id': tenantId
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setTimeline(data.timeline || []);
-      } else {
-        setTimeline(getMockTimelineData());
-      }
-    } catch (err) {
-      console.error('Error loading timeline:', err);
-      setTimeline(getMockTimelineData());
     }
   };
 
