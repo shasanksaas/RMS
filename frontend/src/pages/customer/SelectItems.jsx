@@ -114,10 +114,21 @@ const SelectItems = () => {
         return {
           ...prev,
           [item.id]: {
-            item,
+            id: item.id,
+            sku: item.sku,
+            name: item.productName,
+            title: item.productName,
+            price: item.price,
             quantity: 1,
+            maxQuantity: item.quantity,
             reason: '',
-            notes: ''
+            notes: '',
+            // Add all the required API fields
+            line_item_id: item.id,
+            unit_price: item.price,
+            variant_title: item.variant || null,
+            condition: 'used',
+            photos: []
           }
         };
       }
