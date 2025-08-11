@@ -85,7 +85,7 @@ async def test_optimized_returns_api():
         print('\n\n🔍 TEST 3: Search & Filter Performance')
         start_time = time.time()
         
-        async with session.get(f'{base_url}/api/returns?search=test&status=REQUESTED', headers=headers) as response:
+        async with session.get(f'{base_url}/api/returns/?search=test&status=REQUESTED', headers=headers) as response:
             end_time = time.time()
             response_time = end_time - start_time
             
