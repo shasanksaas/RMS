@@ -121,7 +121,7 @@ const AllReturns = () => {
       setError('');
       
       const apiUrl = getApiUrl();
-      let fullUrl = `${apiUrl}/api/returns`;
+      let fullUrl = `${apiUrl}/api/returns/`;  // Added trailing slash
       
       // Force HTTPS to prevent mixed content errors
       if (fullUrl.startsWith('http://')) {
@@ -130,7 +130,7 @@ const AllReturns = () => {
       
       console.log('Making request to:', fullUrl);
       
-      const response = await fetch(buildApiUrl(`/api/returns/`), {
+      const response = await fetch(fullUrl, {
         headers: {
           'Content-Type': 'application/json',
           'X-Tenant-Id': tenantId
