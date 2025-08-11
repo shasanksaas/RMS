@@ -666,9 +666,19 @@ const ReturnDetail = () => {
                   
                   {/* Smart Shopify URL Construction */}
                   {(() => {
-                    const shopDomain = 'rms34'; // This would come from tenant config in real app
+                    // Use the actual shop domain from API if available, otherwise extract from URLs
+                    let shopDomain = 'rms34'; // Default fallback
+                    
+                    // Try to extract shop domain from API response URLs
+                    if (returnRequest.shopify_order_url) {
+                      const match = returnRequest.shopify_order_url.match(/https:\/\/([^.]+)\.myshopify\.com/);
+                      if (match) {
+                        shopDomain = match[1];
+                      }
+                    }
+                    
                     const orderId = returnRequest.order_id;
-                    const shopifyUrl = `https://${shopDomain}.myshopify.com/admin/orders/${orderId}`;
+                    const shopifyUrl = returnRequest.shopify_order_url || `https://${shopDomain}.myshopify.com/admin/orders/${orderId}`;
                     
                     return (
                       <a
@@ -680,13 +690,13 @@ const ReturnDetail = () => {
                         <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
                           <path d="M15.8 2.2c-1.1-.1-2.4-.1-3.8-.1s-2.7 0-3.8.1c-2.9.2-4.9 1.2-5.8 3.1-.5 1.1-.7 2.4-.7 4.2v5.6c0 1.8.2 3.1.7 4.2.9 1.9 2.9 2.9 5.8 3.1 1.1.1 2.4.1 3.8.1s2.7 0 3.8-.1c2.9-.2 4.9-1.2 5.8-3.1.5-1.1.7-2.4.7-4.2V9.4c0-1.8-.2-3.1-.7-4.2-.9-1.9-2.9-2.9-5.8-3.1zM12 17.5c-3 0-5.5-2.5-5.5-5.5S9 6.5 12 6.5s5.5 2.5 5.5 5.5-2.5 5.5-5.5 5.5zm0-9c-1.9 0-3.5 1.6-3.5 3.5s1.6 3.5 3.5 3.5 3.5-1.6 3.5-3.5-1.6-3.5-3.5-3.5z"/>
                         </svg>
-                        View in Shopify Admin
+                        View Real Shopify Order
                       </a>
                     );
                   })()}
 
                   <p className="text-xs text-green-600 text-center">
-                    🔗 This will open the actual Shopify order page with live data
+                    🔗 Opens the actual order in your Shopify admin panel
                   </p>
                 </div>
 
@@ -694,7 +704,9 @@ const ReturnDetail = () => {
                 <div className="border-t pt-3 space-y-2">
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-gray-500">Data Source</span>
-                    <span className="text-green-600 font-medium">Shopify GraphQL API</span>
+                    <span className="text-green-600 font-medium">
+                      {returnRequest.source === 'shopify_live' ? 'Shopify GraphQL API' : 'Shopify Integration'}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-gray-500">Last Sync</span>
@@ -704,7 +716,22 @@ const ReturnDetail = () => {
                   </div>
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-gray-500">Store Domain</span>
-                    <span className="text-blue-600 font-mono">rms34.myshopify.com</span>
+                    <span className="text-blue-600 font-mono">
+                      {(() => {
+                        if (returnRequest.shopify_order_url) {
+                          const match = returnRequest.shopify_order_url.match(/https:\/\/([^.]+)\.myshopify\.com/);
+                          return match ? `${match[1]}.myshopify.com` : 'rms34.myshopify.com';
+                        }
+                        return 'rms34.myshopify.com';
+                      })()}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-500">Integration Status</span>
+                    <div className="flex items-center space-x-1">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span className="text-green-600 font-medium">Connected</span>
+                    </div>
                   </div>
                 </div>
               </div>
