@@ -113,15 +113,25 @@ class RealtimeShopifyTester:
         
         # Check if request was successful
         if status == 200 and isinstance(data, dict):
-            # Verify this is real-time Shopify data
-            is_realtime = self.verify_realtime_shopify_data(data, order_number)
+            # Verify this is Shopify data (real-time or cached)
+            is_shopify_data = self.verify_realtime_shopify_data(data, order_number)
             
-            if is_realtime:
-                self.log_test(
-                    f"Real-time Shopify Lookup - Order #{order_number}",
-                    True,
-                    f"✅ LIVE DATA: Mode={data.get('mode', 'unknown')}, Order found with real Shopify data"
-                )
+            if is_shopify_data:
+                mode = data.get('mode', 'unknown').lower()
+                is_realtime = 'live' in mode or ('shopify' in mode and 'not_connected' not in mode)
+                
+                if is_realtime:
+                    self.log_test(
+                        f"Real-time Shopify Lookup - Order #{order_number}",
+                        True,
+                        f"✅ REAL-TIME DATA: Mode={data.get('mode', 'unknown')}, Order found with live Shopify API data"
+                    )
+                else:
+                    self.log_test(
+                        f"Real-time Shopify Lookup - Order #{order_number}",
+                        False,
+                        f"⚠️ CACHED/SYNCED DATA: Mode={data.get('mode', 'unknown')}, Using database cache instead of live API"
+                    )
                 
                 # Store order data for uniqueness comparison
                 self.order_data_cache[order_number] = data
@@ -133,7 +143,7 @@ class RealtimeShopifyTester:
                 self.log_test(
                     f"Real-time Shopify Lookup - Order #{order_number}",
                     False,
-                    f"❌ NOT LIVE DATA: Response appears to be cached/static data",
+                    f"❌ INVALID DATA: Response does not contain valid Shopify data",
                     data
                 )
         else:
