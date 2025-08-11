@@ -142,7 +142,7 @@ const Confirm = () => {
     );
   }
 
-  const totalRefund = selectedItems.reduce((total, item) => {
+  const totalRefund = Object.values(selectedItems).reduce((total, item) => {
     return total + (item.quantity * (item.price || 0));
   }, 0);
 
