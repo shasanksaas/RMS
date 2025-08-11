@@ -76,8 +76,6 @@ const ReturnDetail = () => {
 
   const loadTimeline = async () => {
     try {
-      const apiUrl = getApiUrl();
-      
       const response = await fetch(buildApiUrl(`/api/returns/${id}/timeline`), {
         headers: {
           'Content-Type': 'application/json',
