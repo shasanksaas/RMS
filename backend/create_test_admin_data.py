@@ -41,7 +41,7 @@ async def create_test_admin_user():
         first_name="Admin",
         last_name="User",
         role="admin",
-        tenant_id=None  # Admin has no specific tenant
+        tenant_id="admin-global"  # Special tenant for admin users
     )
     
     try:
