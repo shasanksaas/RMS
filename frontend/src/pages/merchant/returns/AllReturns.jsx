@@ -183,53 +183,6 @@ const AllReturns = () => {
     setFilters(prev => ({ ...prev, [key]: value, page: 1 }));
   };
 
-  const getMockReturns = () => [
-    {
-      id: 'RET-001',
-      order_number: 'ORD-12345',
-      customer_name: 'Sarah Johnson',
-      customer_email: 'sarah@example.com',
-      status: 'requested',
-      reason: 'wrong_size',
-      refund_amount: 49.99,
-      created_at: '2024-01-15T10:30:00Z',
-      items: [{ product_name: 'Blue Cotton T-Shirt', quantity: 1 }]
-    },
-    {
-      id: 'RET-002',
-      order_number: 'ORD-12346',
-      customer_name: 'Mike Chen',
-      customer_email: 'mike@example.com',
-      status: 'approved',
-      reason: 'defective',
-      refund_amount: 199.99,
-      created_at: '2024-01-14T15:45:00Z',
-      items: [{ product_name: 'Wireless Headphones', quantity: 1 }]
-    },
-    {
-      id: 'RET-003',
-      order_number: 'ORD-12347',
-      customer_name: 'Emma Davis',
-      customer_email: 'emma@example.com',
-      status: 'resolved',
-      reason: 'not_as_described',
-      refund_amount: 79.99,
-      created_at: '2024-01-13T09:15:00Z',
-      items: [{ product_name: 'Summer Dress', quantity: 1 }]
-    },
-    {
-      id: 'RET-004',
-      order_number: 'ORD-12348',
-      customer_name: 'John Smith',
-      customer_email: 'john@example.com',
-      status: 'denied',
-      reason: 'changed_mind',
-      refund_amount: 29.99,
-      created_at: '2024-01-12T14:20:00Z',
-      items: [{ product_name: 'Phone Case', quantity: 1 }]
-    }
-  ];
-
   const handleStatusUpdate = async (returnId, newStatus) => {
     try {
       const response = await fetch(buildApiUrl(`/api/returns/${returnId}/status`), {
