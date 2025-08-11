@@ -179,6 +179,9 @@ class TenantServiceEnhanced:
             tenants = []
             for doc in tenant_docs:
                 doc.pop('_id', None)
+                # Fix field mapping - MongoDB uses 'id' but model expects 'tenant_id'
+                if 'id' in doc and 'tenant_id' not in doc:
+                    doc['tenant_id'] = doc.pop('id')
                 tenants.append(Tenant(**doc))
             
             return TenantListResponse(
