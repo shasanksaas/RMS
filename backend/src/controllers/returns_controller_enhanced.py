@@ -366,11 +366,19 @@ async def get_return_detail(
         
         # Get Shopify integration details for URLs
         shopify_integration = await db.integrations_shopify.find_one({
-            "tenant_id": tenant_id,
-            "is_active": True
+            "tenant_id": tenant_id
         })
         
-        shop_domain = shopify_integration.get("shop_domain") if shopify_integration else "unknown-store"
+        shop_domain = "unknown-store"  # Default fallback
+        if shopify_integration:
+            # Try different possible field names for shop domain
+            shop_domain = (shopify_integration.get("shop_domain") or 
+                          shopify_integration.get("store_url", "").replace(".myshopify.com", "") or
+                          "unknown-store")
+            # Remove .myshopify.com if it's included
+            if shop_domain.endswith(".myshopify.com"):
+                shop_domain = shop_domain.replace(".myshopify.com", "")
+        
         shopify_order_url = f"https://{shop_domain}.myshopify.com/admin/orders/{return_req.get('order_id')}" if return_req.get('order_id') else None
         shopify_return_url = f"https://{shop_domain}.myshopify.com/admin/returns" if shopify_integration else None
         
