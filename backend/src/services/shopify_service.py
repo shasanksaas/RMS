@@ -452,17 +452,16 @@ class ShopifyService:
             return None
             
         try:
-            # Get real-time access token and shop info
-            tenant = await db.tenants.find_one({"id": use_tenant_id})
-            if not tenant or not tenant.get('shopify_integration'):
-                print(f"DEBUG: No tenant or shopify_integration found for {use_tenant_id}")
+            # Get real-time access token and shop info from integrations_shopify collection
+            integration = await db.integrations_shopify.find_one({"tenant_id": use_tenant_id})
+            if not integration:
+                print(f"DEBUG: No integration found in integrations_shopify for {use_tenant_id}")
                 return None
                 
-            shopify_integration = tenant.get('shopify_integration', {})
-            access_token = shopify_integration.get('access_token')
-            shop_domain = shopify_integration.get('shop_domain')
+            access_token = integration.get('access_token')
+            shop_domain = integration.get('shop_domain')
             
-            print(f"DEBUG: Raw access_token from DB: {access_token}")
+            print(f"DEBUG: Raw access_token from integrations_shopify: {access_token}")
             
             # Decrypt the access token if it's encrypted
             if access_token and access_token.startswith('gAAAAAB'):
@@ -473,7 +472,7 @@ class ShopifyService:
                     print(f"DEBUG: Failed to decrypt access token: {e}")
                     return None
             
-            print(f"DEBUG: Found tenant {use_tenant_id}, shop_domain: {shop_domain}, has_token: {bool(access_token)}")
+            print(f"DEBUG: Found integration for {use_tenant_id}, shop_domain: {shop_domain}, has_token: {bool(access_token)}")
             
             if not access_token or not shop_domain:
                 print(f"DEBUG: Missing credentials - token: {bool(access_token)}, domain: {shop_domain}")
