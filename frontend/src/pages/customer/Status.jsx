@@ -10,44 +10,150 @@ const Status = () => {
   const { returnId } = useParams();
   const [returnRequest, setReturnRequest] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Mock API call to get return status
-    const mockReturnRequest = {
-      id: returnId || 'RET-SAMPLE123',
-      orderNumber: 'ORD-12345',
-      status: 'approved',
-      resolution: {
-        type: 'refund',
-        title: 'Refund to Original Payment',
-        amount: 49.99
-      },
-      timeline: [
+    fetchReturnData();
+  }, [returnId]);
+
+  const fetchReturnData = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `${process.env.REACT_APP_BACKEND_URL}/api/returns/${returnId}`,
         {
-          id: 1,
-          title: 'Return Requested',
-          description: 'Your return request has been submitted and is being reviewed',
-          status: 'completed',
-          timestamp: '2024-01-15T10:30:00Z',
-          icon: Package
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Tenant-Id': localStorage.getItem('currentTenant') || 'tenant-rms34'
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch return data');
+      }
+
+      const data = await response.json();
+      
+      // Transform API data to match component expectations
+      const transformedData = {
+        id: data.id,
+        orderNumber: data.order_number,
+        status: data.status?.toLowerCase(),
+        resolution: {
+          type: 'refund',
+          title: 'Refund to Original Payment',
+          amount: typeof data.estimated_refund === 'object' 
+            ? parseFloat(data.estimated_refund.amount || 0)
+            : parseFloat(data.estimated_refund || 0)
         },
-        {
-          id: 2,
-          title: 'Return Approved',
-          description: 'Your return has been approved. A return label has been generated',
-          status: 'completed',
-          timestamp: '2024-01-15T14:20:00Z',
-          icon: CheckCircle
+        items: data.line_items || [],
+        customer: {
+          name: data.customer_name,
+          email: data.customer_email
         },
-        {
-          id: 3,
-          title: 'Return Label Issued',
-          description: 'Print your return label and ship your items back to us',
-          status: 'current',
-          timestamp: '2024-01-15T14:25:00Z',
-          icon: Download,
-          actionable: true
-        },
+        created_at: data.created_at,
+        timeline: generateTimelineFromAuditLog(data.audit_log || [], data.status)
+      };
+      
+      setReturnRequest(transformedData);
+    } catch (error) {
+      console.error('Error fetching return data:', error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const generateTimelineFromAuditLog = (auditLog, currentStatus) => {
+    const timeline = [
+      {
+        id: 1,
+        title: 'Return Requested',
+        description: 'Your return request has been submitted and is being reviewed',
+        status: 'completed',
+        timestamp: null,
+        icon: Package
+      }
+    ];
+
+    // Add timeline items based on status
+    const status = currentStatus?.toLowerCase();
+    
+    if (['approved', 'processing', 'completed'].includes(status)) {
+      timeline.push({
+        id: 2,
+        title: 'Return Approved',
+        description: 'Your return has been approved. A return label has been generated',
+        status: 'completed',
+        timestamp: null,
+        icon: CheckCircle
+      });
+    }
+
+    if (['processing', 'completed'].includes(status)) {
+      timeline.push({
+        id: 3,
+        title: 'Return Label Issued',
+        description: 'Print your return label and ship your items back to us',
+        status: status === 'processing' ? 'current' : 'completed',
+        timestamp: null,
+        icon: Download,
+        actionable: status === 'processing'
+      });
+    }
+
+    if (status === 'completed') {
+      timeline.push({
+        id: 4,
+        title: 'Items in Transit',
+        description: 'We\'ll update you when we receive your return package',
+        status: 'completed',
+        timestamp: null,
+        icon: Truck
+      });
+
+      timeline.push({
+        id: 5,
+        title: 'Return Processed',
+        description: 'Your refund will be issued once we process your return',
+        status: 'completed',
+        timestamp: null,
+        icon: RefreshCw
+      });
+    } else {
+      timeline.push({
+        id: 4,
+        title: 'Items in Transit',
+        description: 'We\'ll update you when we receive your return package',
+        status: 'pending',
+        timestamp: null,
+        icon: Truck
+      });
+
+      timeline.push({
+        id: 5,
+        title: 'Return Processed',
+        description: 'Your refund will be issued once we process your return',
+        status: 'pending',
+        timestamp: null,
+        icon: RefreshCw
+      });
+    }
+
+    // Add timestamps from audit log if available
+    auditLog.forEach(entry => {
+      const matchingStep = timeline.find(step => 
+        entry.action?.includes('status_updated') || 
+        (entry.action === 'return_created' && step.id === 1)
+      );
+      if (matchingStep && entry.timestamp) {
+        matchingStep.timestamp = entry.timestamp;
+      }
+    });
+
+    return timeline;
+  };
         {
           id: 4,
           title: 'Items in Transit',
