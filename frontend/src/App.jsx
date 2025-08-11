@@ -79,23 +79,17 @@ const App = () => {
               {/* Auth Routes (Public - No Authentication Required) */}
               <Route path="/auth/login" element={
                 <ProtectedRoute requireAuth={false} redirectTo="/app/dashboard">
-                  <AuthGuard requireAuth={false} redirectOnAuth={true}>
-                    <Login />
-                  </AuthGuard>
+                  <Login />
                 </ProtectedRoute>
               } />
               <Route path="/auth/register" element={
                 <ProtectedRoute requireAuth={false} redirectTo="/app/dashboard">
-                  <AuthGuard requireAuth={false} redirectOnAuth={true}>
-                    <Register />
-                  </AuthGuard>
+                  <Register />
                 </ProtectedRoute>
               } />
               <Route path="/auth/forgot-password" element={
                 <ProtectedRoute requireAuth={false} redirectTo="/app/dashboard">
-                  <AuthGuard requireAuth={false} redirectOnAuth={true}>
-                    <ForgotPassword />
-                  </AuthGuard>
+                  <ForgotPassword />
                 </ProtectedRoute>
               } />
               <Route path="/auth/google/callback" element={<GoogleCallback />} />
