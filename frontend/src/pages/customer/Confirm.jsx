@@ -25,7 +25,7 @@ const Confirm = () => {
 
     try {
       // Get backend URL
-      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      const backendUrl = process.env.REACT_APP_BACKEND_URL;
       
       // Use the passed tenant ID or determine it
       let currentTenantId = tenantId;
