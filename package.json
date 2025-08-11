@@ -1,0 +1,54 @@
+{
+  "name": "returns-management-saas",
+  "version": "1.0.0",
+  "description": "Multi-tenant Returns Management SaaS with Shopify Integration",
+  "scripts": {
+    "install:all": "npm run install:backend && npm run install:frontend",
+    "install:backend": "cd backend && pip install -r requirements.txt",
+    "install:frontend": "cd frontend && yarn install",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && python server.py",
+    "dev:frontend": "cd frontend && yarn start",
+    "test": "npm run test:backend && npm run test:frontend",
+    "test:backend": "cd backend && python -m pytest tests/ -v",
+    "test:frontend": "cd frontend && yarn test --watchAll=false",
+    "lint": "npm run lint:backend && npm run lint:frontend",
+    "lint:backend": "cd backend && flake8 src/ --max-line-length=88",
+    "lint:frontend": "cd frontend && yarn lint",
+    "format": "npm run format:backend && npm run format:frontend",
+    "format:backend": "cd backend && black --line-length=88 src/ && isort src/ --profile=black",
+    "format:frontend": "cd frontend && yarn prettier --write src/",
+    "docs:check": "python scripts/docs_validate.py",
+    "docs:serve": "cd docs && python -m http.server 8080",
+    "build": "cd frontend && yarn build",
+    "clean": "npm run clean:backend && npm run clean:frontend",
+    "clean:backend": "cd backend && find . -name '__pycache__' -exec rm -rf {} + 2>/dev/null || true",
+    "clean:frontend": "cd frontend && rm -rf node_modules/.cache build/",
+    "health": "curl -s http://localhost:8001/api/health || echo 'Backend not responding'",
+    "services": "sudo supervisorctl status",
+    "logs": "tail -f /var/log/supervisor/backend.err.log",
+    "reset": "npm run clean && npm run install:all"
+  },
+  "keywords": [
+    "returns-management",
+    "shopify",
+    "saas",
+    "e-commerce",
+    "fastapi",
+    "react",
+    "mongodb"
+  ],
+  "author": "Returns Management Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/returns-management-saas.git"
+  },
+  "devDependencies": {
+    "concurrently": "^7.6.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "python": ">=3.11.0"
+  }
+}

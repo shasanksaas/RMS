@@ -1,0 +1,276 @@
+###
+# Returns Management SaaS - API Examples
+# Copy-paste ready HTTP requests for testing all critical flows
+# Last updated: 2025-01-11
+
+### Variables
+@baseUrl = https://35d12e52-b5b0-4c0d-8c1f-a01716e1ddd2.preview.emergentagent.com
+@tenantId = tenant-rms34
+
+### Health Check
+GET {{baseUrl}}/api/health
+
+### Shopify Integration Status
+GET {{baseUrl}}/api/integrations/shopify/status
+X-Tenant-Id: {{tenantId}}
+
+###
+# Customer Portal - Order Lookup
+POST {{baseUrl}}/api/elite/portal/returns/lookup-order
+Content-Type: application/json
+X-Tenant-Id: {{tenantId}}
+
+{
+  "order_number": "1001",
+  "customer_email": "shashankshekharofficial15@gmail.com"
+}
+
+###
+# Customer Portal - Create Return  
+POST {{baseUrl}}/api/elite/portal/returns/create
+Content-Type: application/json
+X-Tenant-Id: {{tenantId}}
+
+{
+  "order_id": "5813364687033",
+  "customer_email": "shashankshekharofficial15@gmail.com",
+  "return_method": "customer_ships",
+  "items": [
+    {
+      "line_item_id": "13851721105593",
+      "quantity": 1,
+      "reason": "Defective",
+      "title": "TESTORDER",
+      "unit_price": 400.00,
+      "sku": "N/A",
+      "condition": "damaged"
+    }
+  ],
+  "reason": "Product defective",
+  "resolution_type": "refund"
+}
+
+###
+# Merchant Dashboard - List Returns
+GET {{baseUrl}}/api/returns/?page=1&pageSize=10
+X-Tenant-Id: {{tenantId}}
+
+###
+# Merchant Dashboard - Return Details
+GET {{baseUrl}}/api/returns/ed2af19e-9626-4389-ad79-2ab509cebe67
+X-Tenant-Id: {{tenantId}}
+
+###
+# Merchant Dashboard - List Orders
+GET {{baseUrl}}/api/orders/?page=1&pageSize=10
+X-Tenant-Id: {{tenantId}}
+
+###
+# Merchant Dashboard - Order Details
+GET {{baseUrl}}/api/orders/5813364687033
+X-Tenant-Id: {{tenantId}}
+
+###
+# OAuth - Start Installation (Browser redirect)
+GET {{baseUrl}}/api/auth/shopify/install?shop=rms34.myshopify.com
+
+###
+# Integration - Trigger Resync
+POST {{baseUrl}}/api/integrations/shopify/resync
+Content-Type: application/json  
+X-Tenant-Id: {{tenantId}}
+
+{
+  "type": "full",
+  "days": 30
+}
+
+###
+# Photo Upload (multipart/form-data example)
+POST {{baseUrl}}/api/elite/portal/returns/upload-photo
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+X-Tenant-Id: {{tenantId}}
+
+--WebAppBoundary
+Content-Disposition: form-data; name="return_id"
+
+ed2af19e-9626-4389-ad79-2ab509cebe67
+--WebAppBoundary
+Content-Disposition: form-data; name="line_item_id"
+
+13851721105593
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="damaged_item.jpg"
+Content-Type: image/jpeg
+
+< ./test-images/damaged_item.jpg
+--WebAppBoundary--
+
+###
+# Error Testing - Invalid Tenant
+GET {{baseUrl}}/api/returns/
+X-Tenant-Id: invalid-tenant
+
+###
+# Error Testing - Missing Header
+GET {{baseUrl}}/api/returns/
+
+###
+# Error Testing - Invalid Return ID
+GET {{baseUrl}}/api/returns/invalid-return-id
+X-Tenant-Id: {{tenantId}}
+
+###
+# Testing - Shopify Webhook (requires HMAC)
+POST {{baseUrl}}/api/webhooks/orders/create
+Content-Type: application/json
+X-Shopify-Hmac-Sha256: calculated_hmac_here
+X-Shopify-Shop-Domain: rms34.myshopify.com
+
+{
+  "id": 5813364687033,
+  "name": "#1001",
+  "customer": {
+    "id": 6945605689529,
+    "email": "shashankshekharofficial15@gmail.com",
+    "first_name": "Shashank",
+    "last_name": "Shekhar"
+  },
+  "line_items": [
+    {
+      "id": 13851721105593,
+      "title": "TESTORDER",
+      "quantity": 1,
+      "price": "400.00"
+    }
+  ],
+  "created_at": "2025-08-10T12:43:24-04:00"
+}
+
+### 
+# Advanced Queries - Search Returns
+GET {{baseUrl}}/api/returns/?search=shashank&status=requested&page=1
+X-Tenant-Id: {{tenantId}}
+
+###
+# Advanced Queries - Filter by Date Range
+GET {{baseUrl}}/api/returns/?from=2025-01-10&to=2025-01-12&sort=created_at
+X-Tenant-Id: {{tenantId}}
+
+###
+# Performance Testing - Batch Requests
+GET {{baseUrl}}/api/returns/ed2af19e-9626-4389-ad79-2ab509cebe67
+GET {{baseUrl}}/api/returns/edd646d8-b321-4df5-bd28-eb86bedca3a6  
+GET {{baseUrl}}/api/returns/f123456-7890-1234-5678-abcdef123456
+X-Tenant-Id: {{tenantId}}
+
+### 
+# Load Testing - Multiple Order Lookups
+POST {{baseUrl}}/api/elite/portal/returns/lookup-order
+Content-Type: application/json
+X-Tenant-Id: {{tenantId}}
+
+{
+  "order_number": "1001",
+  "customer_email": "shashankshekharofficial15@gmail.com"
+}
+
+###
+POST {{baseUrl}}/api/elite/portal/returns/lookup-order  
+Content-Type: application/json
+X-Tenant-Id: {{tenantId}}
+
+{
+  "order_number": "1005",
+  "customer_email": "debug2@example.com"
+}
+
+###
+POST {{baseUrl}}/api/elite/portal/returns/lookup-order
+Content-Type: application/json  
+X-Tenant-Id: {{tenantId}}
+
+{
+  "order_number": "1003",
+  "customer_email": "test@example.com"
+}
+
+###
+# Monitoring - Response Time Testing
+GET {{baseUrl}}/api/returns/
+X-Tenant-Id: {{tenantId}}
+X-Request-ID: perf-test-001
+
+###
+GET {{baseUrl}}/api/orders/
+X-Tenant-Id: {{tenantId}}
+X-Request-ID: perf-test-002
+
+###
+GET {{baseUrl}}/api/integrations/shopify/status
+X-Tenant-Id: {{tenantId}}
+X-Request-ID: perf-test-003
+
+###
+# Edge Cases - Empty Results
+GET {{baseUrl}}/api/returns/?status=completed
+X-Tenant-Id: {{tenantId}}
+
+###
+# Edge Cases - Large Pagination
+GET {{baseUrl}}/api/returns/?page=999&pageSize=100
+X-Tenant-Id: {{tenantId}}
+
+###
+# Admin APIs (if implemented)
+GET {{baseUrl}}/api/elite/admin/returns/
+X-Tenant-Id: {{tenantId}}
+
+###
+POST {{baseUrl}}/api/elite/admin/returns/ed2af19e-9626-4389-ad79-2ab509cebe67/approve
+Content-Type: application/json
+X-Tenant-Id: {{tenantId}}
+
+{
+  "note": "Return approved for processing",
+  "refund_amount": 354.01
+}
+
+### 
+# Bulk Operations (if implemented)
+POST {{baseUrl}}/api/elite/admin/returns/bulk-action
+Content-Type: application/json
+X-Tenant-Id: {{tenantId}}
+
+{
+  "action": "approve",
+  "return_ids": [
+    "ed2af19e-9626-4389-ad79-2ab509cebe67",
+    "edd646d8-b321-4df5-bd28-eb86bedca3a6"
+  ],
+  "note": "Bulk approval for standard returns"
+}
+
+###
+# Database Direct Queries (for debugging)
+# Note: These would be MongoDB queries, not HTTP requests
+
+# Find returns by tenant
+# db.returns.find({"tenant_id": "tenant-rms34"}).limit(10)
+
+# Check integration status
+# db.integrations_shopify.findOne({"tenant_id": "tenant-rms34"})
+
+# Order lookup
+# db.orders.findOne({"tenant_id": "tenant-rms34", "order_number": "1001"})
+
+### 
+# Environment-specific URLs
+# Development: http://localhost:8001
+# Staging: https://staging.returns-app.com  
+# Production: https://app.returns-management.com
+
+# Example for different environments:
+# GET http://localhost:8001/api/health
+# GET https://staging.returns-app.com/api/health
+# GET https://app.returns-management.com/api/health
