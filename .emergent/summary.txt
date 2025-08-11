@@ -1,9 +1,9 @@
 <analysis>
-The previous AI engineer successfully transitioned the Returns Management SaaS from an MVP to an Elite-Grade Returns Creation system. This involved adopting a Hexagonal Architecture, CQRS, and Domain Events. Key achievements included robust Shopify OAuth integration and initial data synchronization. The recent phase focused heavily on debugging the customer return portal, resolving critical issues such as frontend-backend API endpoint mismatches,  serialization errors, React state synchronization failures for UI components, and  during navigation. A significant challenge was ensuring correct data propagation through the React component chain for return creation. The engineer systematically addressed each error, moving from order lookup to item selection and resolution, but faced a  regarding item  when attempting the final return submission, indicating an ongoing data flow issue in the frontend.
+The previous AI engineer has meticulously developed and debugged a multi-tenant Returns Management SaaS, focusing on the Elite-Grade Returns Creation system. The work followed a Hexagonal Architecture, CQRS, and Domain Events. Initial efforts centered on Shopify OAuth and data synchronization. The recent phase involved extensive debugging of the customer return portal, resolving critical issues across the stack: frontend-backend API mismatches, React state problems,  serialization, and . The engineer systematically addressed data propagation issues from order lookup to return submission, navigating complex problems like incorrect  property access, Shopify API access token encryption, and backend Order not found errors due to database/API lookup discrepancies. The current challenge, identified at the trajectory's end, is that successfully created returns are not appearing in the merchant dashboard because the merchant API queries the wrong MongoDB collection.
 </analysis>
 
 <product_requirements>
-The goal is a multi-tenant Returns Management SaaS integrated with Shopify, providing a customer return portal and merchant dashboard. It requires Shopify OAuth, real-time order/return synchronization, a configurable rules engine, AI suggestions, label issuance, email notifications, and analytics, all with strict multi-tenancy. The Elite-Grade Returns Creation system is a primary focus, supporting dual-mode order lookup (Shopify-connected or fallback), detailed policy preview, comprehensive return creation APIs, and admin queues. This system demands Hexagonal Architecture, CQRS, and Domain Events for world-class UX and code quality. Key user stories cover customer-initiated returns (both Shopify connected and fallback), merchant review of pending requests, manual return creation by merchants, automated rule-based decisions, live order/return data sync, clean labels/refunds, strict security/tenancy, and practical merchant UX (search, filters, bulk actions).
+The application aims to be a multi-tenant Returns Management SaaS integrated with Shopify, offering a customer return portal and a merchant dashboard. Key features include Shopify OAuth, real-time order/return synchronization, a configurable rules engine, AI suggestions, label issuance, email notifications, and analytics, all designed with strict multi-tenancy. A core focus is the Elite-Grade Returns Creation system, supporting dual-mode order lookup (Shopify-connected or fallback to local database), detailed policy preview, comprehensive return creation APIs, and admin queues. This system mandates Hexagonal Architecture, CQRS, and Domain Events for high quality. User stories encompass customer-initiated returns (Shopify integrated and manual fallback), merchant review/approval of requests, manual merchant return creation, automated rule-based decisions, live data sync, label/refund processing, robust security/tenancy, and practical merchant UX with search/filters. So far, the customer return flow for Elite-Grade Returns Creation is the primary implemented feature.
 </product_requirements>
 
 <key_technical_concepts>
@@ -16,27 +16,63 @@ The goal is a multi-tenant Returns Management SaaS integrated with Shopify, prov
 </key_technical_concepts>
 
 <code_architecture>
-The application uses a FastAPI backend and React frontend with MongoDB, emphasizing modularity and scalability, transitioning to a Hexagonal Architecture.
+The application utilizes a FastAPI backend and React frontend with MongoDB, transitioning towards a Hexagonal Architecture for modularity and scalability.
 
 
 
--   : Central FastAPI application. New elite controllers (, ) were registered. Paths like  were added to . Database startup/shutdown handlers were implemented.
--   : Handles authentication and multi-tenancy. Modified to correctly validate tenants and exclude specific paths, including .
+-   : Main FastAPI application.  and  were registered. Paths like  were added to . Database startup/shutdown handlers and  for DB access were configured.
+-   : Holds  and .
+-   : Manages authentication and multi-tenancy. Modified to validate tenants and exclude .
 -   : Centralized config for dynamic  and Shopify credentials.
--   : Shopify API interactions. Enhanced with  and order/refund sync methods.
--    (New): Handles customer-facing return portal APIs, including order lookup and return creation for the new elite system.
--    (New): Handles admin-facing return management APIs for the new elite system.
--    (New): Files like , ,  define core domain entities.  was adjusted for  type calculations and  for events.
--    (New): Defines value objects such as  and . The  class was involved in type conversion fixes.
--    (New): Defines domain events for CQRS. Modified to make  optional in event constructors.
--    (New): Defines commands for the CQRS pattern. Adjusted for proper type imports.
--    (New): Contains query handlers. The  was updated to convert MongoDB  to string for JSON serialization.
--    (New): Contains command handlers. The  was modified to correctly convert  to  when creating  objects.
--   : Customer portal entry point. Updated to call the new  endpoint, handle dynamic tenant ID, and update demo data suggestions.
--   : Item selection step. Modified to pass the full  object, including its ID, and ensure complete item data is stored (e.g., , , ) for subsequent steps.
--   : Resolution selection step. Modified to use native HTML radio buttons instead of UI library components to fix state synchronization, and to correctly receive the full  object and  data. It was also modified to remove non-serializable Icons from navigation state.
--   : Final confirmation step. Updated to call the real  endpoint instead of mock API, and to use the real  and complete  data for the return creation API call.
--   : Main React router. Updated to include new routes for the customer portal (, ).
+-   : Handles Shopify API interactions.
+    *   **Importance**: Critical for fetching live Shopify order data.
+    *   **Changes**: Enhanced with , real-time GraphQL ,  methods. Fixed  to handle null // fields and correct price mapping (). Added import and usage of  for token decryption. Debug logging was temporarily added/removed.
+-   : Manages authentication and token encryption/decryption.
+    *   **Importance**: Provides secure handling of Shopify access tokens.
+    *   **Changes**: Fixed a critical bug where  was incorrectly placed outside the  method, causing authentication failures.
+-   : MongoDB repository for order data.
+    *   **Importance**: Persists and retrieves order information.
+    *   **Changes**: Added  method to allow order lookup by number.  correctly expects  and  objects.
+-   : MongoDB repository for returns.
+    *   **Importance**: Handles persistence of return requests.
+    *   **Changes**: Saves return requests to the  collection in the configured database (). Debugging was added/removed to verify saves.
+-   : Adapter for  in Hexagonal Architecture.
+    *   **Importance**: Provides a clean interface for domain-layer services to interact with Shopify.
+    *   **Changes**: Added  method to bridge the new Shopify service method to the application layer.
+-    (New): Handles customer-facing return portal APIs.
+    *   **Importance**: Provides endpoints for order lookup and return creation.
+    *   **Changes**: Updated  to use real-time Shopify lookup. Made  optional in lookup request.
+-   : Handles merchant-facing return management APIs.
+    *   **Importance**: Displays return requests in the merchant dashboard.
+    *   **Changes**: Currently configured to read from the  collection. This is identified as a mismatch with where new returns are saved.
+-   : Defines abstract repository interfaces.
+    *   **Importance**: Specifies the contracts for data access layer in Hexagonal Architecture.
+    *   **Changes**: Added  abstract method to .
+-    (New): Defines value objects.  class was involved in type conversion fixes.
+-    (New): Defines domain events. Modified to make  optional.
+-    (New): Defines commands for CQRS. Adjusted for proper type imports.
+-    (New): Defines queries for CQRS.
+    *   **Importance**: Defines query objects for retrieving data.
+    *   **Changes**: Made  optional in  query.
+-    (New): Contains query handlers.
+    *   **Importance**: Implements logic for processing queries.
+    *   **Changes**:  was updated to convert MongoDB  to string and to prioritize database lookup then Shopify lookup for orders. Temporarily allowed any email for orders without customer data for testing.
+-    (New): Contains command handlers.
+    *   **Importance**: Implements logic for processing commands.
+    *   **Changes**:  was modified to correctly convert  to , to fetch orders via  (specifically ) if not in local DB, and added debug logging.
+-   : Main React router. Updated with new customer portal routes.
+-   : Customer portal entry point.
+    *   **Importance**: Initiates order lookup.
+    *   **Changes**: Updated to call the new  endpoint, handle dynamic tenant ID, and update demo data suggestions. Passes  object to .
+-   : Item selection step.
+    *   **Importance**: Displays eligible items for return.
+    *   **Changes**: Modified to use the real  object received from  (including its uid=0(root) gid=0(root) groups=0(root), , , ) instead of hardcoded mock data. Fixed data structure mapping for item properties and  to use .
+-   : Resolution selection step.
+    *   **Importance**: Allows selection of resolution type.
+    *   **Changes**: Replaced UI library  with native HTML radio buttons for state synchronization. Removed non-serializable Icons from navigation state. Passes  and  to .
+-   : Final confirmation step.
+    *   **Importance**: Submits the return request to the backend.
+    *   **Changes**: Updated to call . Fixed  iteration (used ),  to , and ensured correct data types (, default ) and  are sent to the API. Added extensive debugging for request/response.
 
 </code_architecture>
 
@@ -49,42 +85,32 @@ The application uses a FastAPI backend and React frontend with MongoDB, emphasiz
 -   Finalize test coverage to ≥70%, performance optimization, and Lighthouse ≥90.
 -   Update remaining core documentation.
 -   Complete the implementation of the Elite-Grade Returns Creation system, including all detailed API contracts, UI/UX (merchant overrides, bulk creation), security, observability, and full testing.
+-   Make the merchant dashboard read from the  collection instead of .
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the previous AI engineer was working on the Elite-Grade Returns Creation system, specifically debugging the end-to-end customer return flow from the frontend portal to the backend API.
+Immediately prior to this summary, the AI engineer was working on the Elite-Grade Returns Creation system, specifically debugging the end-to-end customer return flow from the frontend portal to the backend API, focusing on the final return submission and its visibility in the merchant dashboard.
 
-The work sequence involved:
-1.  **Backend Architecture Setup**: Initial creation of , ,  layers with entities, services, commands, queries, handlers, and repositories as part of the Hexagonal/CQRS architecture. This included setting up new FastAPI controllers (, ).
-2.  **Initial Syntax/Import Fixes**: Resolved  in ,  (making  optional), and  (type imports).
-3.  **Customer Portal Order Lookup**:
-    *   **Problem**: Frontend was calling an old  endpoint, resulting in Something went wrong messages.
-    *   **Fix**: Updated  to correctly call the new  endpoint.
-    *   **Problem**: Backend  API encountered  serialization error when returning MongoDB documents.
-    *   **Fix**: Added a helper function in  to convert  to string.
-    *   **Problem**: Demo data in frontend did not match actual orders in the current tenant, leading to Order not found messages for Shopify-connected tenant.
-    *   **Fix**: Adjusted tenant handling in  and updated demo suggestions to reflect actual available data in , while also ensuring the correct  was used when Shopify was connected.
-4.  **Item Selection and Resolution Navigation**:
-    *   **Problem**: Continue to Resolution button was blocked in  because return reasons for selected items were mandatory but not explicitly communicated to the user.
-    *   **Fix**: Explained the need to select a return reason.
-    *   **Problem**: Resolution option radio buttons in  were not updating React state, preventing navigation to confirmation.
-    *   **Fix**: Replaced UI library  with native HTML radio buttons and direct  handlers in .
-    *   **Problem**: Navigation to confirmation page resulted in  due to non-serializable React components (Icons) being passed via React Router's state.
-    *   **Fix**: Removed Icon components from the state passed during navigation in .
-5.  **Return Request Submission**:
-    *   **Problem**: The  component was using a mock API call () instead of the real backend API for return creation.
-    *   **Fix**: Updated  to call .
-    *   **Problem**: Frontend was sending  instead of the required  (UUID from database) to the backend create API, leading to Order not found or  errors.
-    *   **Fix**: Propagated the correct  through , , , and , ensuring the create API received the UUID.
-    *   **Problem**: Backend  API encountered  error during refund calculation.
-    *   **Fix**: Ensured all monetary calculations in  and  explicitly used  types.
-    *   **Problem**: After submitting the return request, it was not appearing in the merchant returns list because the frontend was sending incomplete item data (missing , , ).
-    *   **Fix**: Initiated a fastest fix by modifying  to pass complete item data.
+The previous critical issues addressed include:
+1.  **Frontend  error**: Fixed  in  and  by adjusting frontend data mapping in  and  to use  and handle direct  access.
+2.  **Order Lookup (Real-time Shopify)**: Initially, the customer portal used an old endpoint, then a database-first lookup. The user explicitly requested a *real-time Shopify API lookup*. This involved extensive debugging of the :
+    *   Corrected  to properly initialize .
+    *   Fixed a bug where the access token was being encrypted before use, causing 401 Unauthorized errors.
+    *   Updated Shopify GraphQL query fields to match API version 2024-10.
+    *   Ensured  handles  values for , , and  objects in Shopify responses.
+    *   The live Shopify order lookup is now confirmed working, populating real product and customer data (e.g., Order #1001 with TESTORDER).
+3.  **Return Creation Order Not Found (Backend 500)**: After the frontend started sending correct Shopify order IDs, the backend  failed with Order not found.
+    *   **Root Cause**: The backend command handler was trying to retrieve the order from MongoDB via , but the real-time Shopify orders were *not* being synced to the local database for the create flow.
+    *   **Fix**: Modified  to call  (a new method added to fetch orders directly from Shopify via GraphQL) if the order isn't found in the local database.
+    *   **Further Fixes**: Added  to  and subsequently to  to ensure proper hexagonal architecture flow. Corrected , , and  data formats being sent from the frontend .
 
-The work paused with a new error:  in the  component, indicating a data structure mismatch or missing  property on items after the  modification.
+**Current State of the Product**:
+The customer portal now successfully looks up Shopify orders in real-time, displays live product data, and the return creation process successfully sends data to the backend API. The backend processes the return creation command, and the  successfully saves the return to the  MongoDB collection.
 
+**The specific nuance immediately before this summary**:
+Despite successful return creation and saving to , the user reported that the returns are *not* appearing in the merchant dashboard. Investigation revealed that the  (which powers the merchant dashboard) is currently querying the  collection, while new returns are saved to the  collection. There is a confirmed mismatch in the collection names.
 </current_work>
 
 <optional_next_step>
-Fix the  error in .
+Modify  to query the  collection instead of  to display created returns in the merchant dashboard.
 </optional_next_step>
