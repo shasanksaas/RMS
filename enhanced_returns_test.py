@@ -459,10 +459,10 @@ class EnhancedReturnsTestSuite:
         # Test 2: Verify no old collection references cause errors
         # Test multiple endpoints to ensure consistency
         endpoints_to_test = [
-            "/returns",
-            "/returns?page=1&limit=5",
-            "/returns?search=test",
-            "/returns?status_filter=requested"
+            "/returns/",
+            "/returns/?page=1&limit=5",
+            "/returns/?search=test",
+            "/returns/?status_filter=requested"
         ]
         
         all_endpoints_working = True
