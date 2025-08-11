@@ -41,20 +41,20 @@ const Confirm = () => {
         order_id: order.id, // Use the UUID order ID (not MongoDB _id)
         customer_email: email,
         return_method: 'prepaid_label',
-        items: selectedItems.map(item => ({
+        items: Object.values(selectedItems).map(item => ({
           line_item_id: item.line_item_id,
           sku: item.sku,
-          title: item.title,
+          title: item.title || item.name,
           variant_title: item.variant_title,
           quantity: item.quantity,
-          unit_price: item.unit_price,
+          unit_price: item.unit_price || item.price,
           reason: item.reason || 'wrong_size',
           reason_description: item.reason_description || '',
-          condition: item.condition,
-          photos: item.photos,
+          condition: item.condition || 'used',
+          photos: item.photos || [],
           notes: item.notes || ''
         })),
-        customer_note: `Selected resolution: ${resolution.title}`
+        customer_note: `Selected resolution: ${resolution.title || resolution.id}`
       };
 
       console.log('Sending return request data:', JSON.stringify(returnRequestData, null, 2));
