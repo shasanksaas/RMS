@@ -48,13 +48,6 @@ const ReturnDetail = () => {
   const loadReturnDetails = async () => {
     try {
       setLoading(true);
-      const apiUrl = getApiUrl();
-      let fullUrl = `${apiUrl}/api/returns/${id}`;
-      
-      // Force HTTPS to prevent mixed content errors
-      if (fullUrl.startsWith('http://')) {
-        fullUrl = fullUrl.replace('http://', 'https://');
-      }
       
       const response = await fetch(buildApiUrl(`/api/returns/${id}`), {
         headers: {
