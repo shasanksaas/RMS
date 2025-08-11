@@ -1,6 +1,12 @@
-# Returns Management SaaS MVP
+# 🚀 Returns Management SaaS - Elite-Grade Platform
 
-A comprehensive, production-ready multi-tenant Returns Management System with Shopify integration, built with FastAPI and React.
+**A comprehensive, production-ready, multi-tenant Returns Management System with advanced Shopify integration, built using Hexagonal Architecture, CQRS, and Domain Events.**
+
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.110.1-green.svg)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/React-19.0.0-blue.svg)](https://reactjs.org/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-6.0+-brightgreen.svg)](https://www.mongodb.com/)
+[![Shopify](https://img.shields.io/badge/Shopify-2025--07-brightgreen.svg)](https://shopify.dev/)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ## 🚀 Project Overview
 
