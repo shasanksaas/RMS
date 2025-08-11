@@ -444,13 +444,17 @@ class ShopifyService:
             # Get real-time access token and shop info
             tenant = await db.tenants.find_one({"id": use_tenant_id})
             if not tenant or not tenant.get('shopify_integration'):
+                print(f"DEBUG: No tenant or shopify_integration found for {use_tenant_id}")
                 return None
                 
             shopify_integration = tenant.get('shopify_integration', {})
             access_token = shopify_integration.get('access_token')
             shop_domain = shopify_integration.get('shop_domain')
             
+            print(f"DEBUG: Found tenant {use_tenant_id}, shop_domain: {shop_domain}, has_token: {bool(access_token)}")
+            
             if not access_token or not shop_domain:
+                print(f"DEBUG: Missing credentials - token: {bool(access_token)}, domain: {shop_domain}")
                 return None
             
             # Real-time GraphQL query to Shopify API
