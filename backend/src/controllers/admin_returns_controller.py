@@ -12,7 +12,7 @@ from ..services.returns_service_advanced import advanced_returns_service
 from ..utils.dependencies import get_tenant_id
 from ..config.database import db
 
-router = APIRouter(prefix="/returns", tags=["admin", "returns"])
+router = APIRouter(prefix="/admin/returns", tags=["admin", "returns"])
 logger = logging.getLogger(__name__)
 
 @router.get("")
