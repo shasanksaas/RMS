@@ -83,20 +83,12 @@ const Login: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await authService.login({
+      const response = await contextLogin({
         tenant_id: formData.tenantId,
         email: formData.email,
         password: formData.password,
         remember_me: formData.rememberMe
       });
-
-      // Store tokens and user info
-      localStorage.setItem('auth_token', response.access_token);
-      localStorage.setItem('currentTenant', formData.tenantId);
-      if (response.refresh_token) {
-        localStorage.setItem('refresh_token', response.refresh_token);
-      }
-      localStorage.setItem('user_info', JSON.stringify(response.user));
 
       // Show success message
       toast({
