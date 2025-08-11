@@ -123,7 +123,7 @@ const Status = () => {
       timeline.push({
         id: 5,
         title: 'Return Processed',
-        description: 'Your refund will be issued once we process your return',
+        description: 'Your refund has been processed',
         status: 'completed',
         timestamp: null,
         icon: RefreshCw
