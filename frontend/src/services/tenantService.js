@@ -3,7 +3,7 @@
  * Handles tenant creation, management, and merchant signup with tenant_id
  */
 
-const API_BASE_URL = import.meta.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+const API_BASE_URL = process.env.REACT_APP_BACKEND_URL;
 
 class TenantService {
   constructor() {
