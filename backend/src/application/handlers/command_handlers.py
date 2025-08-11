@@ -45,8 +45,24 @@ class CreateReturnRequestHandler:
     
     async def handle(self, command: CreateReturnRequest) -> Dict[str, Any]:
         """Create a new return request"""
-        # Get order data
+        # Get order data - first try local database, then Shopify API
         order = await self.order_repository.get_by_id(command.order_id, command.tenant_id)
+        
+        if not order:
+            # Order not in local database, try to fetch from Shopify
+            try:
+                if await self.shopify_service.is_connected(command.tenant_id.value):
+                    # Use the Shopify service to find the order by ID
+                    shopify_order = await self.shopify_service.get_order(command.order_id.value, command.tenant_id.value)
+                    if shopify_order:
+                        order = shopify_order
+                    else:
+                        raise ValueError("Order not found in Shopify")
+                else:
+                    raise ValueError("Shopify not connected and order not in database")
+            except Exception as e:
+                raise ValueError(f"Order not found: {str(e)}")
+        
         if not order:
             raise ValueError("Order not found")
         
