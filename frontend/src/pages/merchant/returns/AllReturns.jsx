@@ -166,6 +166,18 @@ const AllReturns = () => {
     setFilteredReturns(displayReturns);
   }, [displayReturns]);
 
+  // Initial load with auto-refresh
+  useEffect(() => {
+    loadReturns();
+    
+    // Auto-refresh returns every 30 seconds to get live data
+    const interval = setInterval(() => {
+      loadReturns();
+    }, 30000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
   // Debounced search handler
   const debouncedSearch = useMemo(
     () => debounce((searchTerm) => {
