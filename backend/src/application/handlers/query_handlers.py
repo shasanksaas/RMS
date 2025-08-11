@@ -178,15 +178,22 @@ class LookupOrderForReturnHandler:
     async def handle(self, query: LookupOrderForReturn) -> Dict[str, Any]:
         """Real-time Shopify API lookup for customer portal - NO cached data"""
         
+        print(f"DEBUG: Starting lookup for order {query.order_number} in tenant {query.tenant_id}")
+        
         # ALWAYS do real-time Shopify lookup first - NO database lookups
-        if await self.shopify_service.is_connected(query.tenant_id):
+        is_connected = await self.shopify_service.is_connected(query.tenant_id)
+        print(f"DEBUG: Shopify is_connected check result: {is_connected}")
+        
+        if is_connected:
             try:
+                print(f"DEBUG: Calling shopify_service.find_order_by_number")
                 # Real-time GraphQL query to Shopify API
                 shopify_order = await self.shopify_service.find_order_by_number(
                     query.order_number, query.tenant_id
                 )
                 
                 if shopify_order:
+                    print(f"DEBUG: Found shopify order: {shopify_order.get('order_number', 'unknown')}")
                     # Return live Shopify data - no static data allowed
                     return {
                         "success": True,
@@ -194,6 +201,7 @@ class LookupOrderForReturnHandler:
                         "order": shopify_order
                     }
                 else:
+                    print(f"DEBUG: No shopify order found")
                     return {
                         "success": False,
                         "mode": "not_found",
@@ -201,13 +209,14 @@ class LookupOrderForReturnHandler:
                     }
                     
             except Exception as e:
-                print(f"Real-time Shopify lookup failed: {e}")
+                print(f"DEBUG: Real-time Shopify lookup failed: {e}")
                 return {
                     "success": False,
                     "mode": "error",
                     "message": f"Error connecting to Shopify: {str(e)}"
                 }
         else:
+            print(f"DEBUG: Shopify not connected")
             return {
                 "success": False,
                 "mode": "not_connected",
