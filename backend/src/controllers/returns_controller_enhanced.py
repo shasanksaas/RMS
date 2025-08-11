@@ -583,7 +583,8 @@ async def update_return_status(
                 "new_status": new_status,
                 "notes": notes,
                 "source": "merchant_dashboard",
-                "shopify_sync": False  # Will be updated if Shopify sync succeeds
+                "shopify_sync": False,  # Will be updated if Shopify sync succeeds
+                "initiated_by_app": True  # Flag to prevent webhook loops
             },
             "description": f"Status updated from {old_status.upper()} to {new_status.upper()}",
             "type": "status_change"
