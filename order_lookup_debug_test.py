@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
 
 # Configuration
-BACKEND_URL = "https://bca17508-3160-4c8a-b1ab-4beee6e50918.preview.emergentagent.com/api"
+BACKEND_URL = "https://2df859a5-1f9c-46d3-81c6-dff0c2023545.preview.emergentagent.com/api"
 TARGET_TENANT_ID = "tenant-rms34"  # Focus on tenant-rms34 as requested
 TEST_HEADERS = {
     "Content-Type": "application/json",

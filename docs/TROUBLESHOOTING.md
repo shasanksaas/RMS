@@ -30,14 +30,14 @@ curl "http://localhost:8001/api/auth/shopify/install?shop=rms34.myshopify.com"
 1. **Update Shopify App Settings:**
    - Go to https://partners.shopify.com
    - Find your app and click "Edit"
-   - Set "App URL": `https://bca17508-3160-4c8a-b1ab-4beee6e50918.preview.emergentagent.com/app`
-   - Set "Allowed redirection URLs": `https://bca17508-3160-4c8a-b1ab-4beee6e50918.preview.emergentagent.com/api/auth/shopify/callback`
+   - Set "App URL": `https://2df859a5-1f9c-46d3-81c6-dff0c2023545.preview.emergentagent.com/app`
+   - Set "Allowed redirection URLs": `https://2df859a5-1f9c-46d3-81c6-dff0c2023545.preview.emergentagent.com/api/auth/shopify/callback`
    - **Important**: No trailing slashes!
 
 2. **Update Environment:**
    ```bash
    # Update backend/.env
-   APP_URL=https://bca17508-3160-4c8a-b1ab-4beee6e50918.preview.emergentagent.com
+   APP_URL=https://2df859a5-1f9c-46d3-81c6-dff0c2023545.preview.emergentagent.com
    
    # Restart backend
    sudo supervisorctl restart backend
@@ -56,10 +56,10 @@ Domain mismatch between app URL and callback URL.
 **Fix:**
 ```bash
 # Ensure both URLs use same domain
-APP_URL=https://bca17508-3160-4c8a-b1ab-4beee6e50918.preview.emergentagent.com
+APP_URL=https://2df859a5-1f9c-46d3-81c6-dff0c2023545.preview.emergentagent.com
 
 # Callback should be:
-# https://bca17508-3160-4c8a-b1ab-4beee6e50918.preview.emergentagent.com/api/auth/shopify/callback
+# https://2df859a5-1f9c-46d3-81c6-dff0c2023545.preview.emergentagent.com/api/auth/shopify/callback
 ```
 
 #### ❌ `401 Unauthorized` from Shopify API

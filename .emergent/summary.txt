@@ -1,30 +1,28 @@
 <analysis>
-The AI engineer's work spanned several critical phases. Initially, the focus was on establishing a robust multi-tenant SaaS application leveraging Hexagonal Architecture, CQRS, and Domain Events, with core Shopify OAuth integration. The bulk of the previous phase, as summarized in the initial trajectory message, involved extensive debugging and implementation for the Elite-Grade Returns Creation system, resolving complex frontend-backend mismatches, data propagation issues, and Shopify API integration.
-
-Upon handover, the user immediately reported critical performance bottlenecks and data incompleteness in the returns section. The AI engineer pivoted to address these, successfully optimizing the backend API (N+1 query fix, indexing, caching) and rectifying frontend data display. This included removing static data, ensuring real-time Shopify synchronization for customer details, and fixing a persistent React rendering error in the return detail view. A significant addition was the Live Shopify Order link, directly verifying dynamic data. The final reported issue was duplicate entries on the main returns page, which the engineer is currently investigating and fixing by refining frontend display logic and data filtering.
+The AI engineer successfully transformed a basic multi-tenant SaaS application into a robust system with fully functional Elite-Grade Returns Creation and real-time Shopify synchronization. Initial work focused on fixing critical performance bottlenecks, resolving static/incomplete data issues in the merchant dashboard, and addressing persistent duplicate entries. This involved deep dives into backend N+1 queries, MongoDB indexing, frontend rendering logic, and API consistency. Subsequent efforts expanded to implementing comprehensive two-way sync for return statuses, dynamically updating amounts and item details from Shopify, and ensuring data accuracy across both merchant and customer portals. The engineer meticulously fixed multiple discrepancies between backend API responses and frontend expectations. Most recently, the focus shifted to building a complete user management system with Google OAuth, where core backend components and database setup are already complete, and frontend development has just begun.
 </analysis>
 
 <product_requirements>
-The application is a multi-tenant Returns Management SaaS designed for e-commerce, primarily integrating with Shopify. Key features include a customer return portal, a merchant dashboard, Shopify OAuth, real-time order/return synchronization, a configurable rules engine, AI suggestions, label issuance, email notifications, and analytics, all built with strict multi-tenancy. A core component is the Elite-Grade Returns Creation system, supporting Shopify-connected and local database order lookups, detailed policy previews, comprehensive return creation APIs, and admin queues. This system emphasizes Hexagonal Architecture, CQRS, and Domain Events for high quality. User stories encompass customer-initiated returns, merchant review/approval, manual merchant return creation, automated rule-based decisions, live data sync, label/refund processing, robust security/tenancy, and practical merchant UX. So far, the customer return flow for Elite-Grade Returns Creation and its visibility/detail in the merchant dashboard is the primary implemented feature, now fully functional with dynamic Shopify data.
+The application is a multi-tenant Returns Management SaaS platform for e-commerce, primarily integrating with Shopify. Its core purpose is to streamline return processes for merchants and customers. Key features include a customer-facing return portal, a merchant dashboard for managing returns, Shopify OAuth integration, real-time order and return synchronization, a configurable rules engine, AI suggestions, label issuance, email notifications, and analytics, all built with strict multi-tenancy. The Elite-Grade Returns Creation system is a central component, supporting Shopify-connected and local database order lookups, detailed policy previews, comprehensive return creation APIs, and admin queues. The architecture emphasizes Hexagonal Architecture, CQRS, and Domain Events for high quality and maintainability. User stories cover customer-initiated returns, merchant review/approval, manual merchant return creation, automated rule-based decisions, live data synchronization, label and refund processing, robust security/tenancy, and a practical merchant user experience. The customer return flow and its visibility/detail in the merchant dashboard are currently implemented and fully functional with dynamic Shopify data.
 </product_requirements>
 
 <key_technical_concepts>
--   **Multi-Tenancy**: Tenant isolation using  for data segregation.
--   **Modular Architecture**: FastAPI (Python) backend, React (JavaScript) frontend, MongoDB persistence.
--   **Shopify Integration**: OAuth 2.0, GraphQL/REST APIs for real-time data, Webhooks.
--   **Hexagonal Architecture (Ports & Adapters)**: Modularity, separation of concerns.
--   **CQRS (Command Query Responsibility Segregation)**: Separating read and write models.
--   **Domain Events**: Event-driven processing for decoupled communication.
+- **Multi-Tenancy**: Tenant isolation using  for data segregation.
+- **Modular Architecture**: FastAPI (Python) backend, React (JavaScript) frontend, MongoDB persistence.
+- **Shopify Integration**: OAuth 2.0, GraphQL/REST APIs for real-time data, Webhooks.
+- **Hexagonal Architecture (Ports & Adapters)**: Modularity, separation of concerns.
+- **CQRS (Command Query Responsibility Segregation)**: Separating read and write models.
+- **Domain Events**: Event-driven processing for decoupled communication.
+- **Authentication/Authorization**: JWT, RBAC, bcrypt, Google OAuth.
 </key_technical_concepts>
 
 <code_architecture>
 The application uses a FastAPI backend and React frontend with MongoDB, following a Hexagonal Architecture (Ports & Adapters) and CQRS.
 
 
-
 -   : Main FastAPI application entry point.
     -   **Importance**: Configures FastAPI, registers routers, and sets up middleware.
-    -   **Changes**:  and  are registered. Old  registration was removed.  was added to  instance. Legacy endpoints were updated to query the  collection. Routes include  prefix for Kubernetes ingress.
+    -   **Changes**: , , and  are registered.  was added. Legacy endpoints query  collection. Routes include  prefix for Kubernetes.  was temporarily commented out to resolve a routing conflict with .
 -   : Manages authentication and multi-tenancy.
     -   **Importance**: Ensures requests are tenant-scoped and validated.
     -   **Changes**: Modified to validate tenants and exclude  routes.
@@ -34,70 +32,75 @@ The application uses a FastAPI backend and React frontend with MongoDB, followin
 -   : MongoDB repository for returns.
     -   **Importance**: Handles persistence of return requests.
     -   **Changes**: Confirmed saves return requests to the  collection. Implicitly updated to leverage newly added indexes.
--   : Handles customer-facing return portal APIs.
-    -   **Importance**: Provides endpoints for order lookup and return creation for customers.
-    -   **Changes**: Tested and confirmed working for instant customer submissions.
 -   : Handles merchant-facing return management APIs.
     -   **Importance**: Displays and manages return requests in the merchant dashboard and provides detail view data.
-    -   **Changes**: Modified to query the  collection instead of . Implemented comprehensive field mappings ( to , , customer name derivation, order number retrieval from Shopify via GraphQL). Optimized the  and  endpoints for performance by batch fetching order data. Enhanced the detail endpoint to provide  and added new endpoints for status updates, comments, refunds, labels, and emails. Fixed customer name extraction to handle flattened Shopify data.
--   : Manages Shopify integration status.
-    -   **Importance**: Provides API for frontend to display connected Shopify stores.
-    -   **Changes**: Fixed to correctly query  collection, updated return counts to use  collection, and resolved  errors.
--   : Contains command handlers.
-    -   **Importance**: Implements logic for processing commands like .
-    -   **Changes**:  modified to fetch orders via  if not found in local DB.
+    -   **Changes**: Modified to query the  collection. Implemented comprehensive field mappings (customer name derivation, order number retrieval). Optimized  and  for performance by batch fetching. Enhanced detail endpoint with  and new endpoints for status updates, comments, refunds, labels, emails. Added deduplication logic (case-insensitive email matching) and ensured  and  are included. Fixed MongoDB update query for status updates and ensured all statuses are stored in UPPERCASE.
+-   : Manages Shopify webhook reception.
+    -   **Importance**: Processes incoming Shopify webhooks (e.g., returns updates).
+    -   **Changes**: Corrected call signature for .
+-   : Contains webhook processing logic.
+    -   **Importance**: Parses Shopify webhook payloads and updates internal data.
+    -   **Changes**:  and other return handlers were updated to use the correct  collection and tenant format. Implemented loop prevention logic, comprehensive audit logging, and ensured status mapping. Added support for updating , , and  from incoming Shopify webhook data. Standardized status casing to UPPERCASE.
+-    (New File): Script to add MongoDB indexes.
+    -   **Importance**: Improves query performance for  and  collections, especially for multi-tenant queries.
+-    (New File): Script to remove existing duplicate return entries.
+    -   **Importance**: Used to clean up historical duplicate data based on  and .
+-    (New File): Script to add MongoDB indexes for  and  collections.
+    -   **Importance**: Improves query performance for user management.
+-    (New File): Pydantic models for user and session data.
+    -   **Importance**: Defines the structure and validation rules for user and session data in the MongoDB collections.
+-    (New File): Business logic for user management.
+    -   **Importance**: Handles user creation, authentication, authorization, and data retrieval.
+-    (New File): FastAPI endpoints for user management.
+    -   **Importance**: Provides API routes for user registration, login, profile management, and admin user operations.
 -   : Main React router.
     -   **Importance**: Defines application routes.
     -   **Changes**: Updated with new customer portal routes and merchant return detail route.
--   : Final confirmation step in customer portal.
-    -   **Importance**: Submits the return request.
-    -   **Changes**: Removed  fallback URL, now uses .
 -   : Merchant dashboard returns list page.
     -   **Importance**: Displays all returns for the merchant.
-    -   **Changes**: Removed  fallback URL. Updated API calls to use  and ensured correct  endpoint usage. Fixed data parsing to use . Currently undergoing changes to fix duplicate display and ensure dynamic data filtering/rendering.
+    -   **Changes**: Removed  fallback URL, updated API calls, fixed data parsing to use . Removed frontend deduplication logic. Fixed  function for status casing and added missing status mappings. Adjusted amount display logic to handle both number and object formats and mobile view for items. Enhanced .
 -   : Merchant dashboard return detail page.
     -   **Importance**: Displays comprehensive details for a specific return.
-    -   **Changes**: Fixed hardcoded preview domain logic to use environment variables. Adjusted API calls for trailing slashes. Crucially, fixed hardcoded . Removed all mock/static data, rebuilt UI to dynamically display all information (customer, product, price breakdown, timeline, shipping) from backend API. Fixed React rendering errors (object as child for  and  parsing). Added a Live Shopify Order section with a dynamic link to the real Shopify order and live connection status.
--   : Merchant dashboard order detail page.
-    -   **Importance**: Displays comprehensive details for a specific order.
-    -   **Changes**: Fixed hardcoded preview domain logic to use environment variables.
--    (New File): Script to add MongoDB indexes for performance.
-    -   **Importance**: Improves query performance for  and  collections, especially for multi-tenant queries.
--    (New File): Script for testing backend performance and data completeness.
-    -   **Importance**: Used for internal testing and debugging of backend API changes.
--    (New File): Comprehensive documentation for the entire application.
-    -   **Importance**: Serves as a complete technical reference covering architecture, APIs, controllers, Shopify integration, database schemas, security, deployment, and troubleshooting. Replaced the original .
+    -   **Changes**: Fixed hardcoded preview domain logic. Removed mock data, rebuilt UI to dynamically display all information from backend API. Fixed React rendering errors. Added Live Shopify Order section with dynamic link.
+-   : Customer-facing return status/confirmation page.
+    -   **Importance**: Shows the status and details of a submitted return to the customer.
+    -   **Changes**: Completely refactored to fetch and display real data from the backend API, replacing all mock data. Handles proper tenant ID usage.
+-   : Customer return confirmation page.
+    -   **Importance**: Confirms the submission of a return request.
+    -   **Changes**: Fixed to use the correct  tenant ID.
+-    (New File): React component for user login.
+    -   **Importance**: Provides the UI for user authentication.
+-    (New File): React component for user registration.
+    -   **Importance**: Provides the UI for user signup.
+-    (New File): Comprehensive documentation.
+    -   **Importance**: Serves as a complete technical reference.
 </code_architecture>
 
 <pending_tasks>
--   Implement  webhook handler for tenant cleanup.
--   Implement full webhook consumers for all registered topics.
--   Finalize backfill sync strategy for initial order data on install.
--   Finalize testing setup for webhook and dev store interactions.
--   Implement AI Suggestions, Label Issuing, Email Notifications (beyond basic templates), Stripe Billing.
--   Finalize test coverage to ≥70%, performance optimization, and Lighthouse ≥90.
--   Complete the implementation of the Elite-Grade Returns Creation system, including all detailed API contracts, UI/UX (merchant overrides, bulk creation), security, observability, and full testing.
+- Implement  webhook handler for tenant cleanup.
+- Implement full webhook consumers for all registered topics (beyond returns).
+- Finalize backfill sync strategy for initial order data on install.
+- Finalize testing setup for webhook and dev store interactions.
+- Implement AI Suggestions, Label Issuing, Email Notifications (beyond basic templates), Stripe Billing.
+- Finalize test coverage to ≥70%, performance optimization, and Lighthouse ≥90.
+- Complete the implementation of the Elite-Grade Returns Creation system, including all detailed API contracts, UI/UX (merchant overrides, bulk creation), security, observability, and full testing.
+- Complete the Google OAuth callback handler and the remaining authentication components (Frontend Phase 2).
 </pending_tasks>
 
 <current_work>
-Immediately before this summary, the AI engineer was addressing two critical user issues: the return section is very very slow, also inside return details seems there is static or incomplete data with no customer and email or relevant data showing, and later, if i submit the form as customer it should in return instantly no exception and the second is pls all th mock data only real data from shopify should be visible, and showing aan error occured if clicking on eye button, and finally lot of duplicates pls fix that and again no static data striclty all dynamic real live data on the main returns page.
+Immediately before this summary, the AI engineer was tasked with building a complete, production-ready user management structure for the SaaS platform, explicitly including login with Google too easily. This new task follows a series of successful fixes for the core returns management system:
 
-The work done includes:
-1.  **Performance Optimization**: Identified N+1 query issues in  and . Implemented batch fetching for order data and added MongoDB indexes using  for  and  collections. This drastically reduced the returns page load time from 2-5 seconds to milliseconds.
-2.  **Data Completeness (Merchant Dashboard)**:
-    *   Ensured  correctly fetches and maps customer names (handling flattened Shopify data) and order numbers from Shopify GraphQL.
-    *   Cleaned up all mock data from the  MongoDB collection, ensuring only real Shopify-synced returns are displayed.
-3.  **Customer Submission Flow**: Verified the  and frontend () for return creation, confirming instant, exception-free submissions with real data.
-4.  **Return Detail View (Eye Icon) Fix**:
-    *   Addressed an Objects are not valid as a React child JavaScript error in  by correctly parsing and rendering the  object and  fields.
-    *   Rebuilt the  UI to be completely dynamic, fetching all information (customer details, product info, price breakdown, timeline, shipping) from the backend API.
-    *   Enhanced  to provide all necessary fields for the comprehensive detail view, and added new backend endpoints for status updates, comments, refunds, labels, and emails.
-    *   Added a Live Shopify Order section in  with a dynamic link to the actual Shopify admin order page, pulling the  dynamically from the backend.
-5.  **Duplicate Returns Page Entries**: The user reported duplicates on the  page. The AI engineer verified the backend API is not returning duplicates and is currently investigating the frontend display logic in , specifically how it renders the list and filters data, to ensure no duplicates are shown and all data remains dynamic.
+1.  **Duplicate Returns Fix**: Identified and resolved actual duplicate entries in the MongoDB backend by implementing deduplication logic in  (case-insensitive email matching) and providing a cleanup script. Frontend display logic in  was simplified as backend now handles deduplication.
+2.  **API Connectivity & Shopify Link Fix**: Resolved Unable to connect to server issues due to an improper database connection change and fixed broken Shopify order links by correcting  extraction from the Shopify integration in .
+3.  **Status Update & Two-Way Sync**: Fixed Failed to update status errors by correcting MongoDB update queries in . Implemented full bidirectional status synchronization between the app and Shopify via webhooks, including loop prevention, status mapping (e.g., app APPROVED to Shopify open), and comprehensive audit logging.
+4.  **Dynamic Data Display (Amounts, Reasons, Items)**: Ensured that return item amounts, reasons, and actual line items dynamically update and display correctly from Shopify data. Backend APIs () were enhanced to include  and precise  amounts. Frontend  was updated to correctly interpret and display these fields, handle status casing, and show product names instead of No items.
+5.  **Customer Portal Data Accuracy**: The customer-facing return confirmation/status pages (, ) were completely refactored to fetch and display real Shopify data, replacing all static/mock information and ensuring correct tenant ID usage.
 
-The product now has a fully functional Elite-Grade Returns Creation system with optimized performance, complete and dynamic data display in both the main returns list and the detailed view, and a working customer submission portal. The  has been comprehensively updated. The immediate issue is fixing duplicates in the merchant's  view.
+The system now has a stable, highly synchronized returns management core. The current work has just begun on the **User Management structure**:
+-   **Backend (Phase 1 complete)**: New MongoDB collections (, ) with appropriate schemas () and indexes () have been defined. Core backend services () and FastAPI controllers () are created. Necessary environment variables for authentication (SECRET_KEY, Google OAuth credentials) and Python dependencies have been added and installed.
+-   **Frontend (Phase 2 initiated)**: Initial React components for  and  have been created. The next step is to implement the Google OAuth callback handler and complete the remaining authentication components.
 </current_work>
 
 <optional_next_step>
-The next step is to continue fixing the duplicate entries on the main returns page by adding initial load and ensuring proper data filtering in .
+Implement the Google OAuth callback handler and remaining authentication components in the frontend.
 </optional_next_step>
