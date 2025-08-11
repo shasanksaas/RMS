@@ -78,15 +78,13 @@ async def get_returns(
         all_returns = await cursor.to_list(page_size)
         
         # DEDUPLICATION: Remove duplicate returns based on business logic
-        # Keep the most recent return for each unique order_id + customer_email combination
-        seen_combinations = set()
-        deduplicated_returns = []
+        # Keep the most recent return for each unique order_id + customer_email combination (case-insensitive)
         unique_returns_map = {}
         
         # First pass: identify the most recent return for each combination
         for ret in all_returns:
             order_id = ret.get("order_id", "")
-            customer_email = ret.get("customer_email", "")
+            customer_email = ret.get("customer_email", "").lower()  # Case-insensitive comparison
             combination_key = f"{order_id}:{customer_email}"
             
             if combination_key not in unique_returns_map:
@@ -119,6 +117,7 @@ async def get_returns(
         duplicates_removed = len(all_returns) - len(returns)
         if duplicates_removed > 0:
             print(f"DEDUPLICATION: Removed {duplicates_removed} duplicate returns for tenant {tenant_id}")
+            print(f"DEDUPLICATION: Original count: {len(all_returns)}, Deduplicated count: {len(returns)}")
         
         # OPTIMIZATION: Batch fetch all unique order IDs to avoid N+1 queries
         unique_order_ids = list(set(r.get("order_id") for r in returns if r.get("order_id")))
