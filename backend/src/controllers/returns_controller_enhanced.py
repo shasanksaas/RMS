@@ -84,11 +84,24 @@ async def get_returns(
             line_items = return_req.get("line_items", [])
             item_count = sum(item.get("quantity", 0) for item in line_items)
             
-            # Get order number from related order
-            order = await db.orders.find_one({
-                "id": return_req.get("order_id", ""),
-                "tenant_id": tenant_id
-            }) if return_req.get("order_id") else None
+            # Get order number from related order or fetch from Shopify
+            order_number = ""
+            if return_req.get("order_id"):
+                order = await db.orders.find_one({
+                    "id": return_req.get("order_id"),
+                    "tenant_id": tenant_id
+                })
+                if order:
+                    order_number = order.get("order_number", order.get("name", ""))
+                else:
+                    # If order not in local DB, derive from Shopify order ID pattern  
+                    # Shopify order IDs like "5813364687033" typically map to order numbers like "1001"
+                    # For now, we'll try to fetch from Shopify service if needed
+                    from src.services.shopify_service import ShopifyService
+                    shopify_service = ShopifyService(tenant_id)
+                    shopify_order = await shopify_service.get_order_for_return(return_req.get("order_id"))
+                    if shopify_order:
+                        order_number = shopify_order.get("order_number", shopify_order.get("name", ""))
             
             # Extract estimated refund amount
             estimated_refund_data = return_req.get("estimated_refund", {})
