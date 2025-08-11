@@ -10,16 +10,6 @@ const Confirm = () => {
   const location = useLocation();
   const { orderNumber, email, selectedItems, resolution, order, mode, tenantId } = location.state || {};
   
-  // Debug logging
-  console.log('Confirm component received data:', {
-    orderNumber,
-    email,
-    order: order,
-    order_id: order?.id,
-    mode,
-    tenantId
-  });
-  
   const [returnRequest, setReturnRequest] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
