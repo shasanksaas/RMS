@@ -12,7 +12,7 @@ from ..services.tenant_service_enhanced import enhanced_tenant_service
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/auth", tags=["public-auth"])
+router = APIRouter(prefix="/auth", tags=["public-auth"])
 
 @router.post("/merchant-signup", status_code=status.HTTP_201_CREATED)
 async def merchant_signup(
