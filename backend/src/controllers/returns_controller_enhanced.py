@@ -67,14 +67,14 @@ async def get_returns(
         sort_direction = -1 if sort.startswith("-") else 1
         
         # Count total documents
-        total = await db.return_requests.count_documents(query)
+        total = await db.returns.count_documents(query)
         
         # Calculate pagination
         skip = (page - 1) * page_size
         total_pages = (total + page_size - 1) // page_size
         
         # Get returns
-        cursor = db.return_requests.find(query).sort(sort_field, sort_direction).skip(skip).limit(page_size)
+        cursor = db.returns.find(query).sort(sort_field, sort_direction).skip(skip).limit(page_size)
         returns = await cursor.to_list(page_size)
         
         # Format returns for response
