@@ -176,24 +176,9 @@ class LookupOrderForReturnHandler:
         self.shopify_service = shopify_service
     
     async def handle(self, query: LookupOrderForReturn) -> Dict[str, Any]:
-        """Lookup order for return creation - prioritize synced database orders"""
-        customer_email = Email(query.customer_email)
+        """Lookup order for return creation - same logic as merchant dashboard"""
         
-        # First try local synced order lookup (same as merchant dashboard)
-        order = await self.order_repository.find_by_number_and_email(
-            query.order_number, customer_email, query.tenant_id
-        )
-        
-        if order:
-            # Convert MongoDB ObjectId to string for JSON serialization
-            serialized_order = self._serialize_order(order)
-            return {
-                "success": True,
-                "mode": "local",
-                "order": serialized_order
-            }
-        
-        # Also try finding order by number only (in case email doesn't match exactly)
+        # Primary lookup: Find order by number only (same as merchant dashboard)
         order_by_number = await self.order_repository.find_by_number(
             query.order_number, query.tenant_id
         )
@@ -206,26 +191,36 @@ class LookupOrderForReturnHandler:
                 "order": serialized_order
             }
         
-        # Fallback: Try Shopify lookup if connected and local lookup failed
-        if await self.shopify_service.is_connected(query.tenant_id):
-            shopify_order = await self.shopify_service.find_order_by_number(
-                query.order_number, query.tenant_id
+        # Secondary: Try with email if provided (for validation)
+        if query.customer_email:
+            customer_email = Email(query.customer_email)
+            order_with_email = await self.order_repository.find_by_number_and_email(
+                query.order_number, customer_email, query.tenant_id
             )
             
-            if shopify_order:
-                # Check if order has customer data
-                customer_email = shopify_order.get("customer", {}).get("email") if shopify_order.get("customer") else None
-                order_email = shopify_order.get("customer_email")
+            if order_with_email:
+                serialized_order = self._serialize_order(order_with_email)
+                return {
+                    "success": True,
+                    "mode": "local",
+                    "order": serialized_order
+                }
+        
+        # Last resort: Try Shopify real-time lookup (if synced data not available)
+        if await self.shopify_service.is_connected(query.tenant_id):
+            try:
+                shopify_order = await self.shopify_service.find_order_by_number(
+                    query.order_number, query.tenant_id
+                )
                 
-                # Match by customer email if available, otherwise allow any email for testing
-                if (customer_email and customer_email == query.customer_email) or \
-                   (order_email and order_email == query.customer_email) or \
-                   (not customer_email and not order_email):  # Allow orders without customer data for testing
+                if shopify_order:
                     return {
                         "success": True,
                         "mode": "shopify",
                         "order": shopify_order
                     }
+            except Exception as e:
+                print(f"Shopify lookup failed: {e}")
         
         return {
             "success": False,
