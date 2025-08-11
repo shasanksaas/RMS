@@ -626,8 +626,8 @@ class ShopifyService:
             line_items = []
             for edge in order_node.get('lineItems', {}).get('edges', []):
                 item_node = edge['node']
-                variant = item_node.get('variant', {})
-                product = item_node.get('product', {})
+                variant = item_node.get('variant') or {}  # Handle null variants
+                product = item_node.get('product') or {}  # Handle null products
                 
                 line_item = {
                     "id": item_node.get('id', ''),
