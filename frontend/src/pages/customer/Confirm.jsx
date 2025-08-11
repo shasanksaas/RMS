@@ -24,30 +24,76 @@ const Confirm = () => {
     setSubmitting(true);
 
     try {
-      // Simulate API call to create return request
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Get backend URL
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      
+      // Determine tenant ID (consistent with the order lookup)
+      let tenantId = 'tenant-rms34'; // Default to Shopify-connected tenant
+      if (window.location.hostname.includes('fashion') || localStorage.getItem('selectedTenant') === 'tenant-fashion-store') {
+        tenantId = 'tenant-fashion-store';
+      }
 
-      // Mock return request creation
-      const newReturnRequest = {
-        id: 'RET-' + Math.random().toString(36).substr(2, 9).toUpperCase(),
-        orderNumber,
-        status: 'submitted',
-        resolutionType: resolution.id,
-        estimatedRefund: resolution.amount,
-        items: selectedItems,
-        submittedAt: new Date().toISOString(),
-        trackingUrl: `/returns/status/RET-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
+      // Prepare return request data
+      const returnRequestData = {
+        order_id: orderNumber, // This might need to be the actual order ID
+        customer_email: email,
+        return_method: 'prepaid_label', // Default method
+        items: selectedItems.map(item => ({
+          line_item_id: item.id || item.sku,
+          sku: item.sku,
+          title: item.name,
+          variant_title: item.variant || null,
+          quantity: item.quantity,
+          unit_price: item.price,
+          reason: item.reason || 'other',
+          reason_description: item.reasonDetails || '',
+          condition: 'used', // Default condition
+          photos: item.photos || [],
+          notes: item.notes || ''
+        })),
+        customer_note: `Selected resolution: ${resolution.title}`
       };
 
-      setReturnRequest(newReturnRequest);
+      // Call Elite Portal Returns API to create return
+      const response = await fetch(`${backendUrl}/api/elite/portal/returns/create`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Tenant-Id': tenantId
+        },
+        body: JSON.stringify(returnRequestData)
+      });
 
-      // Navigate to status page after brief delay
-      setTimeout(() => {
-        navigate(newReturnRequest.trackingUrl);
-      }, 3000);
+      const responseData = await response.json();
+
+      if (response.ok && responseData.success) {
+        // Success - create return request object
+        const newReturnRequest = {
+          id: responseData.return_request.return_id,
+          orderNumber,
+          status: responseData.return_request.status || 'submitted',
+          resolutionType: resolution.id,
+          estimatedRefund: responseData.return_request.estimated_refund?.amount || resolution.amount,
+          items: selectedItems,
+          submittedAt: new Date().toISOString(),
+          trackingUrl: `/returns/status/${responseData.return_request.return_id}`
+        };
+
+        setReturnRequest(newReturnRequest);
+
+        // Navigate to status page after brief delay
+        setTimeout(() => {
+          navigate(newReturnRequest.trackingUrl);
+        }, 3000);
+
+      } else {
+        // Handle API error
+        throw new Error(responseData.message || 'Failed to create return request');
+      }
 
     } catch (error) {
-      alert('Something went wrong. Please try again.');
+      console.error('Return submission error:', error);
+      alert(error.message || 'Something went wrong. Please try again.');
       setSubmitting(false);
     }
   };
