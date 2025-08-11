@@ -8,6 +8,7 @@ import { Label } from '../ui/label';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Checkbox } from '../ui/checkbox';
 import { useToast } from '../ui/use-toast';
+import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/authService';
 
 interface LoginFormData {
