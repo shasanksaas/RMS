@@ -30,29 +30,38 @@ class ShopifyService:
         # Use provided tenant_id or instance tenant_id
         check_tenant_id = tenant_id or self.tenant_id
         
+        print(f"DEBUG is_connected: tenant_id param={tenant_id}, check_tenant_id={check_tenant_id}")
+        
         if not check_tenant_id:
+            print("DEBUG is_connected: No tenant_id available")
             return False
             
         try:
             # First check integrations_shopify collection
+            print(f"DEBUG is_connected: Checking integrations_shopify collection")
             integration = await db.integrations_shopify.find_one({
                 "tenant_id": check_tenant_id,
                 "status": "connected"
             })
             if integration:
+                print(f"DEBUG is_connected: Found in integrations_shopify")
                 return True
                 
             # Also check tenant document for shopify_integration field
+            print(f"DEBUG is_connected: Checking tenants collection")
             tenant = await db.tenants.find_one({"id": check_tenant_id})
             if tenant and tenant.get('shopify_integration'):
                 shopify_integration = tenant['shopify_integration']
-                return (shopify_integration.get('status') == 'connected' and 
+                result = (shopify_integration.get('status') == 'connected' and 
                        shopify_integration.get('access_token') and
                        shopify_integration.get('shop_domain'))
+                print(f"DEBUG is_connected: Tenant check result={result}")
+                return result
                        
+            print(f"DEBUG is_connected: No integration found")
             return False
         except Exception as e:
-            print(f"Error checking Shopify connection: {e}")
+            print(f"DEBUG is_connected: Error checking Shopify connection: {e}")
             return False
     
     async def is_online(self) -> bool:
