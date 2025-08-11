@@ -335,11 +335,11 @@ class RealtimeShopifyTester:
         
         # Test 2: Check for real-time timestamps
         if status == 200 and isinstance(data, dict):
-            order_data = data.get('order', {})
+            order_data = data.get('order') or {}
             
             # Look for recent update timestamps
-            updated_at = order_data.get('updated_at')
-            processed_at = order_data.get('processed_at')
+            updated_at = order_data.get('updated_at') if order_data else None
+            processed_at = order_data.get('processed_at') if order_data else None
             
             if updated_at or processed_at:
                 self.log_test(
