@@ -89,10 +89,10 @@ async def create_tenant_indexes():
         
         # Sessions collection for tenant isolation
         sessions_indexes = [
-            IndexModel([("tenant_id", "session_id")], unique=True),
-            IndexModel([("tenant_id", "user_id")]),
-            IndexModel([("tenant_id", "expires_at")]),
-            IndexModel([("tenant_id", "created_at")]),
+            IndexModel([("tenant_id", 1), ("session_id", 1)], unique=True),
+            IndexModel([("tenant_id", 1), ("user_id", 1)]),
+            IndexModel([("tenant_id", 1), ("expires_at", 1)]),
+            IndexModel([("tenant_id", 1), ("created_at", 1)]),
         ]
         
         await db.sessions.create_indexes(sessions_indexes)
