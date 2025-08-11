@@ -13,6 +13,7 @@ import base64
 
 from ..config.shopify import ShopifyConfig, OFFLINE_MODE, MOCK_DATA_PATH
 from ..config.database import db
+from ..modules.auth.service import ShopifyAuthService
 
 
 class ShopifyService:
