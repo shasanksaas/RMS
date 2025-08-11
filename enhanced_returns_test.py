@@ -270,7 +270,7 @@ class EnhancedReturnsTestSuite:
             headers = {"X-Tenant-Id": tenant_id}
             
             # Test 1: Confirm all APIs use correct 'returns' collection
-            success, returns_response, status = await self.make_request("GET", "/returns", headers=headers)
+            success, returns_response, status = await self.make_request("GET", "/returns/", headers=headers)
             
             if success and "returns" in returns_response:
                 self.log_test(f"Collection Consistency: 'returns' collection usage for {tenant_id}", True, 
