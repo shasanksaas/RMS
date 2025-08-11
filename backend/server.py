@@ -26,6 +26,7 @@ from src.controllers.admin_drafts_controller import router as admin_drafts_route
 # Elite-Grade Controllers
 from src.controllers.elite_portal_returns_controller import router as elite_portal_router
 from src.controllers.elite_admin_returns_controller import router as elite_admin_router
+from src.controllers.users_controller import router as users_router
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 import uuid
