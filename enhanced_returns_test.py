@@ -104,7 +104,7 @@ class EnhancedReturnsTestSuite:
                              f"No orders found. Status: {status}")
             
             # Get returns for this tenant
-            success, returns_data, status = await self.make_request("GET", "/returns?limit=10", headers=headers)
+            success, returns_data, status = await self.make_request("GET", "/returns/", headers=headers)
             if success and returns_data.get("returns"):
                 self.test_returns[tenant_id] = returns_data["returns"]
                 self.log_test(f"Setup: Get returns for {tenant_id}", True, 
