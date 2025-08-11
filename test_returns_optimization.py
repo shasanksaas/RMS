@@ -19,7 +19,7 @@ async def test_optimized_returns_api():
         print('\n📊 TEST 1: Returns List Performance')
         start_time = time.time()
         
-        async with session.get(f'{base_url}/api/returns', headers=headers) as response:
+        async with session.get(f'{base_url}/api/returns/', headers=headers) as response:
             end_time = time.time()
             response_time = end_time - start_time
             
