@@ -24,7 +24,7 @@ const Resolution = () => {
   }
 
   const totalRefund = selectedItems.reduce((total, item) => {
-    return total + (item.quantity * item.item.price);
+    return total + (item.quantity * item.price);
   }, 0);
 
   const storeCreditBonus = totalRefund * 0.1; // 10% bonus
