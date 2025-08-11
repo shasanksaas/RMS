@@ -62,7 +62,7 @@ const Confirm = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Tenant-Id': tenantId
+          'X-Tenant-Id': currentTenantId
         },
         body: JSON.stringify(returnRequestData)
       });
