@@ -507,16 +507,19 @@ backend:
         comment: "✅ VERIFIED: New Shopify connectivity test endpoints working perfectly! All 3 endpoints operational: (1) Quick Test - basic shop info and products query working, connects to rms34.myshopify.com successfully ✅ (2) Raw Query Test - executes exact GraphQL query from user's curl command, returns proper data structure ✅ (3) Full Connectivity Test - comprehensive test suite with 100% success rate, all 5 GraphQL operations (shop_info, products_query, orders_query, customers_query) working correctly ✅ Real credentials integration confirmed: Store rms34.myshopify.com, Access Token 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, API Version 2025-07. Fixed middleware issue by adding /api/shopify-test/ to skip tenant validation list. Endpoints now production-ready for testing Shopify connectivity."
 
   - task: "Duplicate Returns Issue Investigation"
-    implemented: false
+    implemented: true
     working: false
     file: "src/controllers/returns_controller_enhanced.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "User reported 'lot of duplicates' on AllReturns.jsx page. Need to investigate if duplicates are coming from backend API (/api/returns/) or frontend rendering logic. Will test backend response structure first to identify root cause."
+      - working: false
+        agent: "testing"
+        comment: "🚨 CRITICAL DUPLICATE ISSUE CONFIRMED IN BACKEND: Comprehensive investigation reveals severe data duplication in tenant-rms34. FINDINGS: (1) API Endpoint Working - /api/returns/ endpoint accessible and returning data correctly ✅ (2) MASSIVE DUPLICATES FOUND - Single order (1001) + customer (shashankshekharofficial15@gmail.com) has 12 duplicate return records with different IDs ❌ (3) Data Integrity Issues - 2 groups of identical return objects with same business data but different UUIDs ❌ (4) Timeline Analysis - All duplicates created within 5 hours (07:51-12:49 on 2025-08-11), suggesting rapid duplicate creation during testing/development ❌ (5) MongoDB Verification - 15 total returns for tenant-rms34, with 11 being duplicates of the same order ❌ ROOT CAUSE: Backend data insertion is creating multiple return records for the same order+customer combination. This is NOT a frontend rendering issue - the backend API is serving actual duplicate data. IMPACT: User sees 'lot of duplicates' because there are literally 12 returns for the same order. URGENT FIX REQUIRED: Implement deduplication logic and business rule validation to prevent multiple returns for same order."
 
 frontend:
   - task: "Unified Return Form Component"
