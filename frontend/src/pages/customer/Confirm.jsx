@@ -38,8 +38,8 @@ const Confirm = () => {
 
       // Prepare return request data using the real order ID
       const returnRequestData = {
-        order_id: order.id, // Use the UUID order ID (not MongoDB _id)
-        customer_email: email,
+        order_id: String(order.id), // Ensure string format for order ID
+        customer_email: email || order.customer_email, // Use the email from form or order
         return_method: 'prepaid_label',
         items: Object.values(selectedItems).map(item => ({
           line_item_id: String(item.line_item_id || item.id), // Ensure string format
