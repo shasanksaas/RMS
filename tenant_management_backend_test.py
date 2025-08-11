@@ -834,16 +834,18 @@ class TenantManagementTester:
         try:
             # Try to authenticate existing merchant and test tenant access
             merchant_login_data = {
-                "tenant_id": self.existing_tenant_id,
                 "email": self.existing_merchant_credentials["email"],
                 "password": self.existing_merchant_credentials["password"],
                 "remember_me": False
             }
             
             async with self.session.post(f"{self.base_url}/auth/login", json=merchant_login_data) as response:
+                response_text = await response.text()
+                
                 if response.status == 200:
                     data = await response.json()
                     merchant_token = data.get("access_token")
+                    user_info = data.get("user", {})
                     
                     # Test merchant access to tenant management (should be denied)
                     merchant_headers = {"Authorization": f"Bearer {merchant_token}"}
@@ -853,7 +855,7 @@ class TenantManagementTester:
                             self.test_results["authentication_authorization"].append({
                                 "test": test_name,
                                 "status": "✅ PASS",
-                                "details": "RBAC working - merchant denied tenant management access",
+                                "details": f"RBAC working - merchant (role: {user_info.get('role')}) denied tenant management access",
                                 "response_code": tenant_response.status
                             })
                             logger.info(f"✅ {test_name}: RBAC working correctly")
@@ -871,7 +873,7 @@ class TenantManagementTester:
                     self.test_results["authentication_authorization"].append({
                         "test": test_name,
                         "status": "⚠️ MERCHANT_AUTH_ISSUE",
-                        "details": f"Could not authenticate existing merchant: {response.status}",
+                        "details": f"Could not authenticate existing merchant: {response.status} - {response_text[:200]}",
                         "response_code": response.status
                     })
                     logger.warning(f"⚠️ {test_name}: Merchant auth issue - {response.status}")
