@@ -458,7 +458,7 @@ class ShopifyService:
                 return None
             
             # Real-time GraphQL query to Shopify API
-            graphql_url = f"https://{shop_domain}/admin/api/2025-07/graphql.json"
+            graphql_url = f"https://{shop_domain}/admin/api/2024-10/graphql.json"
             
             # GraphQL query to find order by name (order number)
             query = """
