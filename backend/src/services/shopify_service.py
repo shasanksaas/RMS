@@ -23,6 +23,7 @@ class ShopifyService:
         self.offline_mode = OFFLINE_MODE
         self.mock_data_path = MOCK_DATA_PATH
         self.tenant_id = tenant_id
+        self.auth_service = ShopifyAuthService()  # For decrypting tokens
     
     async def is_connected(self, tenant_id: str = None) -> bool:
         """Check if this tenant has a connected Shopify integration"""
