@@ -773,88 +773,442 @@ All API responses follow this structure:
 - **Request Interceptors**: Automatic tenant header injection
 - **Error Handling**: User-friendly error messages
 
-## 📊 Database Schema
+## 📊 Database Architecture
 
-### Core Collections
+### **MongoDB Schema Design**
+The database follows a document-based approach optimized for multi-tenancy and performance:
 
-#### tenants
+#### **Core Collections Overview**
+| Collection | Purpose | Documents | Indexes | Sharding Key |
+|------------|---------|-----------|---------|--------------|
+| `tenants` | Tenant configuration | ~1K | tenant_id, domain | tenant_id |
+| `orders` | Order data (Shopify sync) | ~100K | tenant_id, order_number | tenant_id |
+| `returns` | Return requests | ~10K | tenant_id, status, created_at | tenant_id |
+| `return_rules` | Business rules engine | ~100 | tenant_id, priority | tenant_id |
+| `integrations_shopify` | OAuth credentials | ~1K | tenant_id | tenant_id |
+| `webhooks` | Webhook event log | ~1M | tenant_id, created_at | tenant_id |
+| `analytics` | Pre-computed metrics | ~10K | tenant_id, date_key | tenant_id |
+
+### **Detailed Schema Definitions**
+
+#### **1. Tenants Collection**
 ```javascript
 {
-  "_id": "tenant-fashion-store",
-  "name": "Fashion Forward", 
-  "domain": "fashionforward.com",
-  "shopify_store_url": "fashion-forward.myshopify.com",
-  "plan": "pro",
+  "_id": ObjectId("..."),
+  "id": "tenant-rms34", // Primary key for tenant identification
+  "name": "RMS Fashion Store",
+  "domain": "rmsfashion.com",
+  "shopify_store_url": "rms34.myshopify.com",
+  "plan": "pro", // free, basic, pro, enterprise
+  "status": "active", // active, suspended, deleted
+  
+  // Business Settings
   "settings": {
     "return_window_days": 30,
     "auto_approve_exchanges": true,
-    "require_photos": true,
-    "brand_color": "#e11d48"
+    "require_photos": ["defective", "damaged_in_shipping"],
+    "max_return_value": 500.00,
+    
+    // Branding
+    "brand_color": "#e11d48",
+    "logo_url": "https://cdn.example.com/logos/tenant-rms34.png",
+    "custom_css": "/* Custom styles */",
+    
+    // Email Configuration
+    "email_settings": {
+      "from_email": "returns@rmsfashion.com",
+      "smtp_configured": true,
+      "templates": {
+        "return_confirmation": "template_id_123",
+        "return_approved": "template_id_124"
+      }
+    },
+    
+    // Payment Settings
+    "payment_settings": {
+      "refund_method": "original_payment", // original_payment, store_credit, manual
+      "processing_fee": 5.00,
+      "free_return_threshold": 100.00
+    }
   },
-  "created_at": "2025-01-01T00:00:00Z",
+  
+  // Tracking & Analytics
+  "metrics": {
+    "total_returns": 157,
+    "total_refunded": 15750.00,
+    "avg_processing_time_hours": 24.5,
+    "customer_satisfaction_score": 4.8
+  },
+  
+  "created_at": ISODate("2025-01-01T00:00:00.000Z"),
+  "updated_at": ISODate("2025-01-15T10:30:00.000Z"),
   "is_active": true
 }
 ```
 
-#### orders (Real Shopify Data)
+#### **2. Orders Collection (Shopify Sync)**
 ```javascript
 {
-  "_id": "order-uuid",
-  "tenant_id": "tenant-fashion-store",
-  "order_id": "shopify-order-123",
-  "order_number": "#1001",
-  "customer_name": "John Smith",
-  "customer_email": "john@email.com",
-  "financial_status": "paid",
-  "fulfillment_status": "fulfilled",
-  "total_price": 159.99,
-  "line_items": [...],
-  "created_at": "2025-01-15T10:00:00Z"
-}
-```
-
-#### return_requests
-```javascript
-{
-  "_id": "return-uuid",
-  "tenant_id": "tenant-fashion-store",
-  "order_id": "order-uuid",
-  "customer_name": "John Smith",
-  "reason": "defective",
-  "status": "approved",
-  "items_to_return": [...],
-  "refund_amount": 79.99,
-  "tracking_number": "TRK123456",
-  "created_at": "2025-01-20T14:30:00Z"
-}
-```
-
-#### return_rules
-```javascript
-{
-  "_id": "rule-uuid",
-  "tenant_id": "tenant-fashion-store",
-  "name": "Auto-approve defective items",
-  "conditions": {
-    "auto_approve_reasons": ["defective", "damaged_in_shipping"],
-    "max_days_since_order": 30
+  "_id": ObjectId("..."),
+  "id": "5813364687033", // Shopify order ID
+  "tenant_id": "tenant-rms34",
+  
+  // Order Identification
+  "order_number": "1001",
+  "name": "#RMS1001", // Shopify order name format
+  "order_id": "5813364687033", // Duplicate for compatibility
+  
+  // Financial Information
+  "total_price": "400.00",
+  "total_discounts": "0.00",
+  "total_tax": "32.00",
+  "subtotal_price": "368.00",
+  "currency": "USD",
+  "financial_status": "paid", // pending, paid, partially_paid, refunded
+  "fulfillment_status": "fulfilled", // unfulfilled, partial, fulfilled
+  
+  // Customer Information
+  "customer": {
+    "id": "customer_shopify_id",
+    "first_name": "Shashank",
+    "last_name": "Shekhar",
+    "email": "shashankshekharofficial15@gmail.com",
+    "phone": "+1234567890",
+    "accepts_marketing": true
   },
-  "actions": {
-    "auto_approve": true,
-    "generate_label": true
+  "customer_name": "Shashank Shekhar", // Computed field
+  "customer_email": "shashankshekharofficial15@gmail.com", // Denormalized
+  "customer_display_name": "Shashank S.", // For UI display
+  
+  // Line Items (Products)
+  "line_items": [
+    {
+      "id": "13851721105593",
+      "variant_id": "variant_123",
+      "product_id": "product_456",
+      "title": "TESTORDER Premium T-Shirt",
+      "variant_title": "Large / Blue",
+      "sku": "TSHIRT-L-BLUE",
+      "vendor": "Premium Brand",
+      "quantity": 1,
+      "price": "400.00",
+      "total_discount": "0.00",
+      "tax_lines": [{"rate": 0.08, "title": "Sales Tax", "price": "32.00"}],
+      
+      // Return Status Tracking
+      "returnable": true,
+      "returned_quantity": 0,
+      "refunded_quantity": 0,
+      
+      // Product Metadata for Returns
+      "properties": {
+        "size": "Large",
+        "color": "Blue",
+        "material": "100% Cotton"
+      },
+      "fulfillment_service": "manual",
+      "fulfillment_status": "fulfilled"
+    }
+  ],
+  
+  // Shipping Information
+  "shipping_address": {
+    "first_name": "Shashank",
+    "last_name": "Shekhar",
+    "company": "",
+    "address1": "123 Main Street",
+    "address2": "Apt 4B",
+    "city": "New York",
+    "province": "NY",
+    "country": "United States",
+    "zip": "10001",
+    "phone": "+1234567890"
   },
-  "priority": 1,
-  "is_active": true
+  
+  // Billing Information (if different)
+  "billing_address": {
+    // Same structure as shipping_address
+  },
+  
+  // Fulfillment & Shipping
+  "fulfillments": [
+    {
+      "id": "fulfillment_123",
+      "status": "success",
+      "created_at": "2025-01-10T08:30:00Z",
+      "tracking_company": "UPS",
+      "tracking_number": "1Z999AA1234567890",
+      "tracking_url": "https://www.ups.com/track?tracknum=1Z999AA1234567890"
+    }
+  ],
+  
+  // Timestamps
+  "created_at": "2025-01-10T08:00:00Z",
+  "updated_at": "2025-01-10T08:30:00Z",
+  "processed_at": "2025-01-10T08:05:00Z",
+  
+  // Return Eligibility
+  "return_eligible": true,
+  "return_window_end": "2025-02-09T08:00:00Z", // 30 days from order
+  
+  // Sync Metadata
+  "source": "shopify_live", // shopify_live, shopify_webhook, manual
+  "last_sync": "2025-01-15T12:00:00Z",
+  "shopify_admin_url": "https://rms34.myshopify.com/admin/orders/5813364687033"
 }
 ```
 
-### Indexes
+#### **3. Returns Collection (Elite-Grade Schema)**
 ```javascript
-// Performance-optimized indexes
-db.tenants.createIndex({"id": 1})
+{
+  "_id": ObjectId("..."),
+  "id": "539c705d-99db-4b70-a527-ac6faf05ba17", // UUID for returns
+  "tenant_id": "tenant-rms34",
+  
+  // Order Reference
+  "order_id": "5813364687033", // Links to orders collection
+  "order_number": "1001", // Denormalized for quick access
+  
+  // Customer Information
+  "customer_email": "shashankshekharofficial15@gmail.com",
+  "customer_name": "Shashank Shekhar", // Derived from order
+  "customer_phone": "+1234567890",
+  
+  // Return Request Details
+  "return_method": "prepaid_label", // prepaid_label, customer_ships, drop_off
+  "return_reason_category": "quality", // quality, fit, damaged, changed_mind
+  "customer_note": "Item doesn't fit as expected",
+  
+  // Line Items Being Returned
+  "line_items": [
+    {
+      "line_item_id": "13851721105593", // Reference to order line item
+      "sku": "TSHIRT-L-BLUE",
+      "title": "TESTORDER Premium T-Shirt",
+      "variant_title": "Large / Blue",
+      "quantity": 1, // Quantity being returned
+      "unit_price": 400.00,
+      
+      // Return Specific Information
+      "reason": "defective", // defective, damaged_in_shipping, wrong_item, too_small, too_large
+      "condition": "damaged", // new, used, damaged
+      "resolution": "refund", // refund, exchange, store_credit, repair
+      
+      // Evidence & Documentation
+      "photos": [
+        {
+          "url": "https://storage.example.com/returns/photos/photo1.jpg",
+          "description": "Damage on sleeve",
+          "uploaded_at": "2025-01-20T14:30:00Z"
+        }
+      ],
+      "notes": "There's a small tear on the left sleeve",
+      
+      // AI Analysis (if enabled)
+      "ai_analysis": {
+        "damage_assessment": "minor_defect",
+        "authenticity_check": "verified",
+        "condition_grade": "B",
+        "confidence_score": 0.85
+      }
+    }
+  ],
+  
+  // Financial Calculations
+  "estimated_refund": {
+    "amount": 354.01, // After fees and taxes
+    "currency": "USD",
+    "breakdown": {
+      "item_total": 400.00,
+      "tax_refund": 32.00,
+      "shipping_refund": 0.00,
+      "restocking_fee": -20.00, // If applicable
+      "processing_fee": -5.00,
+      "final_amount": 354.01
+    }
+  },
+  
+  // Status & Workflow
+  "status": "requested", // requested, approved, denied, processing, completed, cancelled
+  "decision": "", // approved, denied, partial_approval
+  "decision_reason": "",
+  "decision_made_by": "", // admin_user_id or "auto_approved"
+  "decision_made_at": null,
+  
+  // State Machine History
+  "state_history": [
+    {
+      "from_state": null,
+      "to_state": "requested",
+      "changed_by": "customer",
+      "changed_at": "2025-01-20T14:30:00Z",
+      "notes": "Return request submitted"
+    }
+  ],
+  
+  // Processing Information
+  "shipping": {
+    "return_label_url": null,
+    "tracking_number": null,
+    "carrier": null,
+    "estimated_delivery": null,
+    "return_address": {
+      "company": "RMS Fashion Returns",
+      "address1": "456 Warehouse Dr",
+      "city": "Fulfillment City",
+      "state": "CA",
+      "zip": "90210",
+      "country": "US"
+    }
+  },
+  
+  // Resolution & Refund
+  "resolution": {
+    "type": null, // refund, exchange, store_credit, repair
+    "status": "pending", // pending, processing, completed, failed
+    "refund_transaction_id": null,
+    "exchange_order_id": null,
+    "store_credit_id": null,
+    "completed_at": null,
+    "notes": ""
+  },
+  
+  // Rules Engine Processing
+  "rule_evaluations": [
+    {
+      "rule_id": "rule_auto_approve_defective",
+      "rule_name": "Auto-approve defective items",
+      "matched": true,
+      "action_taken": "auto_approve",
+      "confidence_score": 0.95,
+      "evaluated_at": "2025-01-20T14:31:00Z"
+    }
+  ],
+  
+  // Audit & Compliance
+  "audit_log": [
+    {
+      "action": "return_created",
+      "performed_by": "customer", // customer, admin_user_id, system
+      "timestamp": "2025-01-20T14:30:00Z",
+      "details": {
+        "user_agent": "Mozilla/5.0...",
+        "ip_address": "192.168.1.1",
+        "changes": {
+          "status": "requested"
+        }
+      }
+    }
+  ],
+  
+  // Timestamps
+  "created_at": "2025-01-20T14:30:00Z",
+  "updated_at": "2025-01-20T14:30:00Z",
+  "expires_at": "2025-02-19T14:30:00Z", // 30 days to complete return
+  
+  // Performance Metrics
+  "metrics": {
+    "processing_time_hours": null,
+    "customer_satisfaction_score": null, // 1-5 rating
+    "cost_to_process": 15.50 // Including labor, shipping, etc.
+  }
+}
+```
+
+### **Database Indexes for Performance**
+
+#### **Critical Performance Indexes**
+```javascript
+// Tenants Collection
+db.tenants.createIndex({"id": 1}, {"unique": true})
+db.tenants.createIndex({"domain": 1})
+db.tenants.createIndex({"shopify_store_url": 1})
+
+// Orders Collection - Multi-tenant optimized
+db.orders.createIndex({"tenant_id": 1, "id": 1}, {"unique": true})
 db.orders.createIndex({"tenant_id": 1, "order_number": 1})
-db.return_requests.createIndex({"tenant_id": 1, "status": 1})
-db.return_rules.createIndex({"tenant_id": 1, "priority": 1})
+db.orders.createIndex({"tenant_id": 1, "customer_email": 1})
+db.orders.createIndex({"tenant_id": 1, "created_at": -1})
+db.orders.createIndex({"tenant_id": 1, "financial_status": 1})
+db.orders.createIndex({"tenant_id": 1, "return_eligible": 1})
+
+// Returns Collection - Query optimized
+db.returns.createIndex({"tenant_id": 1, "id": 1}, {"unique": true})
+db.returns.createIndex({"tenant_id": 1, "status": 1, "created_at": -1})
+db.returns.createIndex({"tenant_id": 1, "order_id": 1})
+db.returns.createIndex({"tenant_id": 1, "customer_email": 1})
+db.returns.createIndex({"tenant_id": 1, "decision": 1})
+db.returns.createIndex({"created_at": -1}) // For analytics
+db.returns.createIndex({"expires_at": 1}) // For cleanup jobs
+
+// Text Search Indexes
+db.returns.createIndex(
+  {
+    "customer_name": "text",
+    "customer_email": "text",
+    "order_number": "text",
+    "customer_note": "text"
+  },
+  {
+    "name": "returns_text_search",
+    "weights": {
+      "customer_email": 10,
+      "order_number": 8,
+      "customer_name": 5,
+      "customer_note": 1
+    }
+  }
+)
+
+// Rules Engine
+db.return_rules.createIndex({"tenant_id": 1, "priority": 1, "is_active": 1})
+db.return_rules.createIndex({"tenant_id": 1, "conditions.auto_approve_reasons": 1})
+
+// Shopify Integrations
+db.integrations_shopify.createIndex({"tenant_id": 1}, {"unique": true})
+db.integrations_shopify.createIndex({"shop_domain": 1})
+
+// Webhooks & Events
+db.webhooks.createIndex({"tenant_id": 1, "created_at": -1})
+db.webhooks.createIndex({"tenant_id": 1, "topic": 1, "processed": 1})
+db.webhooks.createIndex({"created_at": 1}, {"expireAfterSeconds": 2592000}) // 30 days TTL
+
+// Analytics & Metrics
+db.analytics.createIndex({"tenant_id": 1, "date_key": 1, "metric_type": 1})
+db.analytics.createIndex({"tenant_id": 1, "created_at": -1})
+```
+
+### **Data Consistency & Integrity**
+
+#### **Multi-Tenant Data Isolation Rules**
+1. **All collections MUST include `tenant_id` field**
+2. **All queries MUST filter by `tenant_id`**  
+3. **Cross-tenant references are FORBIDDEN**
+4. **Backup and restore operations are tenant-aware**
+
+#### **Data Validation Schema**
+```javascript
+// MongoDB Schema Validation Example
+db.createCollection("returns", {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["id", "tenant_id", "order_id", "status", "created_at"],
+      properties: {
+        id: {bsonType: "string", pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"},
+        tenant_id: {bsonType: "string", pattern: "^tenant-[a-zA-Z0-9-]+$"},
+        status: {enum: ["requested", "approved", "denied", "processing", "completed", "cancelled"]},
+        estimated_refund: {
+          bsonType: "object",
+          properties: {
+            amount: {bsonType: "number", minimum: 0},
+            currency: {bsonType: "string", enum: ["USD", "EUR", "GBP", "CAD"]}
+          }
+        }
+      }
+    }
+  }
+})
 ```
 
 ## 🧪 Testing
