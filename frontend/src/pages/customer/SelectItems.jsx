@@ -172,7 +172,7 @@ const SelectItems = () => {
 
   const selectedCount = Object.values(selectedItems).filter(item => item.quantity > 0).length;
   const totalRefund = Object.values(selectedItems).reduce((total, item) => {
-    return total + (item.quantity * item.item.price);
+    return total + (item.quantity * item.price);
   }, 0);
 
   return (
