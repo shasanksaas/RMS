@@ -71,7 +71,7 @@ class CreateReturnRequestHandler:
                 title=item_data["title"],
                 variant_title=item_data.get("variant_title"),
                 quantity=item_data["quantity"],
-                unit_price=Money(item_data["unit_price"], "USD"),
+                unit_price=Money(str(item_data["unit_price"]), "USD"),  # Convert to string for Decimal
                 reason=ReturnReason(item_data["reason"], item_data.get("reason_description", "")),
                 condition=item_data["condition"],
                 photos=item_data.get("photos", []),
