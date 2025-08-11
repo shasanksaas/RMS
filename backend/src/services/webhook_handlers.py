@@ -594,7 +594,7 @@ class WebhookProcessor:
             current_status = current_return.get("status", "").lower()
             
             # Check if status is already the same (prevent loops)
-            if current_status == app_status.lower():
+            if current_status.upper() == app_status.upper():
                 print(f"✅ Return {current_return['id']} already has status {app_status}, skipping update")
                 return {"action": "no_change", "return_id": current_return["id"]}
             
