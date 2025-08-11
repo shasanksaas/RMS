@@ -11,7 +11,7 @@ from ..models.tenant import (
     Tenant, TenantCreate, TenantUpdate, TenantStatus, 
     TenantListResponse, TenantMerchantSignup, TenantConnection
 )
-from ..models.user import User
+from ..models.user import UserDB as User
 from ..middleware.security import get_current_user, require_admin_user
 from ..services.tenant_service_enhanced import enhanced_tenant_service
 
