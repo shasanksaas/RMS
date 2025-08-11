@@ -109,7 +109,7 @@ const ReturnDetail = () => {
       if (response.ok) {
         const data = await response.json();
         
-        // Download the label
+        // Download the label if URL provided
         if (data.label_url) {
           const link = document.createElement('a');
           link.href = data.label_url;
@@ -120,17 +120,13 @@ const ReturnDetail = () => {
         }
         
         await loadReturnDetails();
-        await loadTimeline();
         setError('');
       } else {
-        // Fallback - show success message even if API fails
-        alert('Return label generated successfully!');
-        setReturnRequest(prev => ({ ...prev, status: 'label_issued' }));
+        setError(`Failed to generate label: ${response.statusText}`);
       }
     } catch (err) {
       console.error('Error issuing label:', err);
-      alert('Return label generated successfully!');
-      setReturnRequest(prev => ({ ...prev, status: 'label_issued' }));
+      setError('Unable to generate return label. Please try again.');
     } finally {
       setActionLoading(false);
     }
@@ -152,18 +148,73 @@ const ReturnDetail = () => {
       });
 
       if (response.ok) {
-        await loadTimeline();
+        await loadReturnDetails();
         setActionNotes('');
         setError('');
-        alert('Email sent successfully!');
       } else {
-        alert('Email sent successfully!');
+        setError(`Failed to send email: ${response.statusText}`);
       }
     } catch (err) {
       console.error('Error sending email:', err);
-      alert('Email sent successfully!');
+      setError('Unable to send email notification. Please try again.');
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const handleProcessRefund = async () => {
+    setActionLoading(true);
+    try {
+      const response = await fetch(buildApiUrl(`/api/returns/${id}/refund`), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Tenant-Id': tenantId
+        },
+        body: JSON.stringify({
+          refund_method: returnRequest.refund_mode || 'original_payment'
+        })
+      });
+
+      if (response.ok) {
+        await loadReturnDetails();
+        setError('');
+      } else {
+        setError(`Failed to process refund: ${response.statusText}`);
+      }
+    } catch (err) {
+      console.error('Error processing refund:', err);
+      setError('Unable to process refund. Please try again.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const addComment = async () => {
+    if (!newComment.trim()) return;
+    
+    try {
+      const response = await fetch(buildApiUrl(`/api/returns/${id}/comments`), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Tenant-Id': tenantId
+        },
+        body: JSON.stringify({
+          comment: newComment.trim(),
+          internal: true // Comments are not shown to customers
+        })
+      });
+
+      if (response.ok) {
+        await loadReturnDetails();
+        setNewComment('');
+      } else {
+        setError(`Failed to add comment: ${response.statusText}`);
+      }
+    } catch (err) {
+      console.error('Error adding comment:', err);
+      setError('Unable to add comment. Please try again.');
     }
   };
 
