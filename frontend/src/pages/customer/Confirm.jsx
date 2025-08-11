@@ -183,7 +183,7 @@ const Confirm = () => {
                     </div>
                   </div>
                   <div className="font-semibold">
-                    ${(selectedItem.quantity * selectedItem.item.price).toFixed(2)}
+                    ${(selectedItem.quantity * (selectedItem.price || 0)).toFixed(2)}
                   </div>
                 </div>
               ))}
