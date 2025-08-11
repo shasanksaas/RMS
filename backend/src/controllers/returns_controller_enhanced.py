@@ -646,14 +646,15 @@ async def update_return_status(
             }
         
         # Update the return in database with audit trail
-        db_update = {
-            "$set": update_data,
-            "$push": {"audit_log": audit_entry}
-        }
+        db_update = {"$set": update_data}
         
         # Add Shopify sync failure audit if needed
         if shopify_sync_error:
-            db_update["$push"]["audit_log"] = {"$each": [audit_entry, shopify_audit_entry]}
+            # Add both main audit entry and shopify failure entry
+            db_update["$push"] = {"audit_log": {"$each": [audit_entry, shopify_audit_entry]}}
+        else:
+            # Add just the main audit entry
+            db_update["$push"] = {"audit_log": audit_entry}
         
         result = await db.returns.update_one(
             {"id": return_id, "tenant_id": tenant_id},
