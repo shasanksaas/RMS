@@ -53,21 +53,16 @@ class CreateReturnRequestHandler:
             order = await self.order_repository.get_by_id(command.order_id, command.tenant_id)
             
             if not order:
-                # Order not in local database, try to fetch from Shopify
+                # Order not in local database, try to fetch from Shopify directly
                 try:
-                    print(f"DEBUG: Checking Shopify connection for tenant: {command.tenant_id.value}")
-                    if await self.shopify_service.is_connected(command.tenant_id.value):
-                        print(f"DEBUG: Shopify connected, fetching order: {command.order_id.value}")
-                        shopify_order = await self.shopify_service.get_order_for_return(command.order_id.value, command.tenant_id.value)
-                        if shopify_order:
-                            order = shopify_order
-                            print(f"DEBUG: Found order in Shopify: {order.get('id', 'unknown')}")
-                        else:
-                            print(f"DEBUG: Order not found in Shopify")
-                            raise ValueError("Order not found in Shopify")
+                    print(f"DEBUG: Order not in local DB, trying Shopify for tenant: {command.tenant_id.value}")
+                    shopify_order = await self.shopify_service.get_order_for_return(command.order_id.value, command.tenant_id.value)
+                    if shopify_order:
+                        order = shopify_order
+                        print(f"DEBUG: Found order in Shopify: {order.get('id', 'unknown')}")
                     else:
-                        print(f"DEBUG: Shopify not connected")
-                        raise ValueError("Shopify not connected and order not in database")
+                        print(f"DEBUG: Order not found in Shopify")
+                        raise ValueError("Order not found in Shopify")
                 except Exception as e:
                     print(f"DEBUG: Shopify lookup error: {e}")
                     raise ValueError(f"Order not found: {str(e)}")
