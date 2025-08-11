@@ -73,9 +73,52 @@ async def get_returns(
         skip = (page - 1) * page_size
         total_pages = (total + page_size - 1) // page_size
         
-        # Get returns
+        # Get returns with deduplication logic
         cursor = db.returns.find(query).sort(sort_field, sort_direction).skip(skip).limit(page_size)
-        returns = await cursor.to_list(page_size)
+        all_returns = await cursor.to_list(page_size)
+        
+        # DEDUPLICATION: Remove duplicate returns based on business logic
+        # Keep the most recent return for each unique order_id + customer_email combination
+        seen_combinations = set()
+        deduplicated_returns = []
+        unique_returns_map = {}
+        
+        # First pass: identify the most recent return for each combination
+        for ret in all_returns:
+            order_id = ret.get("order_id", "")
+            customer_email = ret.get("customer_email", "")
+            combination_key = f"{order_id}:{customer_email}"
+            
+            if combination_key not in unique_returns_map:
+                unique_returns_map[combination_key] = ret
+            else:
+                # Keep the more recent one (by created_at or updated_at)
+                existing = unique_returns_map[combination_key]
+                current_date = ret.get("updated_at") or ret.get("created_at")
+                existing_date = existing.get("updated_at") or existing.get("created_at")
+                
+                if current_date and existing_date:
+                    if isinstance(current_date, str):
+                        try:
+                            current_date = datetime.fromisoformat(current_date.replace('Z', '+00:00'))
+                        except:
+                            pass
+                    if isinstance(existing_date, str):
+                        try:
+                            existing_date = datetime.fromisoformat(existing_date.replace('Z', '+00:00'))
+                        except:
+                            pass
+                    
+                    if current_date > existing_date:
+                        unique_returns_map[combination_key] = ret
+        
+        # Use deduplicated returns
+        returns = list(unique_returns_map.values())
+        
+        # Log deduplication activity
+        duplicates_removed = len(all_returns) - len(returns)
+        if duplicates_removed > 0:
+            print(f"DEDUPLICATION: Removed {duplicates_removed} duplicate returns for tenant {tenant_id}")
         
         # OPTIMIZATION: Batch fetch all unique order IDs to avoid N+1 queries
         unique_order_ids = list(set(r.get("order_id") for r in returns if r.get("order_id")))
