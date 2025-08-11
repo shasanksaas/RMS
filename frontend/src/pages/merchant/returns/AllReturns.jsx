@@ -66,7 +66,7 @@ const AllReturns = () => {
     return `${apiUrl}${endpoint}`;
   };
 
-  // Load returns from backend - OPTIMIZED with no duplicates
+  // Load returns from backend - Backend handles deduplication now
   const loadReturns = async () => {
     try {
       setLoading(true);
@@ -83,19 +83,12 @@ const AllReturns = () => {
         const data = await response.json();
         const returnsData = data.returns || [];
         
-        // Remove any potential duplicates by ID and ensure all data is clean
-        const uniqueReturns = returnsData.reduce((acc, returnItem) => {
-          // Skip if we already have this return ID
-          if (!acc.find(existing => existing.id === returnItem.id)) {
-            // Ensure all required fields exist (no static fallbacks)
-            if (returnItem.id && returnItem.customer_email && returnItem.order_number) {
-              acc.push(returnItem);
-            }
-          }
-          return acc;
-        }, []);
+        // Backend now handles deduplication, so just validate essential fields
+        const validReturns = returnsData.filter(returnItem => 
+          returnItem.id && returnItem.customer_email
+        );
         
-        setAllReturns(uniqueReturns);
+        setAllReturns(validReturns);
         setPagination(data.pagination || {});
         setError('');
       } else if (response.status === 404) {
