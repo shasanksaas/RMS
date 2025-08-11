@@ -704,7 +704,7 @@ api_router.include_router(orders_enhanced_router)
 api_router.include_router(returns_enhanced_router)
 api_router.include_router(portal_returns_router)
 api_router.include_router(admin_returns_router)
-api_router.include_router(order_lookup_router)
+# api_router.include_router(order_lookup_router)  # Disabled - conflicts with returns_enhanced_router prefix
 api_router.include_router(admin_drafts_router)
 # Elite-Grade Controllers
 api_router.include_router(elite_portal_router)
