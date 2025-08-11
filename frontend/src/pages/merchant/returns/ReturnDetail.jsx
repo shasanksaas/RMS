@@ -430,13 +430,19 @@ const ReturnDetail = () => {
                     <div className="flex-1">
                       <h4 className="font-medium text-gray-900">{item.title || item.product_name}</h4>
                       <p className="text-sm text-gray-500">
-                        {formatCurrency(item.unit_price || item.price, getRefundBreakdown().currency)} x {item.quantity}
+                        {formatCurrency(
+                          (typeof item.unit_price === 'object' ? parseFloat(item.unit_price?.amount || 0) : (item.unit_price || item.price)), 
+                          getRefundBreakdown().currency
+                        )} x {item.quantity}
                       </p>
                       <p className="text-sm text-gray-600">Price incl. of discount & taxes</p>
                     </div>
                     <div className="text-right">
                       <p className="font-bold text-lg">
-                        {formatCurrency((item.unit_price || item.price) * item.quantity, getRefundBreakdown().currency)}
+                        {formatCurrency(
+                          (typeof item.unit_price === 'object' ? parseFloat(item.unit_price?.amount || 0) : (item.unit_price || item.price)) * item.quantity,
+                          getRefundBreakdown().currency
+                        )}
                       </p>
                     </div>
                   </div>
