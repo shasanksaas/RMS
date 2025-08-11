@@ -168,7 +168,7 @@ const App = () => {
                   <AdminLayout />
                 </ProtectedRoute>
               }>
-                <Route path="tenants" element={<AdminTenants />} />
+                <Route path="tenants" element={<TenantManager />} />
                 <Route path="ops" element={<AdminOperations />} />
                 <Route path="audit" element={<AdminAudit />} />
                 <Route path="flags" element={<AdminFeatureFlags />} />
