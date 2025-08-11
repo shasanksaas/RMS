@@ -204,7 +204,7 @@ async def get_return_detail(
     tenant_id: str = Depends(get_tenant_id)
 ):
     """
-    Get detailed return information by ID
+    Get detailed return information by ID - OPTIMIZED
     """
     try:
         # Find return
@@ -216,11 +216,21 @@ async def get_return_detail(
         if not return_req:
             raise HTTPException(status_code=404, detail="Return not found")
         
-        # Get related order
+        # Get related order - first try local database
         order = await db.orders.find_one({
             "id": return_req.get("order_id", ""),
             "tenant_id": tenant_id
         })
+        
+        # OPTIMIZATION: If order not found locally, fetch from Shopify once
+        if not order and return_req.get("order_id"):
+            try:
+                from src.services.shopify_service import ShopifyService
+                shopify_service = ShopifyService(tenant_id)
+                order = await shopify_service.get_order_for_return(return_req.get("order_id"))
+            except Exception as e:
+                print(f"Failed to fetch order from Shopify for return detail: {e}")
+                order = None
         
         # Format items from line_items
         formatted_items = []
