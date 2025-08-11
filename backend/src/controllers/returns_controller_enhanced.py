@@ -211,12 +211,28 @@ async def get_returns(
             if order:
                 order_number = order.get("order_number", order.get("name", ""))
             
-            # Extract estimated refund amount
+            # Calculate estimated refund from line items (for accuracy)
             estimated_refund_data = return_req.get("estimated_refund", {})
             if isinstance(estimated_refund_data, dict):
                 estimated_refund = float(estimated_refund_data.get("amount", 0))
             else:
                 estimated_refund = float(estimated_refund_data) if estimated_refund_data else 0
+            
+            # If no estimated refund, calculate from line items
+            if estimated_refund == 0 and line_items:
+                calculated_refund = 0
+                for item in line_items:
+                    if isinstance(item, dict):
+                        quantity = int(item.get("quantity", 1))
+                        unit_price_data = item.get("unit_price", {})
+                        if isinstance(unit_price_data, dict):
+                            unit_price = float(unit_price_data.get("amount", 0))
+                        else:
+                            unit_price = float(unit_price_data) if unit_price_data else 0
+                        calculated_refund += quantity * unit_price
+                
+                if calculated_refund > 0:
+                    estimated_refund = calculated_refund
             
             # Format created_at
             created_at = return_req.get("created_at")
