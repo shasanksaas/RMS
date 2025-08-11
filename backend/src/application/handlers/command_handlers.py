@@ -45,86 +45,99 @@ class CreateReturnRequestHandler:
     
     async def handle(self, command: CreateReturnRequest) -> Dict[str, Any]:
         """Create a new return request"""
-        # Get order data - first try local database, then Shopify API
-        order = await self.order_repository.get_by_id(command.order_id, command.tenant_id)
-        
-        if not order:
-            # Order not in local database, try to fetch from Shopify
-            try:
-                if await self.shopify_service.is_connected(command.tenant_id.value):
-                    shopify_order = await self.shopify_service.get_order_for_return(command.order_id.value, command.tenant_id.value)
-                    if shopify_order:
-                        order = shopify_order
+        try:
+            print(f"DEBUG: Command order_id type: {type(command.order_id)}, value: {command.order_id}")
+            print(f"DEBUG: Command tenant_id type: {type(command.tenant_id)}, value: {command.tenant_id}")
+            
+            # Get order data - first try local database, then Shopify API
+            order = await self.order_repository.get_by_id(command.order_id, command.tenant_id)
+            
+            if not order:
+                # Order not in local database, try to fetch from Shopify
+                try:
+                    print(f"DEBUG: Checking Shopify connection for tenant: {command.tenant_id.value}")
+                    if await self.shopify_service.is_connected(command.tenant_id.value):
+                        print(f"DEBUG: Shopify connected, fetching order: {command.order_id.value}")
+                        shopify_order = await self.shopify_service.get_order_for_return(command.order_id.value, command.tenant_id.value)
+                        if shopify_order:
+                            order = shopify_order
+                            print(f"DEBUG: Found order in Shopify: {order.get('id', 'unknown')}")
+                        else:
+                            print(f"DEBUG: Order not found in Shopify")
+                            raise ValueError("Order not found in Shopify")
                     else:
-                        raise ValueError("Order not found in Shopify")
-                else:
-                    raise ValueError("Shopify not connected and order not in database")
-            except Exception as e:
-                raise ValueError(f"Order not found: {str(e)}")
-        
-        if not order:
-            raise ValueError("Order not found")
-        
-        # Get current policy
-        policy = await self.policy_service.get_current_policy(command.tenant_id)
-        
-        # Create return entity
-        return_obj = Return.create_new(
-            tenant_id=command.tenant_id,
-            order_id=command.order_id,
-            customer_email=command.customer_email,
-            channel=command.channel,
-            return_method=command.return_method,
-            policy_snapshot=policy
-        )
-        
-        # Add line items
-        for item_data in command.line_items:
-            line_item = ReturnLineItem(
-                line_item_id=item_data["line_item_id"],
-                sku=item_data["sku"],
-                title=item_data["title"],
-                variant_title=item_data.get("variant_title"),
-                quantity=item_data["quantity"],
-                unit_price=Money(str(item_data["unit_price"]), "USD"),  # Convert to string for Decimal
-                reason=ReturnReason(item_data["reason"], item_data.get("reason_description", "")),
-                condition=item_data["condition"],
-                photos=item_data.get("photos", []),
-                notes=item_data.get("notes", "")
+                        print(f"DEBUG: Shopify not connected")
+                        raise ValueError("Shopify not connected and order not in database")
+                except Exception as e:
+                    print(f"DEBUG: Shopify lookup error: {e}")
+                    raise ValueError(f"Order not found: {str(e)}")
+            
+            if not order:
+                raise ValueError("Order not found")
+            
+            # Get current policy
+            policy = await self.policy_service.get_current_policy(command.tenant_id)
+            
+            # Create return entity
+            return_obj = Return.create_new(
+                tenant_id=command.tenant_id,
+                order_id=command.order_id,
+                customer_email=command.customer_email,
+                channel=command.channel,
+                return_method=command.return_method,
+                policy_snapshot=policy
             )
-            return_obj.add_line_item(line_item)
-        
-        # Calculate estimated refund
-        return_obj.estimated_refund = return_obj.calculate_refund()
-        
-        # Submit the return
-        return_obj.change_status(
-            return_obj.status.REQUESTED, 
-            command.submitted_by or "customer",
-            "Return request submitted"
-        )
-        
-        # Save return
-        await self.return_repository.save(return_obj)
-        
-        # Publish domain events
-        for event in return_obj.get_domain_events():
-            await self.event_publisher.publish(event)
-        return_obj.clear_domain_events()
-        
-        # Send notification
-        await self.notification_service.send_return_requested_notification(
-            return_obj, command.tenant_id
-        )
-        
-        return {
-            "return_id": return_obj.id.value,
-            "status": return_obj.status.value,
-            "estimated_refund": {
-                "amount": float(return_obj.estimated_refund.amount),
-                "currency": return_obj.estimated_refund.currency
+            
+            # Add line items
+            for item_data in command.line_items:
+                line_item = ReturnLineItem(
+                    line_item_id=item_data["line_item_id"],
+                    sku=item_data["sku"],
+                    title=item_data["title"],
+                    variant_title=item_data.get("variant_title"),
+                    quantity=item_data["quantity"],
+                    unit_price=Money(str(item_data["unit_price"]), "USD"),  # Convert to string for Decimal
+                    reason=ReturnReason(item_data["reason"], item_data.get("reason_description", "")),
+                    condition=item_data["condition"],
+                    photos=item_data.get("photos", []),
+                    notes=item_data.get("notes", "")
+                )
+                return_obj.add_line_item(line_item)
+            
+            # Calculate estimated refund
+            return_obj.estimated_refund = return_obj.calculate_refund()
+            
+            # Submit the return
+            return_obj.change_status(
+                return_obj.status.REQUESTED, 
+                command.submitted_by or "customer",
+                "Return request submitted"
+            )
+            
+            # Save return
+            await self.return_repository.save(return_obj)
+            
+            # Publish domain events
+            for event in return_obj.get_domain_events():
+                await self.event_publisher.publish(event)
+            return_obj.clear_domain_events()
+            
+            # Send notification
+            await self.notification_service.send_return_requested_notification(
+                return_obj, command.tenant_id
+            )
+            
+            return {
+                "return_id": return_obj.id.value,
+                "status": return_obj.status.value,
+                "estimated_refund": {
+                    "amount": float(return_obj.estimated_refund.amount),
+                    "currency": return_obj.estimated_refund.currency
+                }
             }
-        }
+        except Exception as e:
+            print(f"DEBUG: Exception in CreateReturnRequestHandler: {e}")
+            raise
 
 
 class CreateReturnDraftHandler:
