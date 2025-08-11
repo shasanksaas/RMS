@@ -14,11 +14,11 @@ const Confirm = () => {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!orderNumber || !email || !selectedItems || !resolution) {
+    if (!orderNumber || !email || !selectedItems || !resolution || !order) {
       navigate('/returns/start');
       return;
     }
-  }, [orderNumber, email, selectedItems, resolution, navigate]);
+  }, [orderNumber, email, selectedItems, resolution, order, navigate]);
 
   const handleSubmit = async () => {
     setSubmitting(true);
