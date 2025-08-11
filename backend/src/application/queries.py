@@ -63,7 +63,7 @@ class GetPendingDrafts(Query):
 class LookupOrderForReturn(Query):
     """Query to lookup order for return creation"""
     order_number: str
-    customer_email: str
+    customer_email: Optional[str] = None  # Optional for lookup
     tenant_id: TenantId
 
 
