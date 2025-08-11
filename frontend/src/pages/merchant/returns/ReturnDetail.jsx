@@ -206,7 +206,7 @@ const ReturnDetail = () => {
     try {
       const apiUrl = getApiUrl();
       
-      const response = await fetch(`${apiUrl}/api/returns/${id}/status`, {
+      const response = await fetch(buildApiUrl(`/api/returns/${id}/status`), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
