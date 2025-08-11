@@ -654,7 +654,20 @@ const ReturnDetail = () => {
                 <div>
                   <h5 className="font-medium text-gray-900 mb-2">Reason</h5>
                   <p className="text-sm text-gray-600">
-                    {returnRequest.line_items?.[0]?.reason || returnRequest.reason || returnRequest.return_reason_category || 'Received damaged item'}
+                    {(() => {
+                      // Handle different reason formats
+                      const reasonData = returnRequest.line_items?.[0]?.reason || returnRequest.reason || returnRequest.return_reason_category;
+                      
+                      if (typeof reasonData === 'object' && reasonData !== null) {
+                        // Handle object format: {code: "defective", description: ""}
+                        return reasonData.description || reasonData.code || 'Received damaged item';
+                      } else if (typeof reasonData === 'string') {
+                        // Handle string format
+                        return reasonData || 'Received damaged item';
+                      } else {
+                        return 'Received damaged item';
+                      }
+                    })()}
                   </p>
                 </div>
 
