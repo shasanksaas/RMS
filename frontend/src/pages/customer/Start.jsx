@@ -69,23 +69,6 @@ const CustomerStart = () => {
     } finally {
       setLoading(false);
     }
-  }; 
-          } 
-        });
-      } else if (response.status === 404) {
-        setError('We couldn\'t find that order. Please check the order number and email address.');
-      } else if (response.status === 403) {
-        setError('The email address doesn\'t match our records for this order.');
-      } else {
-        const errorData = await response.json();
-        setError(errorData.detail || 'Unable to lookup order. Please try again.');
-      }
-    } catch (err) {
-      console.error('Order lookup error:', err);
-      setError('Something went wrong. Please try again.');
-    } finally {
-      setLoading(false);
-    }
   };
 
   const handleInputChange = (field, value) => {
