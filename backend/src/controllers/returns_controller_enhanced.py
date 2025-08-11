@@ -348,38 +348,90 @@ async def get_return_detail(
         updated_at_str = updated_at.isoformat() if isinstance(updated_at, datetime) else (updated_at or "")
         
         return {
+            # Basic Information
             "id": return_req["id"],
             "order_id": return_req.get("order_id", ""),
             "order_number": order_number,
+            
+            # Customer Information
             "customer": {
                 "name": customer_name,
                 "email": customer_email
             },
-            "status": return_req.get("status", "").upper(),
+            "customer_name": customer_name,
+            "customer_email": customer_email,
+            "customer_phone": order.get("customer", {}).get("phone") if order else return_req.get("customer_phone"),
+            
+            # Status Information
+            "status": return_req.get("status", "").lower(),
             "decision": return_req.get("decision", ""),
+            "decision_made_at": return_req.get("decision_made_at"),
+            "decision_made_by": return_req.get("decision_made_by", ""),
+            
+            # Return Details
             "channel": return_req.get("channel", ""),
             "preferred_outcome": return_req.get("preferred_outcome", ""),
-            "return_method": return_req.get("return_method", ""),
+            "return_method": return_req.get("return_method", "customer_ships"),
+            "return_method_original": return_req.get("return_method_original"),
+            "return_reason_category": return_req.get("return_reason_category", ""),
             "customer_note": return_req.get("customer_note", ""),
+            "notes": return_req.get("customer_note", ""),
+            "reason": return_req.get("return_reason_category", ""),
+            
+            # Financial Information
+            "estimated_refund": return_req.get("estimated_refund", {}),
+            "currency": order.get("currency", "INR") if order else "INR",
+            "refund_mode": return_req.get("refund_mode", "store_credit"),
+            "payment_method": order.get("payment_gateway", "manual payment gateway") if order else "manual payment gateway",
+            
+            # Items
+            "items": formatted_items,
+            "line_items": return_req.get("line_items", []),
+            
+            # Shipping Information
+            "shipping_address": order.get("shipping_address", {}) if order else {},
+            "shipping": return_req.get("shipping", {}),
+            "tracking_number": return_req.get("tracking_number"),
+            
+            # Shopify Integration
+            "shopify_sync_issues": not bool(order),
+            "product_deleted": False,  # This would need to be checked against Shopify
+            "source": return_req.get("source", "customer_portal"),
+            
+            # Admin Information
             "admin_override_note": return_req.get("admin_override_note", ""),
             "internal_tags": return_req.get("internal_tags", []),
-            "items": formatted_items,
             "fees": return_req.get("fees", {}),
-            "estimated_refund": estimated_refund,
             "label_url": return_req.get("label_url"),
-            "tracking_number": return_req.get("tracking_number"),
             "policy_version": return_req.get("policy_version", ""),
+            
+            # Audit Trail
+            "audit_log": return_req.get("audit_log", []),
+            "state_history": return_req.get("state_history", []),
+            "explain_trace": return_req.get("explain_trace", []),
+            
+            # Timestamps
             "created_at": created_at_str,
             "updated_at": updated_at_str,
+            "expires_at": return_req.get("expires_at"),
+            
+            # URLs
             "shopify_order_url": shopify_order_url,
             "shopify_return_url": shopify_return_url,
-            "explain_trace": return_req.get("explain_trace", []),
+            
+            # Order Context
             "order_info": {
                 "order_number": order.get("order_number", "") if order else "",
                 "total_price": order.get("total_price", 0) if order else 0,
-                "currency": order.get("currency", "USD") if order else "USD",
-                "created_at": order.get("created_at", "") if order else ""
-            } if order else None
+                "currency": order.get("currency", "INR") if order else "INR",
+                "created_at": order.get("created_at", "") if order else "",
+                "financial_status": order.get("financial_status", "") if order else "",
+                "fulfillment_status": order.get("fulfillment_status", "") if order else ""
+            } if order else None,
+            
+            # Additional metadata for UI
+            "last_sync": order.get("last_sync") if order else None,
+            "metrics": return_req.get("metrics", {})
         }
         
     except HTTPException:
