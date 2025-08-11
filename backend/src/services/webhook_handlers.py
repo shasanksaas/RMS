@@ -650,6 +650,35 @@ class WebhookProcessor:
                 "updated_at": datetime.utcnow()
             }
             
+            # Update reason if provided in webhook
+            if payload.get("return_line_items") or payload.get("reason"):
+                reason_text = ""
+                if payload.get("reason"):
+                    reason_text = payload.get("reason")
+                elif payload.get("return_line_items"):
+                    # Extract reason from line items
+                    line_items = payload.get("return_line_items", [])
+                    if line_items and isinstance(line_items, list) and len(line_items) > 0:
+                        first_item = line_items[0]
+                        if isinstance(first_item, dict):
+                            reason_text = first_item.get("reason", first_item.get("return_reason", ""))
+                
+                if reason_text:
+                    update_data["reason"] = reason_text
+            
+            # Update estimated refund if provided
+            if payload.get("refund_amount") or payload.get("total_refund"):
+                refund_amount = payload.get("refund_amount", payload.get("total_refund", 0))
+                if refund_amount:
+                    try:
+                        update_data["estimated_refund"] = {
+                            "amount": float(refund_amount),
+                            "currency": payload.get("currency", "USD"),
+                            "updated_from_shopify": True
+                        }
+                    except (ValueError, TypeError):
+                        pass
+            
             # Add status-specific fields
             if app_status == "APPROVED":
                 update_data.update({
