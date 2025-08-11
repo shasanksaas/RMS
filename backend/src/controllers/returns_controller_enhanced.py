@@ -231,6 +231,32 @@ async def get_return_detail(
             shopify_order_url = f"https://{shop_domain}/admin/orders/{order.get('shopify_order_id')}"
             # Shopify return URL would be similar if return exists in Shopify
         
+        # Extract estimated refund
+        estimated_refund_data = return_req.get("estimated_refund", {})
+        if isinstance(estimated_refund_data, dict):
+            estimated_refund = float(estimated_refund_data.get("amount", 0))
+        else:
+            estimated_refund = float(estimated_refund_data) if estimated_refund_data else 0
+        
+        # Get customer name from order or derive from email
+        customer_name = ""
+        customer_email = return_req.get("customer_email", "")
+        if order and order.get("customer"):
+            customer_data = order.get("customer", {})
+            if isinstance(customer_data, dict):
+                customer_name = f"{customer_data.get('first_name', '')} {customer_data.get('last_name', '')}".strip()
+                if not customer_name and customer_data.get('name'):
+                    customer_name = customer_data.get('name', '')
+            else:
+                customer_name = str(customer_data) if customer_data else ""
+        
+        # If no customer name from order, extract from email
+        if not customer_name and customer_email:
+            customer_name = customer_email.split('@')[0].replace('.', ' ').title()
+        
+        # Get order number from order
+        order_number = order.get("order_number", "") if order else ""
+        
         # Format dates
         created_at = return_req.get("created_at")
         updated_at = return_req.get("updated_at")
@@ -241,10 +267,10 @@ async def get_return_detail(
         return {
             "id": return_req["id"],
             "order_id": return_req.get("order_id", ""),
-            "order_number": return_req.get("order_number", ""),
+            "order_number": order_number,
             "customer": {
-                "name": return_req.get("customer_name", ""),
-                "email": return_req.get("customer_email", "")
+                "name": customer_name,
+                "email": customer_email
             },
             "status": return_req.get("status", "").upper(),
             "decision": return_req.get("decision", ""),
@@ -256,7 +282,7 @@ async def get_return_detail(
             "internal_tags": return_req.get("internal_tags", []),
             "items": formatted_items,
             "fees": return_req.get("fees", {}),
-            "estimated_refund": return_req.get("estimated_refund", 0),
+            "estimated_refund": estimated_refund,
             "label_url": return_req.get("label_url"),
             "tracking_number": return_req.get("tracking_number"),
             "policy_version": return_req.get("policy_version", ""),
