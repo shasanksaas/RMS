@@ -69,7 +69,7 @@ async def require_admin_user(current_user: User = Depends(get_current_user)) -> 
         )
     return current_user
 
-router = APIRouter(prefix="/api/tenants", tags=["tenant-management"])
+router = APIRouter(prefix="/tenants", tags=["tenant-management"])
 
 @router.post("/", response_model=Tenant, status_code=status.HTTP_201_CREATED)
 async def create_tenant(
