@@ -71,28 +71,61 @@ This application is a **production-ready, enterprise-grade Returns Management Sa
 - [🔍 Troubleshooting](#-troubleshooting)
 - [🤝 Contributing](#-contributing)
 
-## 🛠 Tech Stack
+## 🛠 Technology Stack
 
-### Backend
-- **FastAPI** (v0.110.1) - High-performance Python web framework
-- **MongoDB** with Motor (async driver) - NoSQL database for scalability
-- **Shopify API** (v12.3.0) - E-commerce platform integration
-- **Cryptography** (Fernet) - Encryption for sensitive data
-- **Pydantic** - Data validation and serialization
-- **Aiohttp** - Async HTTP client for external APIs
+### **Backend Technology Stack**
+| Technology | Version | Purpose | Key Benefits |
+|------------|---------|---------|--------------|
+| **FastAPI** | v0.110.1 | High-performance Python web framework | Automatic API docs, async support, type validation |
+| **Python** | 3.11+ | Backend runtime | Rich ecosystem, excellent async support |
+| **MongoDB** | 6.0+ with Motor | NoSQL database with async driver | Horizontal scaling, flexible schema, rich queries |
+| **Shopify API** | v12.3.0 (2025-07) | E-commerce platform integration | GraphQL + REST, webhooks, OAuth 2.0 |
+| **Cryptography** | Latest | Data encryption (Fernet) | AES-128 encryption for sensitive data |
+| **Pydantic** | v2.x | Data validation and serialization | Type safety, automatic validation |
+| **Aiohttp** | Latest | Async HTTP client | High-performance external API calls |
+| **PyJWT** | Latest | JSON Web Token handling | Secure authentication tokens |
 
-### Frontend
-- **React** (v19.0.0) - Modern UI library
-- **React Router DOM** (v7.5.1) - Client-side routing
-- **Radix UI** - Accessible component primitives
-- **Tailwind CSS** (v3.4.17) - Utility-first CSS framework
-- **Lucide React** - Beautiful icon library
-- **Axios** - HTTP client for API communication
+### **Frontend Technology Stack**
+| Technology | Version | Purpose | Key Benefits |
+|------------|---------|---------|--------------|
+| **React** | v19.0.0 | Modern UI library | Component-based, virtual DOM, rich ecosystem |
+| **React Router DOM** | v7.5.1 | Client-side routing | SPA navigation, code splitting |
+| **TypeScript** | v5.x | Type-safe JavaScript | Better developer experience, catch errors early |
+| **Radix UI** | Latest | Accessible component primitives | WAI-ARIA compliance, customizable |
+| **Tailwind CSS** | v3.4.17 | Utility-first CSS framework | Rapid styling, consistent design system |
+| **Lucide React** | Latest | Beautiful icon library | 1000+ SVG icons, tree-shakable |
+| **Axios** | Latest | HTTP client for API communication | Interceptors, request/response transformation |
+| **React Hook Form** | Latest | Form state management | Performance, validation, developer experience |
 
-### Infrastructure
-- **Supervisor** - Process management
-- **CRACO** - Create React App Configuration Override
-- **ESLint & Prettier** - Code quality and formatting
+### **Infrastructure & DevOps**
+| Technology | Purpose | Key Benefits |
+|------------|---------|--------------|
+| **Supervisor** | Process management | Auto-restart, logging, monitoring |
+| **Nginx** | Reverse proxy, static files | Load balancing, SSL termination |
+| **Docker** | Containerization | Consistent environments, easy deployment |
+| **Kubernetes** | Container orchestration | Auto-scaling, service discovery |
+| **MongoDB Atlas** | Managed database | High availability, automatic backups |
+| **AWS/GCP** | Cloud infrastructure | Scalability, global distribution |
+
+### **Development & Testing**
+| Technology | Purpose | Key Benefits |
+|------------|---------|--------------|
+| **Pytest** | Python testing framework | Fixtures, parametrization, plugins |
+| **Jest** | JavaScript testing framework | Snapshot testing, mocking, coverage |
+| **Playwright** | E2E testing | Cross-browser, reliable selectors |
+| **ESLint** | JavaScript linting | Code quality, consistency |
+| **Prettier** | Code formatting | Consistent formatting, team collaboration |
+| **CRACO** | Create React App configuration | Custom webpack, babel configs |
+
+### **External Integrations**
+| Service | Purpose | Integration Method |
+|---------|---------|-------------------|
+| **Shopify** | E-commerce platform | OAuth 2.0, GraphQL, Webhooks |
+| **SendGrid** | Transactional emails | REST API, SMTP |
+| **Stripe** | Payment processing | REST API, Webhooks |
+| **AWS S3** | File storage | SDK, signed URLs |
+| **OpenAI** | AI-powered features | REST API, streaming |
+| **Twilio** | SMS notifications | REST API |
 
 ## 🏗️ System Architecture
 
