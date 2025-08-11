@@ -3,19 +3,71 @@ Tenant Management Controller - Admin-only Multi-tenancy APIs
 Provides comprehensive tenant management with strict RBAC
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Request, Header
+from fastapi.security import HTTPBearer
 from typing import Optional, Dict, Any
 import logging
+import jwt
 
 from ..models.tenant import (
     Tenant, TenantCreate, TenantUpdate, TenantStatus, 
     TenantListResponse, TenantMerchantSignup, TenantConnection
 )
 from ..models.user import UserDB as User
-from ..middleware.security import get_current_user, require_admin_user
 from ..services.tenant_service_enhanced import enhanced_tenant_service
+from ..services.auth_service import auth_service
 
 logger = logging.getLogger(__name__)
+security = HTTPBearer()
+
+# Authentication dependencies
+async def get_current_user(request: Request, token: str = Depends(security)) -> User:
+    """Get current authenticated user from JWT token"""
+    try:
+        # Get JWT secret from environment
+        import os
+        secret = os.environ.get('SECRET_KEY', 'user-management-secret-key-2023')
+        
+        # Decode token
+        payload = jwt.decode(token.credentials, secret, algorithms=["HS256"])
+        user_id = payload.get("sub")
+        
+        if not user_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid authentication token"
+            )
+        
+        # Get user from database
+        user = await auth_service.get_user_by_id(user_id)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User not found"
+            )
+        
+        return user
+        
+    except jwt.InvalidTokenError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication token"
+        )
+    except Exception as e:
+        logger.error(f"Authentication error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication failed"
+        )
+
+async def require_admin_user(current_user: User = Depends(get_current_user)) -> User:
+    """Require admin role for access"""
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required"
+        )
+    return current_user
 
 router = APIRouter(prefix="/api/tenants", tags=["tenant-management"])
 
