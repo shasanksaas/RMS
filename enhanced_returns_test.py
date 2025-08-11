@@ -495,7 +495,7 @@ class EnhancedReturnsTestSuite:
         
         # Test 4: Test frontend-backend integration maintained
         # Verify response format is still compatible
-        success, response, status = await self.make_request("GET", "/returns", headers=headers)
+        success, response, status = await self.make_request("GET", "/returns/", headers=headers)
         
         if success and isinstance(response.get("returns"), list) and "pagination" in response:
             self.log_test("Cleanup Verification: Frontend-backend integration", True, 
