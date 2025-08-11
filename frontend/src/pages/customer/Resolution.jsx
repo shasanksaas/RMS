@@ -138,7 +138,6 @@ const Resolution = () => {
           <CardDescription>Choose how you'd like to be compensated for your return</CardDescription>
         </CardHeader>
         <CardContent>
-          <RadioGroup value={selectedResolution} onValueChange={setSelectedResolution}>
           <div className="space-y-4">
             {resolutionOptions.map((option) => {
               const Icon = option.icon;
@@ -192,7 +191,6 @@ const Resolution = () => {
               );
             })}
           </div>
-          </RadioGroup>
         </CardContent>
       </Card>
 
