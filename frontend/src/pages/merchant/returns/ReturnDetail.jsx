@@ -29,6 +29,17 @@ const ReturnDetail = () => {
     return url;
   };
 
+  const buildApiUrl = (endpoint) => {
+    const apiUrl = getApiUrl();
+    let fullUrl = `${apiUrl}${endpoint}`;
+    
+    // Force HTTPS to prevent mixed content errors
+    if (fullUrl.startsWith('http://')) {
+      fullUrl = fullUrl.replace('http://', 'https://');
+    }
+    return fullUrl;
+  };
+
   useEffect(() => {
     loadReturnDetails();
     loadTimeline();
