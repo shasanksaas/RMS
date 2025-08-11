@@ -548,7 +548,22 @@ const AllReturns = () => {
                       </div>
                       <div>
                         <span className="text-gray-500">Amount:</span>
-                        <div className="font-medium">${returnRequest.refund_amount}</div>
+                        <div className="font-medium">
+                          {(() => {
+                            const refund = returnRequest.estimated_refund;
+                            if (typeof refund === 'object' && refund !== null) {
+                              const amount = refund.amount || 0;
+                              const currency = refund.currency || 'USD';
+                              const symbol = currency === 'INR' ? '₹' : '$';
+                              return `${symbol}${Number(amount).toFixed(2)}`;
+                            } else if (typeof refund === 'number' && refund > 0) {
+                              return `$${Number(refund).toFixed(2)}`;
+                            } else if (returnRequest.refund_amount) {
+                              return `$${Number(returnRequest.refund_amount).toFixed(2)}`;
+                            }
+                            return '$0.00';
+                          })()}
+                        </div>
                       </div>
                       <div>
                         <span className="text-gray-500">Reason:</span>
