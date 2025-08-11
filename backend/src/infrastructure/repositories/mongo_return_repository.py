@@ -22,14 +22,22 @@ class MongoReturnRepository(ReturnRepository):
     
     async def save(self, return_obj: Return) -> None:
         """Save or update a return"""
-        document = self._to_document(return_obj)
-        
-        # Upsert based on return ID
-        await self.collection.update_one(
-            {"id": return_obj.id.value, "tenant_id": return_obj.tenant_id.value},
-            {"$set": document},
-            upsert=True
-        )
+        try:
+            print(f"DEBUG save: Converting return {return_obj.id.value} to document")
+            document = self._to_document(return_obj)
+            print(f"DEBUG save: Document keys: {list(document.keys())}")
+            
+            # Upsert based on return ID
+            print(f"DEBUG save: Upserting to database")
+            result = await self.collection.update_one(
+                {"id": return_obj.id.value, "tenant_id": return_obj.tenant_id.value},
+                {"$set": document},
+                upsert=True
+            )
+            print(f"DEBUG save: Upsert result - matched: {result.matched_count}, modified: {result.modified_count}, upserted: {result.upserted_id}")
+        except Exception as e:
+            print(f"DEBUG save: Error during save: {e}")
+            raise
     
     async def get_by_id(self, return_id: ReturnId, tenant_id: TenantId) -> Optional[Return]:
         """Get return by ID"""
