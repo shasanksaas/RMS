@@ -21,10 +21,12 @@ const OrderDetail = () => {
   }, [orderId]);
 
   const getApiUrl = () => {
-    if (backendUrl && backendUrl.includes('preview.emergentagent.com')) {
-      return 'http://localhost:8001';
+    // Force HTTPS to prevent mixed content issues
+    let url = backendUrl;
+    if (url && url.startsWith('http://')) {
+      url = url.replace('http://', 'https://');
     }
-    return backendUrl || 'http://localhost:8001';
+    return url;
   };
 
   const loadOrder = async () => {
