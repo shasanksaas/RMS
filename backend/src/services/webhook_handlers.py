@@ -485,18 +485,154 @@ class WebhookProcessor:
         return {"action": "return_closed", "return_id": return_id}
 
     async def handle_return_update(self, shop_domain: str, payload: Dict[str, Any]) -> Dict[str, Any]:
-        """Handle return update - Shopify RMS Guide requirement"""
-        return_data = self._transform_return_payload(payload)
-        tenant_id = f"{shop_domain.replace('.myshopify.com', '')}.myshopify.com"
-        
-        # Update return with new data
-        await db.return_requests.update_one(
-            {"return_id": return_data["return_id"], "tenant_id": tenant_id},
-            {"$set": {**return_data, "tenant_id": tenant_id, "synced_at": datetime.utcnow()}},
-            upsert=True
-        )
-        
-        return {"action": "return_updated", "return_id": return_data["return_id"]}
+        """Handle general return update from Shopify - Main two-way sync handler"""
+        try:
+            return_id = str(payload.get("id"))
+            order_id = str(payload.get("order_id", ""))
+            shopify_status = payload.get("status", "").lower()
+            
+            # Correct tenant_id format (matches our app format)
+            tenant_id = f"tenant-{shop_domain.replace('.myshopify.com', '')}"
+            
+            print(f"🔄 Shopify webhook: Return {return_id} status update to {shopify_status} for {tenant_id}")
+            
+            # Map Shopify statuses to our app statuses
+            status_map = {
+                "requested": "requested",
+                "open": "approved",
+                "closed": "completed", 
+                "declined": "denied",
+                "canceled": "cancelled",
+                "cancelled": "cancelled"
+            }
+            
+            app_status = status_map.get(shopify_status, shopify_status)
+            
+            # Find the return in our database
+            return_query = {}
+            if return_id:
+                return_query["$or"] = [
+                    {"shopify_return_id": return_id},
+                    {"id": return_id}
+                ]
+            if order_id:
+                if "$or" in return_query:
+                    return_query["$or"].append({"order_id": order_id})
+                else:
+                    return_query["order_id"] = order_id
+            
+            return_query["tenant_id"] = tenant_id
+            
+            current_return = await db.returns.find_one(return_query)
+            
+            if not current_return:
+                print(f"⚠️ No matching return found for Shopify return {return_id}, order {order_id}")
+                return {"action": "return_not_found", "return_id": return_id}
+            
+            current_status = current_return.get("status", "").lower()
+            
+            # Check if status is already the same (prevent loops)
+            if current_status == app_status.lower():
+                print(f"✅ Return {current_return['id']} already has status {app_status}, skipping update")
+                return {"action": "no_change", "return_id": current_return["id"]}
+            
+            # Check if this was recently updated from our app (prevent ping-pong)
+            # Skip if updated from our app within last 30 seconds
+            recent_audit = current_return.get("audit_log", [])
+            if recent_audit:
+                last_audit = recent_audit[-1] if isinstance(recent_audit, list) else recent_audit
+                if (isinstance(last_audit, dict) and 
+                    last_audit.get("performed_by") == "admin" and
+                    last_audit.get("timestamp")):
+                    
+                    try:
+                        if isinstance(last_audit["timestamp"], str):
+                            last_update = datetime.fromisoformat(last_audit["timestamp"].replace('Z', '+00:00'))
+                        else:
+                            last_update = last_audit["timestamp"]
+                        
+                        time_diff = (datetime.utcnow() - last_update).total_seconds()
+                        if time_diff < 30:
+                            print(f"⏰ Return {current_return['id']} updated from app {time_diff}s ago, skipping webhook update")
+                            return {"action": "recent_app_update", "return_id": current_return["id"]}
+                    except Exception as e:
+                        print(f"⚠️ Error checking recent updates: {e}")
+            
+            # Create comprehensive audit entry
+            audit_entry = {
+                "id": f"audit_shopify_{int(datetime.utcnow().timestamp() * 1000)}",
+                "action": "status_updated_from_shopify",
+                "performed_by": "shopify_webhook",
+                "timestamp": datetime.utcnow(),
+                "details": {
+                    "old_status": current_status,
+                    "new_status": app_status,
+                    "shopify_status": shopify_status,
+                    "shopify_return_id": return_id,
+                    "shopify_order_id": order_id,
+                    "source": "shopify_webhook",
+                    "webhook_payload": {
+                        "status": shopify_status,
+                        "updated_at": payload.get("updated_at")
+                    }
+                },
+                "description": f"Status updated from {current_status.upper()} to {app_status.upper()} via Shopify webhook",
+                "type": "shopify_sync"
+            }
+            
+            # Prepare update data
+            update_data = {
+                "status": app_status,
+                "shopify_return_id": return_id,
+                "synced_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow()
+            }
+            
+            # Add status-specific fields
+            if app_status == "approved":
+                update_data.update({
+                    "decision": "approved",
+                    "decision_made_at": datetime.utcnow(),
+                    "decision_made_by": "shopify",
+                    "approved_at": datetime.utcnow()
+                })
+            elif app_status in ["denied", "rejected"]:
+                update_data.update({
+                    "decision": "denied",
+                    "decision_made_at": datetime.utcnow(),
+                    "decision_made_by": "shopify",
+                    "declined_at": datetime.utcnow()
+                })
+            elif app_status == "completed":
+                update_data["completed_at"] = datetime.utcnow()
+            elif app_status == "cancelled":
+                update_data["cancelled_at"] = datetime.utcnow()
+            
+            # Update return in our database
+            update_result = await db.returns.update_one(
+                {"id": current_return["id"], "tenant_id": tenant_id},
+                {
+                    "$set": update_data,
+                    "$push": {"audit_log": audit_entry}
+                }
+            )
+            
+            if update_result.matched_count > 0:
+                print(f"✅ Updated return {current_return['id']} status from {current_status} to {app_status} via Shopify webhook")
+                return {
+                    "action": "return_updated", 
+                    "return_id": current_return["id"], 
+                    "shopify_return_id": return_id,
+                    "old_status": current_status,
+                    "new_status": app_status
+                }
+            else:
+                print(f"❌ Failed to update return {current_return['id']}")
+                return {"action": "update_failed", "return_id": current_return["id"]}
+            
+        except Exception as e:
+            print(f"❌ Error handling return update webhook: {e}")
+            return {"action": "error", "error": str(e)}
 
     # REFUND HANDLERS
     async def handle_refund_created(self, shop_domain: str, payload: Dict[str, Any]) -> Dict[str, Any]:
