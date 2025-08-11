@@ -113,7 +113,6 @@ async def create_test_merchant_users():
     print("Creating test merchant users...")
     
     db = await get_database()
-    user_service = AuthService(db)
     
     # Test merchant users
     test_merchants = [
@@ -140,7 +139,7 @@ async def create_test_merchant_users():
     for merchant_data in test_merchants:
         try:
             # Check if merchant already exists
-            existing = await user_service.get_user_by_email(merchant_data["email"])
+            existing = await auth_service.get_user_by_email(merchant_data["tenant_id"], merchant_data["email"])
             if existing:
                 print(f"✅ Merchant user already exists: {merchant_data['email']}")
                 created_merchants.append(existing)
@@ -150,7 +149,7 @@ async def create_test_merchant_users():
         
         try:
             merchant_user = UserCreate(**merchant_data)
-            merchant = await user_service.create_user(merchant_user)
+            merchant = await auth_service.create_user(merchant_user, created_by=None)
             print(f"✅ Created merchant user: {merchant.email} for tenant {merchant_data['tenant_id']}")
             created_merchants.append(merchant)
         except Exception as e:
