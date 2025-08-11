@@ -29,10 +29,9 @@ const AllReturns = () => {
   const handleSync = async () => {
     try {
       setSyncing(true);
-      const apiUrl = getApiUrl();
       
       // Trigger Shopify returns sync
-      const response = await fetch(`${apiUrl}/api/integrations/shopify/resync`, {
+      const response = await fetch(buildApiUrl('/api/integrations/shopify/resync'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -48,11 +47,11 @@ const AllReturns = () => {
         await loadReturns();
         setError('');
       } else {
-        setError('Sync failed. Please try again.');
+        setError('Failed to sync with Shopify. Please try again.');
       }
     } catch (err) {
-      console.error('Sync error:', err);
-      setError('Sync failed. Please try again.');
+      console.error('Error syncing returns:', err);
+      setError('Unable to sync with Shopify. Please check your connection.');
     } finally {
       setSyncing(false);
     }
