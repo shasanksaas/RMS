@@ -90,7 +90,7 @@ class DuplicateReturnsVerificationTest:
         print("\n🎯 Testing Returns API for tenant-rms34...")
         
         # Test 1: Basic API accessibility
-        success, response, status = await self.make_request("GET", "/returns")
+        success, response, status = await self.make_request("GET", "/returns/")
         
         if not success:
             self.log_test("Returns API Accessibility", False, f"API not accessible. Status: {status}, Response: {response}")
