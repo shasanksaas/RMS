@@ -717,10 +717,11 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Customer Portal Order Lookup - Simplified Logic Testing - COMPLETED"
+    - "Real-time Shopify API Customer Portal Lookup Testing - COMPLETED"
   stuck_tasks: 
     - "GraphQL Service for Returns Operations"
     - "Sync Service with Initial Backfill"
+    - "Real-time Shopify Integration Configuration for tenant-rms34"
   test_all: false
   test_priority: "high_first"
 
