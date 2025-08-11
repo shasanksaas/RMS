@@ -24,11 +24,16 @@ from .auth_service import auth_service
 logger = logging.getLogger(__name__)
 
 class TenantServiceEnhanced:
-    def __init__(self, db: AsyncIOMotorDatabase):
+    def __init__(self, db: AsyncIOMotorDatabase = None):
         self.db = db
-        self.tenants_collection = db.tenants
-        self.users_collection = db.users
-        self.integrations_collection = db.integrations_shopify
+        if db:
+            self.tenants_collection = db.tenants
+            self.users_collection = db.users
+            self.integrations_collection = db.integrations_shopify
+        else:
+            self.tenants_collection = None
+            self.users_collection = None
+            self.integrations_collection = None
         
     async def initialize(self):
         """Initialize indexes for optimal performance and security"""
