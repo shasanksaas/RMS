@@ -284,7 +284,7 @@ const ReturnDetail = () => {
     try {
       const apiUrl = getApiUrl();
       
-      const response = await fetch(`${apiUrl}/api/returns/${id}/email`, {
+      const response = await fetch(buildApiUrl(`/api/returns/${id}/email`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
