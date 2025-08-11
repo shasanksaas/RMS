@@ -16,7 +16,7 @@ import uuid
 import time
 
 # Configuration
-BACKEND_URL = "https://f4ede537-31b1-4ba8-b14e-a9ada50dbb28.preview.emergentagent.com/api"
+BACKEND_URL = "https://08b6a991-c887-40f9-af10-847ba717e8f4.preview.emergentagent.com/api"
 TEST_TENANT_ID = "rms34.myshopify.com"  # Using the real tenant with Shopify integration
 TEST_HEADERS = {
     "Content-Type": "application/json",
