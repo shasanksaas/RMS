@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Clock, User, Package, MessageSquare, CheckCircle, XCircle, Printer, Mail } from 'lucide-react';
+import { 
+  ArrowLeft, Clock, User, Package, MessageSquare, CheckCircle, XCircle, 
+  Printer, Mail, AlertTriangle, Truck, CreditCard, Home, Phone, ShoppingBag 
+} from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Button } from '../../../components/ui/button';
 import { Badge } from '../../../components/ui/badge';
@@ -10,11 +13,11 @@ import { Alert, AlertDescription } from '../../../components/ui/alert';
 const ReturnDetail = () => {
   const { id } = useParams();
   const [returnRequest, setReturnRequest] = useState(null);
-  const [timeline, setTimeline] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionNotes, setActionNotes] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState('');
+  const [newComment, setNewComment] = useState('');
 
   // Get backend URL and tenant from environment
   const backendUrl = process.env.REACT_APP_BACKEND_URL;
