@@ -210,19 +210,22 @@ class Return:
     
     def calculate_refund(self) -> Money:
         """Calculate refund amount based on policy and items"""
+        from decimal import Decimal
+        
         total_item_value = sum(
             item.calculate_value().amount for item in self.line_items
         )
         
-        # Apply policy fees
-        fees = 0.0
+        # Apply policy fees - use Decimal for all calculations
+        fees = Decimal('0')
         if self.policy_snapshot.restock_fee_enabled:
-            fees += total_item_value * (self.policy_snapshot.restock_fee_percent / 100)
+            restock_percentage = Decimal(str(self.policy_snapshot.restock_fee_percent)) / Decimal('100')
+            fees += total_item_value * restock_percentage
         
         if self.policy_snapshot.shipping_fee_enabled:
-            fees += self.policy_snapshot.shipping_fee_amount
+            fees += Decimal(str(self.policy_snapshot.shipping_fee_amount))
         
-        refund_amount = max(0, total_item_value - fees)
+        refund_amount = max(Decimal('0'), total_item_value - fees)
         
         return Money(refund_amount, self.estimated_refund.currency)
     
