@@ -155,7 +155,7 @@ class EnhancedReturnsTestSuite:
             
             # Test 2: Pagination, filtering, and sorting
             success, paginated_response, status = await self.make_request(
-                "GET", "/returns?page=1&limit=5&sort_by=created_at&sort_order=desc", headers=headers)
+                "GET", "/returns/?page=1&limit=5&sort_by=created_at&sort_order=desc", headers=headers)
             
             if success and paginated_response.get("pagination"):
                 pagination = paginated_response["pagination"]
