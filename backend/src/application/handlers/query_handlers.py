@@ -198,10 +198,12 @@ class LookupOrderForReturnHandler:
         )
         
         if order:
+            # Convert MongoDB ObjectId to string for JSON serialization
+            serialized_order = self._serialize_order(order)
             return {
                 "success": True,
                 "mode": "local",
-                "order": order
+                "order": serialized_order
             }
         
         return {
@@ -209,6 +211,25 @@ class LookupOrderForReturnHandler:
             "mode": "fallback",
             "message": "Order not found. Please proceed with manual entry."
         }
+    
+    def _serialize_order(self, order: Dict[str, Any]) -> Dict[str, Any]:
+        """Convert MongoDB order document to JSON-serializable format"""
+        from bson import ObjectId
+        from datetime import datetime
+        
+        def convert_value(value):
+            if isinstance(value, ObjectId):
+                return str(value)
+            elif isinstance(value, datetime):
+                return value.isoformat()
+            elif isinstance(value, dict):
+                return {k: convert_value(v) for k, v in value.items()}
+            elif isinstance(value, list):
+                return [convert_value(item) for item in value]
+            else:
+                return value
+        
+        return convert_value(order)
 
 
 class GetEligibleItemsForReturnHandler:
