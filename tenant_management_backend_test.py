@@ -1208,7 +1208,6 @@ class TenantManagementTester:
         
         try:
             login_data = {
-                "tenant_id": self.existing_tenant_id,
                 "email": self.existing_merchant_credentials["email"],
                 "password": self.existing_merchant_credentials["password"],
                 "remember_me": False
@@ -1227,7 +1226,7 @@ class TenantManagementTester:
                         self.test_results["integration_existing_system"].append({
                             "test": test_name,
                             "status": "✅ PASS",
-                            "details": f"Existing merchant login successful - Role: {user_info.get('role', 'unknown')}",
+                            "details": f"Existing merchant login successful - Role: {user_info.get('role', 'unknown')}, Tenant: {user_info.get('tenant_id', 'unknown')}",
                             "response_code": response.status
                         })
                         logger.info(f"✅ {test_name}: Merchant login successful")
