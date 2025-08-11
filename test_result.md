@@ -783,7 +783,6 @@ metadata:
 
 test_plan:
   current_focus:
-    - "User Management System - Google OAuth Frontend Implementation"
     - "Complete Authentication Flow Testing"
   stuck_tasks: 
     - "GraphQL Service for Returns Operations"
