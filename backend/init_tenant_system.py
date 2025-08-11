@@ -53,12 +53,12 @@ async def create_tenant_indexes():
         
         # Enhanced returns indexes for tenant isolation
         returns_indexes = [
-            IndexModel([("tenant_id", "return_id")], unique=True),
-            IndexModel([("tenant_id", "order_id")]),
-            IndexModel([("tenant_id", "customer_email")]),
-            IndexModel([("tenant_id", "status")]),
-            IndexModel([("tenant_id", "created_at")]),
-            IndexModel([("tenant_id", "updated_at")]),
+            IndexModel([("tenant_id", 1), ("return_id", 1)], unique=True),
+            IndexModel([("tenant_id", 1), ("order_id", 1)]),
+            IndexModel([("tenant_id", 1), ("customer_email", 1)]),
+            IndexModel([("tenant_id", 1), ("status", 1)]),
+            IndexModel([("tenant_id", 1), ("created_at", 1)]),
+            IndexModel([("tenant_id", 1), ("updated_at", 1)]),
         ]
         
         await db.returns.create_indexes(returns_indexes)
