@@ -10,9 +10,9 @@ import { Label } from '../../components/ui/label';
 const SelectItems = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { orderNumber, email } = location.state || {};
+  const { orderNumber, email, order: orderData, mode, tenantId } = location.state || {};
   
-  const [order, setOrder] = useState(null);
+  const [order, setOrder] = useState(orderData || null);
   const [selectedItems, setSelectedItems] = useState({});
   const [loading, setLoading] = useState(true);
 
