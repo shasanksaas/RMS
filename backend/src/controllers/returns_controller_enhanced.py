@@ -25,7 +25,7 @@ async def get_returns(
     sort: str = Query("-created_at", description="Sort field and direction")
 ):
     """
-    Get returns with server-side filtering, search, and pagination
+    Get returns with server-side filtering, search, and pagination - OPTIMIZED
     """
     try:
         # Build query
@@ -77,31 +77,48 @@ async def get_returns(
         cursor = db.returns.find(query).sort(sort_field, sort_direction).skip(skip).limit(page_size)
         returns = await cursor.to_list(page_size)
         
-        # Format returns for response
+        # OPTIMIZATION: Batch fetch all unique order IDs to avoid N+1 queries
+        unique_order_ids = list(set(r.get("order_id") for r in returns if r.get("order_id")))
+        orders_map = {}
+        
+        if unique_order_ids:
+            # Batch fetch orders from database
+            orders_cursor = db.orders.find({
+                "id": {"$in": unique_order_ids}, 
+                "tenant_id": tenant_id
+            })
+            orders = await orders_cursor.to_list(length=None)
+            orders_map = {order["id"]: order for order in orders}
+        
+        # OPTIMIZATION: Batch fetch missing orders from Shopify (if needed)
+        missing_order_ids = [oid for oid in unique_order_ids if oid not in orders_map]
+        if missing_order_ids:
+            # Initialize Shopify service once
+            from src.services.shopify_service import ShopifyService
+            shopify_service = ShopifyService(tenant_id)
+            
+            # Fetch missing orders from Shopify in batch (if possible)
+            for order_id in missing_order_ids:
+                try:
+                    shopify_order = await shopify_service.get_order_for_return(order_id)
+                    if shopify_order:
+                        orders_map[order_id] = shopify_order
+                except Exception as e:
+                    print(f"Failed to fetch order {order_id} from Shopify: {e}")
+                    continue
+        
+        # Format returns for response with cached order data
         formatted_returns = []
         for return_req in returns:
             # Count items from line_items
             line_items = return_req.get("line_items", [])
             item_count = sum(item.get("quantity", 0) for item in line_items)
             
-            # Get order number from related order or fetch from Shopify
+            # Get order data from cached map
+            order = orders_map.get(return_req.get("order_id"))
             order_number = ""
-            if return_req.get("order_id"):
-                order = await db.orders.find_one({
-                    "id": return_req.get("order_id"),
-                    "tenant_id": tenant_id
-                })
-                if order:
-                    order_number = order.get("order_number", order.get("name", ""))
-                else:
-                    # If order not in local DB, derive from Shopify order ID pattern  
-                    # Shopify order IDs like "5813364687033" typically map to order numbers like "1001"
-                    # For now, we'll try to fetch from Shopify service if needed
-                    from src.services.shopify_service import ShopifyService
-                    shopify_service = ShopifyService(tenant_id)
-                    shopify_order = await shopify_service.get_order_for_return(return_req.get("order_id"))
-                    if shopify_order:
-                        order_number = shopify_order.get("order_number", shopify_order.get("name", ""))
+            if order:
+                order_number = order.get("order_number", order.get("name", ""))
             
             # Extract estimated refund amount
             estimated_refund_data = return_req.get("estimated_refund", {})
@@ -124,19 +141,22 @@ async def get_returns(
             else:
                 updated_at_str = updated_at or ""
             
-            # Get customer name from order or derive from email
+            # OPTIMIZATION: Get customer name from order data or derive from email
             customer_name = ""
             customer_email = return_req.get("customer_email", "")
+            
             if order and order.get("customer"):
                 customer_data = order.get("customer", {})
                 if isinstance(customer_data, dict):
                     customer_name = f"{customer_data.get('first_name', '')} {customer_data.get('last_name', '')}".strip()
                     if not customer_name and customer_data.get('name'):
                         customer_name = customer_data.get('name', '')
+                    if not customer_name and customer_data.get('displayName'):
+                        customer_name = customer_data.get('displayName', '')
                 else:
                     customer_name = str(customer_data) if customer_data else ""
             
-            # If no customer name from order, extract from email
+            # If no customer name from order, extract from email as fallback
             if not customer_name and customer_email:
                 customer_name = customer_email.split('@')[0].replace('.', ' ').title()
             
