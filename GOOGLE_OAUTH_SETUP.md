@@ -23,7 +23,7 @@ Add these redirect URIs to your OAuth client:
 
 **REQUIRED REDIRECT URIs:**
 ```
-https://2df859a5-1f9c-46d3-81c6-dff0c2023545.preview.emergentagent.com/auth/google/callback
+https://f07a6717-33e5-45c0-b306-b76d55047333.preview.emergentagent.com/auth/google/callback
 http://localhost:3000/auth/google/callback
 https://localhost:3000/auth/google/callback
 ```
@@ -31,7 +31,7 @@ https://localhost:3000/auth/google/callback
 ### Step 3: Authorized Origins (if needed)
 Add these origins:
 ```
-https://2df859a5-1f9c-46d3-81c6-dff0c2023545.preview.emergentagent.com
+https://f07a6717-33e5-45c0-b306-b76d55047333.preview.emergentagent.com
 http://localhost:3000
 https://localhost:3000
 ```
@@ -43,7 +43,7 @@ https://localhost:3000
 ## 🧪 TESTING INSTRUCTIONS
 
 ### Test Admin Access:
-1. Go to: https://2df859a5-1f9c-46d3-81c6-dff0c2023545.preview.emergentagent.com/auth/login
+1. Go to: https://f07a6717-33e5-45c0-b306-b76d55047333.preview.emergentagent.com/auth/login
 2. Use credentials:
    - **Email:** admin@returns-manager.com
    - **Password:** AdminPassword123!
