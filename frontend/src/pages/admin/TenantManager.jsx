@@ -157,9 +157,9 @@ const TenantManager = () => {
     }
   };
 
-  const filteredTenants = tenants.filter(tenant =>
+  const filteredTenants = (tenants || []).filter(tenant =>
     tenant.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    tenant.tenant_id.toLowerCase().includes(searchQuery.toLowerCase())
+    tenant.tenant_id?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const formatDate = (dateString) => {
