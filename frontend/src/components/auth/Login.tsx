@@ -172,7 +172,7 @@ const Login: React.FC = () => {
       case 'customer':
         return '/returns/start';
       default:
-        return '/dashboard';
+        return '/app/dashboard'; // Default to merchant dashboard instead of /dashboard
     }
   };
 
