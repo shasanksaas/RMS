@@ -66,11 +66,11 @@ async def create_tenant_indexes():
         
         # Enhanced orders indexes for tenant isolation
         orders_indexes = [
-            IndexModel([("tenant_id", "order_id")], unique=True),
-            IndexModel([("tenant_id", "order_number")]),
-            IndexModel([("tenant_id", "customer.email")]),
-            IndexModel([("tenant_id", "financial_status")]),
-            IndexModel([("tenant_id", "created_at")]),
+            IndexModel([("tenant_id", 1), ("order_id", 1)], unique=True),
+            IndexModel([("tenant_id", 1), ("order_number", 1)]),
+            IndexModel([("tenant_id", 1), ("customer.email", 1)]),
+            IndexModel([("tenant_id", 1), ("financial_status", 1)]),
+            IndexModel([("tenant_id", 1), ("created_at", 1)]),
         ]
         
         await db.orders.create_indexes(orders_indexes)
