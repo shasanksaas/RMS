@@ -84,12 +84,12 @@ async def create_test_tenants():
     
     created_tenants = []
     
-    for tenant_data in test_tenants:
+    for tenant_info in test_tenants:
         try:
             # Check if tenant already exists
-            existing = await tenant_service.get_tenant_by_id(tenant_data["tenant_id"])
+            existing = await tenant_service.get_tenant_by_id(tenant_info["tenant_id"])
             if existing:
-                print(f"✅ Tenant already exists: {tenant_data['tenant_id']}")
+                print(f"✅ Tenant already exists: {tenant_info['tenant_id']}")
                 created_tenants.append(existing)
                 continue
         except:
@@ -97,15 +97,15 @@ async def create_test_tenants():
         
         try:
             tenant_data = TenantCreate(
-                name=tenant_data["name"],
-                tenant_id=tenant_data["tenant_id"],
-                notes=tenant_data["notes"]
+                name=tenant_info["name"],
+                tenant_id=tenant_info["tenant_id"],
+                notes=tenant_info["notes"]
             )
             tenant = await tenant_service.create_tenant(tenant_data, created_by_admin_id="admin@test.com")
             print(f"✅ Created tenant: {tenant.tenant_id} - {tenant.name}")
             created_tenants.append(tenant)
         except Exception as e:
-            print(f"❌ Failed to create tenant {tenant_data['tenant_id']}: {e}")
+            print(f"❌ Failed to create tenant {tenant_info['tenant_id']}: {e}")
     
     return created_tenants
 
