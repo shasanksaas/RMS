@@ -54,6 +54,7 @@ import AdminOperations from './pages/admin/Operations';
 import AdminAudit from './pages/admin/Audit';
 import AdminFeatureFlags from './pages/admin/FeatureFlags';
 import AdminCatalog from './pages/admin/Catalog';
+import TenantManager from './pages/admin/TenantManager';
 
 import './App.css';
 
