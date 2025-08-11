@@ -22,13 +22,29 @@ async def get_shopify_integration_status(tenant_id: str = Depends(get_tenant_id)
     Returns connection status, sync status, and data counts
     """
     try:
-        # Get tenant record
-        tenant = await db.tenants.find_one({"id": tenant_id})
+        # First check integrations_shopify collection
+        integration = await db.integrations_shopify.find_one({"tenant_id": tenant_id})
         
-        if not tenant or not tenant.get("shopify_integration"):
+        # Also check tenant record for shopify_integration field (fallback)
+        tenant = await db.tenants.find_one({"id": tenant_id})
+        tenant_integration = tenant.get("shopify_integration") if tenant else None
+        
+        # Use integration data from either source
+        shopify_integration = None
+        if integration:
+            shopify_integration = integration
+        elif tenant_integration:
+            shopify_integration = tenant_integration
+        else:
             return {"connected": False}
         
-        shopify_integration = tenant["shopify_integration"]
+        # Check if properly connected
+        is_connected = (shopify_integration.get("status") == "connected" and 
+                       shopify_integration.get("access_token") and
+                       shopify_integration.get("shop_domain"))
+        
+        if not is_connected:
+            return {"connected": False}
         
         # Get order counts
         thirty_days_ago = datetime.utcnow() - timedelta(days=30)
