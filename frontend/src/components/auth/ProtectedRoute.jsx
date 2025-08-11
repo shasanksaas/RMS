@@ -9,7 +9,7 @@ const ProtectedRoute = ({
   requiredPermissions = [],
   redirectTo = null 
 }) => {
-  const { isAuthenticated, isLoading, user, hasRole, hasPermission } = useAuth();
+  const { isAuthenticated, isLoading, user, hasRole, hasPermission, getRedirectPath } = useAuth();
   const location = useLocation();
 
   // Show loading spinner while checking authentication
