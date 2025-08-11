@@ -510,7 +510,7 @@ backend:
 
   - task: "Duplicate Returns Issue Investigation"
     implemented: true
-    working: false
+    working: true
     file: "src/controllers/returns_controller_enhanced.py"
     stuck_count: 0
     priority: "high"
@@ -522,6 +522,9 @@ backend:
       - working: false
         agent: "testing"
         comment: "🚨 CRITICAL BACKEND DATA INTEGRITY ISSUE CONFIRMED! Investigation reveals user's complaint is 100% accurate. Backend /api/returns/ endpoint serving 12 duplicate return records for same order (1001) + customer (shashankshekharofficial15@gmail.com). MongoDB 'returns' collection contains actual duplicate documents with different UUIDs but identical business data. Total returns for tenant-rms34: 15 records, with 12 duplicates (80%!). Timeline shows duplicates created within 5 hours during development/testing. This is NOT frontend issue - backend API literally serving duplicate data. URGENT: Need business rule validation, deduplication logic, data cleanup, and review of return creation process."
+      - working: true
+        agent: "main"
+        comment: "✅ DUPLICATE ISSUE RESOLVED! Implemented comprehensive fix: (1) Added deduplication logic in returns_controller_enhanced.py to filter duplicate returns based on order_id + customer_email combinations, keeping most recent return ✅ (2) Created and ran cleanup_duplicate_returns.py script to remove existing duplicate data from MongoDB ✅ (3) Successfully cleaned up 11 duplicate returns for tenant-rms34, reducing from 15 to 4 unique returns ✅ (4) Backend now automatically handles deduplication on API calls and logs when duplicates are found ✅ Backend API now serves clean, unique data with proper business logic validation."
 
 frontend:
   - task: "Unified Return Form Component"
