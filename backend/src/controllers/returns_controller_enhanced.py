@@ -295,18 +295,28 @@ async def get_return_detail(
         customer_name = ""
         customer_email = return_req.get("customer_email", "")
         
-        if order and order.get("customer"):
-            customer_data = order.get("customer", {})
-            if isinstance(customer_data, dict):
-                customer_name = f"{customer_data.get('first_name', '')} {customer_data.get('last_name', '')}".strip()
-                if not customer_name and customer_data.get('name'):
-                    customer_name = customer_data.get('name', '')
-                if not customer_name and customer_data.get('displayName'):
-                    customer_name = customer_data.get('displayName', '')
+        if order:
+            # Handle both nested customer object and flattened fields
+            if order.get("customer"):
+                customer_data = order.get("customer", {})
+                if isinstance(customer_data, dict):
+                    customer_name = f"{customer_data.get('first_name', '')} {customer_data.get('last_name', '')}".strip()
+                    if not customer_name and customer_data.get('name'):
+                        customer_name = customer_data.get('name', '')
+                    if not customer_name and customer_data.get('displayName'):
+                        customer_name = customer_data.get('displayName', '')
+                else:
+                    customer_name = str(customer_data) if customer_data else ""
             else:
-                customer_name = str(customer_data) if customer_data else ""
+                # Handle flattened customer fields (common with Shopify sync)
+                customer_name = order.get("customer_name", "")
+                if not customer_name and order.get("customer_display_name"):
+                    customer_name = order.get("customer_display_name", "")
+                if not customer_name and order.get("customer_email"):
+                    email = order.get("customer_email", "")
+                    customer_name = email.split('@')[0].replace('.', ' ').replace('_', ' ').title()
         
-        # If no customer name from order, extract from email as fallback
+        # If no customer name from order, extract from return email as fallback
         if not customer_name and customer_email:
             customer_name = customer_email.split('@')[0].replace('.', ' ').replace('_', ' ').title()
         
