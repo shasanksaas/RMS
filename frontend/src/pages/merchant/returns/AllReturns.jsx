@@ -721,7 +721,7 @@ const AllReturns = () => {
                               </Link>
                             </Button>
                             <select
-                              value={returnRequest.status || 'requested'}
+                              value={returnRequest.status?.toLowerCase() || 'requested'}
                               onChange={(e) => handleStatusUpdate(returnRequest.id, e.target.value)}
                               className="text-xs border rounded px-2 py-1 bg-white"
                             >
@@ -730,6 +730,7 @@ const AllReturns = () => {
                               <option value="denied">Denied</option>
                               <option value="processing">Processing</option>
                               <option value="completed">Completed</option>
+                              <option value="cancelled">Cancelled</option>
                             </select>
                           </div>
                         </td>
