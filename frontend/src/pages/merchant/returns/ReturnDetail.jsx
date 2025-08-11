@@ -267,8 +267,6 @@ const ReturnDetail = () => {
   const handleSendEmail = async () => {
     setActionLoading(true);
     try {
-      const apiUrl = getApiUrl();
-      
       const response = await fetch(buildApiUrl(`/api/returns/${id}/email`), {
         method: 'POST',
         headers: {
