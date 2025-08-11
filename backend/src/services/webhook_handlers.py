@@ -650,6 +650,35 @@ class WebhookProcessor:
                 "updated_at": datetime.utcnow()
             }
             
+            # Update line items if provided in webhook
+            if payload.get("return_line_items"):
+                line_items = payload.get("return_line_items", [])
+                updated_line_items = []
+                
+                for item in line_items:
+                    if isinstance(item, dict):
+                        formatted_item = {
+                            "line_item_id": item.get("line_item_id", ""),
+                            "title": item.get("title", item.get("product_title", "")),
+                            "variant_title": item.get("variant_title", ""),
+                            "sku": item.get("sku", ""),
+                            "quantity": int(item.get("quantity", 1)),
+                            "unit_price": {
+                                "amount": str(item.get("price", item.get("unit_price", 0))),
+                                "currency": payload.get("currency", "USD")
+                            },
+                            "reason": {
+                                "code": item.get("return_reason", ""),
+                                "description": item.get("return_reason_note", "")
+                            },
+                            "updated_from_shopify": True
+                        }
+                        updated_line_items.append(formatted_item)
+                
+                if updated_line_items:
+                    update_data["line_items"] = updated_line_items
+                    print(f"🛍️ Updated {len(updated_line_items)} line items from Shopify for return {current_return['id']}")
+            
             # Update reason if provided in webhook
             if payload.get("return_line_items") or payload.get("reason"):
                 reason_text = ""
