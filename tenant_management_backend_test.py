@@ -65,6 +65,9 @@ class TenantManagementTester:
             await self.test_tenant_isolation()
             await self.test_integration_with_existing_system()
             
+            # Test complete workflow as requested in review
+            await self.test_complete_workflow()
+            
             # Generate comprehensive report
             self.generate_test_report()
 
