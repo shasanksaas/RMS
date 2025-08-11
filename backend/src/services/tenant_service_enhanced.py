@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 class TenantServiceEnhanced:
     def __init__(self, db: AsyncIOMotorDatabase = None):
         self.db = db
-        if db:
+        if db is not None:
             self.tenants_collection = db.tenants
             self.users_collection = db.users
             self.integrations_collection = db.integrations_shopify
