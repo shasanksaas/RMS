@@ -36,7 +36,7 @@ const SelectItems = () => {
           productImage: '/placeholder-product.jpg',
           sku: item.sku || 'N/A',
           quantity: item.quantity,
-          price: item.unit_price || item.price,
+          price: item.unit_price || item.price || 0, // Use unit_price first, fallback to price
           eligible: true
         }))
       };
