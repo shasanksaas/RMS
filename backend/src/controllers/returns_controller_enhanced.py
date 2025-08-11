@@ -80,9 +80,22 @@ async def get_returns(
         # Format returns for response
         formatted_returns = []
         for return_req in returns:
-            # Count items
-            items = return_req.get("items", [])
-            item_count = sum(item.get("quantity", 0) for item in items)
+            # Count items from line_items
+            line_items = return_req.get("line_items", [])
+            item_count = sum(item.get("quantity", 0) for item in line_items)
+            
+            # Get order number from related order
+            order = await db.orders.find_one({
+                "id": return_req.get("order_id", ""),
+                "tenant_id": tenant_id
+            }) if return_req.get("order_id") else None
+            
+            # Extract estimated refund amount
+            estimated_refund_data = return_req.get("estimated_refund", {})
+            if isinstance(estimated_refund_data, dict):
+                estimated_refund = float(estimated_refund_data.get("amount", 0))
+            else:
+                estimated_refund = float(estimated_refund_data) if estimated_refund_data else 0
             
             # Format created_at
             created_at = return_req.get("created_at")
@@ -91,18 +104,41 @@ async def get_returns(
             else:
                 created_at_str = created_at or ""
             
+            # Format updated_at
+            updated_at = return_req.get("updated_at")
+            if isinstance(updated_at, datetime):
+                updated_at_str = updated_at.isoformat()
+            else:
+                updated_at_str = updated_at or ""
+            
+            # Get customer name from order or derive from email
+            customer_name = ""
+            customer_email = return_req.get("customer_email", "")
+            if order and order.get("customer"):
+                customer_data = order.get("customer", {})
+                if isinstance(customer_data, dict):
+                    customer_name = f"{customer_data.get('first_name', '')} {customer_data.get('last_name', '')}".strip()
+                    if not customer_name and customer_data.get('name'):
+                        customer_name = customer_data.get('name', '')
+                else:
+                    customer_name = str(customer_data) if customer_data else ""
+            
+            # If no customer name from order, extract from email
+            if not customer_name and customer_email:
+                customer_name = customer_email.split('@')[0].replace('.', ' ').title()
+            
             formatted_returns.append({
                 "id": return_req["id"],
-                "order_number": return_req.get("order_number", ""),
+                "order_number": order.get("order_number", "") if order else "",
                 "order_id": return_req.get("order_id", ""),
-                "customer_name": return_req.get("customer_name", ""),
-                "customer_email": return_req.get("customer_email", ""),
+                "customer_name": customer_name,
+                "customer_email": customer_email,
                 "status": return_req.get("status", "").upper(),
                 "decision": return_req.get("decision", ""),
                 "item_count": item_count,
-                "estimated_refund": return_req.get("estimated_refund", 0),
+                "estimated_refund": estimated_refund,
                 "created_at": created_at_str,
-                "updated_at": return_req.get("updated_at", "").isoformat() if return_req.get("updated_at") else ""
+                "updated_at": updated_at_str
             })
         
         return {
