@@ -42,16 +42,16 @@ const Confirm = () => {
         customer_email: email,
         return_method: 'prepaid_label',
         items: selectedItems.map(item => ({
-          line_item_id: item.id || item.sku,
+          line_item_id: item.line_item_id,
           sku: item.sku,
-          title: item.name || item.title,
-          variant_title: item.variant || null,
+          title: item.title,
+          variant_title: item.variant_title,
           quantity: item.quantity,
-          unit_price: item.price,
+          unit_price: item.unit_price,
           reason: item.reason || 'wrong_size',
-          reason_description: item.reasonDetails || '',
-          condition: 'used',
-          photos: item.photos || [],
+          reason_description: item.reason_description || '',
+          condition: item.condition,
+          photos: item.photos,
           notes: item.notes || ''
         })),
         customer_note: `Selected resolution: ${resolution.title}`
