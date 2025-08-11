@@ -420,24 +420,165 @@ class ShopifyService:
         return products
 
     # Methods needed by unified returns controller
-    async def find_order_by_number(self, order_number: str) -> Optional[Dict[str, Any]]:
-        """Find order by order number"""
-        if self.tenant_id:
-            # Get tenant's shop info from database
-            tenant = await db.tenants.find_one({"id": self.tenant_id})
-            if tenant and tenant.get('shopify_store'):
-                shop = tenant['shopify_store']
-                orders = await self.get_orders(shop, self.tenant_id, 100)
-                
-                for order in orders:
-                    if order.get('name') == f"#{order_number}" or order.get('order_number') == order_number:
-                        return order
+    async def find_order_by_number(self, order_number: str, tenant_id: str = None) -> Optional[Dict[str, Any]]:
+        """Real-time Shopify GraphQL lookup by order number - NO cached data"""
+        use_tenant_id = tenant_id or self.tenant_id
         
-        # Fallback: search in seeded data
-        orders_cursor = db.orders.find({"tenant_id": self.tenant_id, "order_number": order_number})
-        orders = await orders_cursor.to_list(1)
-        if orders:
-            return orders[0]
+        if not use_tenant_id:
+            return None
+            
+        try:
+            # Get real-time access token and shop info
+            tenant = await db.tenants.find_one({"id": use_tenant_id})
+            if not tenant or not tenant.get('shopify_integration'):
+                return None
+                
+            shopify_integration = tenant.get('shopify_integration', {})
+            access_token = shopify_integration.get('access_token')
+            shop_domain = shopify_integration.get('shop_domain')
+            
+            if not access_token or not shop_domain:
+                return None
+            
+            # Real-time GraphQL query to Shopify API
+            graphql_url = f"https://{shop_domain}/admin/api/2025-07/graphql.json"
+            
+            # GraphQL query to find order by name (order number)
+            query = """
+            query getOrderByName($query: String!) {
+                orders(first: 1, query: $query) {
+                    edges {
+                        node {
+                            id
+                            name
+                            email
+                            phone
+                            totalPriceSet {
+                                shopMoney {
+                                    amount
+                                    currencyCode
+                                }
+                            }
+                            customer {
+                                id
+                                email
+                                firstName
+                                lastName
+                                phone
+                                displayName
+                            }
+                            billingAddress {
+                                firstName
+                                lastName
+                                company
+                                address1
+                                address2
+                                city
+                                province
+                                country
+                                zip
+                                phone
+                            }
+                            shippingAddress {
+                                firstName
+                                lastName
+                                company
+                                address1
+                                address2
+                                city
+                                province
+                                country
+                                zip
+                                phone
+                            }
+                            lineItems(first: 50) {
+                                edges {
+                                    node {
+                                        id
+                                        title
+                                        quantity
+                                        variant {
+                                            id
+                                            title
+                                            sku
+                                            price
+                                        }
+                                        originalUnitPriceSet {
+                                            shopMoney {
+                                                amount
+                                                currencyCode
+                                            }
+                                        }
+                                        product {
+                                            id
+                                            title
+                                            productType
+                                            vendor
+                                        }
+                                    }
+                                }
+                            }
+                            fulfillmentOrders(first: 10) {
+                                edges {
+                                    node {
+                                        id
+                                        status
+                                        fulfillAt
+                                    }
+                                }
+                            }
+                            createdAt
+                            updatedAt
+                            processedAt
+                            financialStatus
+                            fulfillmentStatus
+                        }
+                    }
+                }
+            }
+            """
+            
+            # Add # prefix if not present
+            search_order_number = order_number if order_number.startswith('#') else f"#{order_number}"
+            
+            variables = {
+                "query": f"name:{search_order_number}"
+            }
+            
+            headers = {
+                "Content-Type": "application/json",
+                "X-Shopify-Access-Token": access_token
+            }
+            
+            payload = {
+                "query": query,
+                "variables": variables
+            }
+            
+            # Execute real-time GraphQL query
+            async with aiohttp.ClientSession() as session:
+                async with session.post(graphql_url, json=payload, headers=headers) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        
+                        if 'errors' in data:
+                            print(f"GraphQL errors: {data['errors']}")
+                            return None
+                            
+                        orders = data.get('data', {}).get('orders', {}).get('edges', [])
+                        
+                        if orders:
+                            order_node = orders[0]['node']
+                            
+                            # Transform GraphQL response to standard format
+                            return self._transform_graphql_order(order_node)
+                    else:
+                        print(f"Shopify API error: {response.status}")
+                        return None
+                        
+        except Exception as e:
+            print(f"Real-time Shopify lookup error: {e}")
+            return None
         
         return None
 
