@@ -281,24 +281,29 @@ async def get_return_detail(
         else:
             estimated_refund = float(estimated_refund_data) if estimated_refund_data else 0
         
-        # Get customer name from order or derive from email
+        # OPTIMIZATION: Get customer name from order data with better fallbacks
         customer_name = ""
         customer_email = return_req.get("customer_email", "")
+        
         if order and order.get("customer"):
             customer_data = order.get("customer", {})
             if isinstance(customer_data, dict):
                 customer_name = f"{customer_data.get('first_name', '')} {customer_data.get('last_name', '')}".strip()
                 if not customer_name and customer_data.get('name'):
                     customer_name = customer_data.get('name', '')
+                if not customer_name and customer_data.get('displayName'):
+                    customer_name = customer_data.get('displayName', '')
             else:
                 customer_name = str(customer_data) if customer_data else ""
         
-        # If no customer name from order, extract from email
+        # If no customer name from order, extract from email as fallback
         if not customer_name and customer_email:
-            customer_name = customer_email.split('@')[0].replace('.', ' ').title()
+            customer_name = customer_email.split('@')[0].replace('.', ' ').replace('_', ' ').title()
         
         # Get order number from order
-        order_number = order.get("order_number", "") if order else ""
+        order_number = ""
+        if order:
+            order_number = order.get("order_number", order.get("name", ""))
         
         # Format dates
         created_at = return_req.get("created_at")
