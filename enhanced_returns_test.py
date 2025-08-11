@@ -447,7 +447,7 @@ class EnhancedReturnsTestSuite:
         # Test 1: Verify old returns_controller.py is not interfering
         # This is tested by checking if enhanced controller is handling requests
         headers = {"X-Tenant-Id": TEST_TENANT_FASHION}
-        success, response, status = await self.make_request("GET", "/returns", headers=headers)
+        success, response, status = await self.make_request("GET", "/returns/", headers=headers)
         
         if success and "returns" in response:
             self.log_test("Cleanup Verification: Enhanced controller active", True, 
