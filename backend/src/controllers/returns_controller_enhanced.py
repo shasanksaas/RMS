@@ -592,6 +592,7 @@ async def update_return_status(
         # Try to sync with Shopify
         shopify_sync_success = False
         shopify_sync_error = None
+        shopify_audit_entry = None
         
         try:
             # Get Shopify integration
