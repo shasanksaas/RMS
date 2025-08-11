@@ -55,6 +55,8 @@ async def test_optimized_returns_api():
                 
                 # Store first return for detail test
                 test_return_id = returns[0]['id'] if returns else None
+            else:
+                test_return_id = None
         
         # Test 2: Individual Return Detail
         if test_return_id:
