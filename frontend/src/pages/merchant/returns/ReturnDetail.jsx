@@ -56,7 +56,7 @@ const ReturnDetail = () => {
         fullUrl = fullUrl.replace('http://', 'https://');
       }
       
-      const response = await fetch(fullUrl, {
+      const response = await fetch(buildApiUrl(`/api/returns/${id}`), {
         headers: {
           'Content-Type': 'application/json',
           'X-Tenant-Id': tenantId
