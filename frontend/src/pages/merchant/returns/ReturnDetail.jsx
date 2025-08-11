@@ -49,7 +49,7 @@ const ReturnDetail = () => {
     try {
       setLoading(true);
       
-      const response = await fetch(buildApiUrl(`/api/returns/${id}/`), {
+      const response = await fetch(buildApiUrl(`/api/returns/${id}`), {
         headers: {
           'Content-Type': 'application/json',
           'X-Tenant-Id': tenantId
