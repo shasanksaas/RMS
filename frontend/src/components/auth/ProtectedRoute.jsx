@@ -60,18 +60,4 @@ const ProtectedRoute = ({
   return children;
 };
 
-// Helper function to get redirect path based on role
-const getRedirectPath = (role) => {
-  switch (role) {
-    case 'merchant':
-      return '/app/dashboard';
-    case 'admin':
-      return '/admin/dashboard';
-    case 'customer':
-      return '/returns/start';
-    default:
-      return '/app/dashboard';
-  }
-};
-
 export default ProtectedRoute;
