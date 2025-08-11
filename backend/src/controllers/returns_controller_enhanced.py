@@ -439,3 +439,260 @@ async def get_return_detail(
     except Exception as e:
         print(f"Error getting return detail: {e}")
         raise HTTPException(status_code=500, detail="Failed to get return detail")
+
+
+@router.put("/{return_id}/status")
+async def update_return_status(
+    return_id: str,
+    status_data: dict,
+    tenant_id: str = Depends(get_tenant_id)
+):
+    """
+    Update return status with audit logging
+    """
+    try:
+        new_status = status_data.get("status", "").lower()
+        notes = status_data.get("notes", "")
+        
+        # Validate status
+        valid_statuses = ["requested", "approved", "denied", "rejected", "processing", "completed", "archived"]
+        if new_status not in valid_statuses:
+            raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid_statuses}")
+        
+        # Update return
+        update_data = {
+            "status": new_status,
+            "updated_at": datetime.utcnow(),
+            "decision": new_status if new_status in ["approved", "denied"] else "",
+            "decision_made_at": datetime.utcnow() if new_status in ["approved", "denied"] else None,
+            "decision_made_by": "admin"  # In real app, this would be the actual admin user ID
+        }
+        
+        if notes:
+            update_data["admin_notes"] = notes
+        
+        # Add to audit log
+        audit_entry = {
+            "action": f"status_updated_to_{new_status}",
+            "performed_by": "admin",
+            "timestamp": datetime.utcnow(),
+            "details": {"old_status": "previous", "new_status": new_status, "notes": notes},
+            "description": f"Status updated to {new_status.upper()}"
+        }
+        
+        update_data["$push"] = {"audit_log": audit_entry}
+        
+        result = await db.returns.update_one(
+            {"id": return_id, "tenant_id": tenant_id},
+            {"$set": update_data, "$push": {"audit_log": audit_entry}}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Return not found")
+        
+        return {"success": True, "message": f"Return status updated to {new_status}"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error updating return status: {e}")
+        raise HTTPException(status_code=500, detail="Failed to update return status")
+
+
+@router.post("/{return_id}/comments")
+async def add_comment(
+    return_id: str,
+    comment_data: dict,
+    tenant_id: str = Depends(get_tenant_id)
+):
+    """
+    Add comment to return
+    """
+    try:
+        comment_text = comment_data.get("comment", "").strip()
+        if not comment_text:
+            raise HTTPException(status_code=400, detail="Comment text is required")
+        
+        # Create comment entry
+        comment_entry = {
+            "action": "comment_added",
+            "performed_by": "admin",
+            "timestamp": datetime.utcnow(),
+            "details": {"comment": comment_text},
+            "description": f"Comment added: {comment_text[:50]}{'...' if len(comment_text) > 50 else ''}"
+        }
+        
+        result = await db.returns.update_one(
+            {"id": return_id, "tenant_id": tenant_id},
+            {"$push": {"audit_log": comment_entry}, "$set": {"updated_at": datetime.utcnow()}}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Return not found")
+        
+        return {"success": True, "message": "Comment added successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error adding comment: {e}")
+        raise HTTPException(status_code=500, detail="Failed to add comment")
+
+
+@router.post("/{return_id}/refund")
+async def process_refund(
+    return_id: str,
+    refund_data: dict,
+    tenant_id: str = Depends(get_tenant_id)
+):
+    """
+    Process refund for return
+    """
+    try:
+        # Get return
+        return_req = await db.returns.find_one({"id": return_id, "tenant_id": tenant_id})
+        if not return_req:
+            raise HTTPException(status_code=404, detail="Return not found")
+        
+        refund_method = refund_data.get("refund_method", "original_payment")
+        
+        # In a real implementation, this would:
+        # 1. Call Shopify Refund API
+        # 2. Process payment through payment gateway
+        # 3. Update order status in Shopify
+        
+        # For now, simulate processing
+        refund_entry = {
+            "action": "refund_processed",
+            "performed_by": "admin",
+            "timestamp": datetime.utcnow(),
+            "details": {
+                "refund_method": refund_method,
+                "amount": return_req.get("estimated_refund", {}).get("amount", 0)
+            },
+            "description": f"Refund processed via {refund_method}"
+        }
+        
+        update_data = {
+            "status": "completed",
+            "refund_status": "processed",
+            "refund_processed_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }
+        
+        await db.returns.update_one(
+            {"id": return_id, "tenant_id": tenant_id},
+            {"$set": update_data, "$push": {"audit_log": refund_entry}}
+        )
+        
+        return {"success": True, "message": "Refund processed successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error processing refund: {e}")
+        raise HTTPException(status_code=500, detail="Failed to process refund")
+
+
+@router.post("/{return_id}/label")
+async def generate_return_label(
+    return_id: str,
+    tenant_id: str = Depends(get_tenant_id)
+):
+    """
+    Generate return shipping label
+    """
+    try:
+        # Get return
+        return_req = await db.returns.find_one({"id": return_id, "tenant_id": tenant_id})
+        if not return_req:
+            raise HTTPException(status_code=404, detail="Return not found")
+        
+        # In a real implementation, this would:
+        # 1. Call shipping API (UPS, FedEx, etc.)
+        # 2. Generate PDF label
+        # 3. Store label URL
+        
+        # For now, simulate label generation
+        label_url = f"https://storage.example.com/labels/return_{return_id}_label.pdf"
+        
+        label_entry = {
+            "action": "label_generated",
+            "performed_by": "admin",
+            "timestamp": datetime.utcnow(),
+            "details": {"label_url": label_url},
+            "description": "Return shipping label generated"
+        }
+        
+        await db.returns.update_one(
+            {"id": return_id, "tenant_id": tenant_id},
+            {
+                "$set": {
+                    "label_url": label_url,
+                    "label_generated_at": datetime.utcnow(),
+                    "updated_at": datetime.utcnow()
+                },
+                "$push": {"audit_log": label_entry}
+            }
+        )
+        
+        return {"success": True, "label_url": label_url, "message": "Return label generated"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error generating label: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate return label")
+
+
+@router.post("/{return_id}/email")
+async def send_email_update(
+    return_id: str,
+    email_data: dict,
+    tenant_id: str = Depends(get_tenant_id)
+):
+    """
+    Send email update to customer
+    """
+    try:
+        # Get return
+        return_req = await db.returns.find_one({"id": return_id, "tenant_id": tenant_id})
+        if not return_req:
+            raise HTTPException(status_code=404, detail="Return not found")
+        
+        email_type = email_data.get("type", "status_update")
+        message = email_data.get("message", "")
+        
+        # In a real implementation, this would:
+        # 1. Use SendGrid, SES, or other email service
+        # 2. Load email template
+        # 3. Send personalized email to customer
+        
+        # For now, simulate email sending
+        email_entry = {
+            "action": "email_sent",
+            "performed_by": "admin",
+            "timestamp": datetime.utcnow(),
+            "details": {
+                "email_type": email_type,
+                "recipient": return_req.get("customer_email"),
+                "message_preview": message[:100] if message else "Status update email"
+            },
+            "description": f"Email notification sent to {return_req.get('customer_email')}"
+        }
+        
+        await db.returns.update_one(
+            {"id": return_id, "tenant_id": tenant_id},
+            {
+                "$set": {"updated_at": datetime.utcnow()},
+                "$push": {"audit_log": email_entry}
+            }
+        )
+        
+        return {"success": True, "message": "Email sent successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error sending email: {e}")
+        raise HTTPException(status_code=500, detail="Failed to send email")
