@@ -40,12 +40,12 @@ async def create_tenant_indexes():
         
         # Enhanced user indexes for tenant isolation
         user_indexes = [
-            IndexModel([("tenant_id", "email")], unique=True),
-            IndexModel([("tenant_id", "role")]),
-            IndexModel([("tenant_id", "user_id")], unique=True),
-            IndexModel([("tenant_id", "created_at")]),
-            IndexModel([("tenant_id", "last_login")]),
-            IndexModel([("tenant_id", "auth_provider")]),
+            IndexModel([("tenant_id", 1), ("email", 1)], unique=True),
+            IndexModel([("tenant_id", 1), ("role", 1)]),
+            IndexModel([("tenant_id", 1), ("user_id", 1)], unique=True),
+            IndexModel([("tenant_id", 1), ("created_at", 1)]),
+            IndexModel([("tenant_id", 1), ("last_login", 1)]),
+            IndexModel([("tenant_id", 1), ("auth_provider", 1)]),
         ]
         
         await db.users.create_indexes(user_indexes)
