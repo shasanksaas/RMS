@@ -123,17 +123,9 @@ const AllReturns = () => {
     };
   }, []);
 
-  // Filter and search logic - IMPROVED with no duplicates
+  // Filter and search logic - SIMPLIFIED (backend now handles deduplication)
   const filterReturns = useCallback((returnsData, searchTerm, statusFilter) => {
-    // First ensure no duplicates by creating a unique set
-    const uniqueReturns = returnsData.reduce((acc, returnItem) => {
-      if (!acc.find(existing => existing.id === returnItem.id)) {
-        acc.push(returnItem);
-      }
-      return acc;
-    }, []);
-
-    let filtered = [...uniqueReturns];
+    let filtered = [...returnsData];
 
     // Apply search filter (only on real data)
     if (searchTerm.trim()) {
