@@ -139,52 +139,59 @@ const Resolution = () => {
         </CardHeader>
         <CardContent>
           <RadioGroup value={selectedResolution} onValueChange={setSelectedResolution}>
-            <div className="space-y-4">
-              {resolutionOptions.map((option) => {
-                const Icon = option.icon;
-                return (
-                  <div key={option.id}>
-                    <Label 
-                      htmlFor={option.id}
-                      className={`block p-6 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md ${
-                        selectedResolution === option.id 
-                          ? `${option.color} border-opacity-100` 
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <div className="flex items-start space-x-4">
-                        <RadioGroupItem value={option.id} id={option.id} className="mt-1" />
-                        <Icon className="h-6 w-6 mt-1 text-gray-600" />
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-2">
-                            <h3 className="text-lg font-semibold text-gray-900">{option.title}</h3>
-                            {option.badge && (
-                              <span className="px-2 py-1 text-xs font-bold bg-purple-600 text-white rounded">
-                                {option.badge}
+          <div className="space-y-4">
+            {resolutionOptions.map((option) => {
+              const Icon = option.icon;
+              return (
+                <div key={option.id}>
+                  <div 
+                    onClick={() => setSelectedResolution(option.id)}
+                    className={`block p-6 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md ${
+                      selectedResolution === option.id 
+                        ? `${option.color} border-opacity-100` 
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-start space-x-4">
+                      <input 
+                        type="radio" 
+                        name="resolution" 
+                        value={option.id} 
+                        checked={selectedResolution === option.id}
+                        onChange={() => setSelectedResolution(option.id)}
+                        className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                      />
+                      <Icon className="h-6 w-6 mt-1 text-gray-600" />
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2">
+                          <h3 className="text-lg font-semibold text-gray-900">{option.title}</h3>
+                          {option.badge && (
+                            <span className="px-2 py-1 text-xs font-bold bg-purple-600 text-white rounded">
+                              {option.badge}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-gray-600 mt-1">{option.description}</p>
+                        <div className="mt-3 flex items-center justify-between">
+                          <div className="text-2xl font-bold text-green-600">
+                            ${option.amount.toFixed(2)}
+                            {option.id === 'store_credit' && (
+                              <span className="text-sm text-gray-500 ml-2">
+                                (${totalRefund.toFixed(2)} + ${storeCreditBonus.toFixed(2)} bonus)
                               </span>
                             )}
                           </div>
-                          <p className="text-gray-600 mt-1">{option.description}</p>
-                          <div className="mt-3 flex items-center justify-between">
-                            <div className="text-2xl font-bold text-green-600">
-                              ${option.amount.toFixed(2)}
-                              {option.id === 'store_credit' && (
-                                <span className="text-sm text-gray-500 ml-2">
-                                  (${totalRefund.toFixed(2)} + ${storeCreditBonus.toFixed(2)} bonus)
-                                </span>
-                              )}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              {option.processing}
-                            </div>
+                          <div className="text-sm text-gray-500">
+                            {option.processing}
                           </div>
                         </div>
                       </div>
-                    </Label>
+                    </div>
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              );
+            })}
+          </div>
           </RadioGroup>
         </CardContent>
       </Card>
