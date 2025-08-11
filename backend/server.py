@@ -607,7 +607,7 @@ async def get_analytics(tenant_id: str = Depends(get_tenant_id), days: int = 30)
     start_date = end_date - timedelta(days=days)
     
     # Get return requests in period
-    returns = await db.return_requests.find({
+    returns = await db.returns.find({
         "tenant_id": tenant_id,
         "created_at": {"$gte": start_date, "$lte": end_date}
     }).to_list(1000)
