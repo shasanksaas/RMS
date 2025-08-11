@@ -49,19 +49,19 @@ class TenantServiceEnhanced:
         try:
             # Tenant indexes
             tenant_indexes = [
-                IndexModel([("tenant_id",)], unique=True),
-                IndexModel([("status",)]),
-                IndexModel([("created_at",)]),
-                IndexModel([("claimed_at",)]),
-                IndexModel([("last_activity_at",)]),
+                IndexModel([("tenant_id", 1)], unique=True),
+                IndexModel([("status", 1)]),
+                IndexModel([("created_at", 1)]),
+                IndexModel([("claimed_at", 1)]),
+                IndexModel([("last_activity_at", 1)]),
             ]
             await self.tenants_collection.create_indexes(tenant_indexes)
             
             # User indexes (for tenant isolation)
             user_indexes = [
-                IndexModel([("tenant_id", "email")], unique=True),
-                IndexModel([("tenant_id", "role")]),
-                IndexModel([("tenant_id", "user_id")]),
+                IndexModel([("tenant_id", 1), ("email", 1)], unique=True),
+                IndexModel([("tenant_id", 1), ("role", 1)]),
+                IndexModel([("tenant_id", 1), ("user_id", 1)]),
             ]
             await self.users_collection.create_indexes(user_indexes)
             
