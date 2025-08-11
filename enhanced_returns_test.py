@@ -328,7 +328,7 @@ class EnhancedReturnsTestSuite:
         success_fashion, fashion_returns, status = await self.make_request("GET", "/returns/", headers=fashion_headers)
         
         # Get returns for tech tenant
-        success_tech, tech_returns, status = await self.make_request("GET", "/returns", headers=tech_headers)
+        success_tech, tech_returns, status = await self.make_request("GET", "/returns/", headers=tech_headers)
         
         if success_fashion and success_tech:
             fashion_ids = {r["id"] for r in fashion_returns.get("returns", [])}
