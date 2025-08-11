@@ -159,8 +159,6 @@ const ReturnDetail = () => {
   const handleApprove = async () => {
     setActionLoading(true);
     try {
-      const apiUrl = getApiUrl();
-      
       const response = await fetch(buildApiUrl(`/api/returns/${id}/status`), {
         method: 'PUT',
         headers: {
