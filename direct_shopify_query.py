@@ -86,8 +86,8 @@ async def query_shopify_order():
     }
     """
     
-    # Test with order 1001 (Shopify ID: 5813364687033)
-    variables = {"id": "gid://shopify/Order/5813364687033"}
+    # Test with order 1004 (Shopify ID: 5813756919993)
+    variables = {"id": "gid://shopify/Order/5813756919993"}
     
     payload = {
         "query": query,
