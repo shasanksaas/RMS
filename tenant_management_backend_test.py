@@ -1162,13 +1162,15 @@ class TenantManagementTester:
         try:
             # Test login endpoint availability
             login_data = {
-                "tenant_id": self.existing_tenant_id,
+                "tenant_id": "tenant-fashion-forward-demo",
                 "email": "test@example.com",  # Invalid credentials
                 "password": "invalid",
                 "remember_me": False
             }
             
-            async with self.session.post(f"{self.base_url}/auth/login", json=login_data) as response:
+            headers = {"X-Tenant-Id": "tenant-fashion-forward-demo"}
+            
+            async with self.session.post(f"{self.base_url}/users/login", json=login_data, headers=headers) as response:
                 # We expect 401 for invalid credentials, which means endpoint is working
                 if response.status == 401:
                     self.test_results["integration_existing_system"].append({
