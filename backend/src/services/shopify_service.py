@@ -581,6 +581,70 @@ class ShopifyService:
             return None
         
         return None
+    
+    def _transform_graphql_order(self, order_node: Dict[str, Any]) -> Dict[str, Any]:
+        """Transform GraphQL order response to standard format"""
+        try:
+            # Extract line items
+            line_items = []
+            for edge in order_node.get('lineItems', {}).get('edges', []):
+                item_node = edge['node']
+                variant = item_node.get('variant', {})
+                product = item_node.get('product', {})
+                
+                line_item = {
+                    "id": item_node.get('id', ''),
+                    "title": item_node.get('title', ''),
+                    "quantity": item_node.get('quantity', 0),
+                    "sku": variant.get('sku', ''),
+                    "variant_title": variant.get('title', ''),
+                    "variant_id": variant.get('id', ''),
+                    "product_id": product.get('id', ''),
+                    "product_title": product.get('title', ''),
+                    "product_type": product.get('productType', ''),
+                    "vendor": product.get('vendor', ''),
+                    "price": float(variant.get('price', 0)) if variant.get('price') else 0.0,
+                    "unit_price": float(item_node.get('originalUnitPriceSet', {}).get('shopMoney', {}).get('amount', 0)),
+                    "fulfillment_status": "fulfilled"  # Default for eligible returns
+                }
+                line_items.append(line_item)
+            
+            # Extract customer information
+            customer = order_node.get('customer', {})
+            billing = order_node.get('billingAddress', {})
+            shipping = order_node.get('shippingAddress', {})
+            
+            # Build standard order format
+            transformed_order = {
+                "id": order_node.get('id', '').replace('gid://shopify/Order/', ''),
+                "order_number": order_node.get('name', '').replace('#', ''),
+                "name": order_node.get('name', ''),
+                "email": order_node.get('email', ''),
+                "phone": order_node.get('phone', ''),
+                "total_price": float(order_node.get('totalPriceSet', {}).get('shopMoney', {}).get('amount', 0)),
+                "currency": order_node.get('totalPriceSet', {}).get('shopMoney', {}).get('currencyCode', 'USD'),
+                "customer_id": customer.get('id', '').replace('gid://shopify/Customer/', '') if customer.get('id') else None,
+                "customer_email": customer.get('email', ''),
+                "customer_name": f"{customer.get('firstName', '')} {customer.get('lastName', '')}".strip() if customer else '',
+                "customer_phone": customer.get('phone', ''),
+                "customer_display_name": customer.get('displayName', ''),
+                "billing_address": billing,
+                "shipping_address": shipping,
+                "line_items": line_items,
+                "financial_status": order_node.get('financialStatus', '').lower(),
+                "fulfillment_status": order_node.get('fulfillmentStatus', '').lower(),
+                "created_at": order_node.get('createdAt', ''),
+                "updated_at": order_node.get('updatedAt', ''),
+                "processed_at": order_node.get('processedAt', ''),
+                "source": "shopify_live",  # Mark as live data
+                "tenant_id": self.tenant_id
+            }
+            
+            return transformed_order
+            
+        except Exception as e:
+            print(f"Order transformation error: {e}")
+            return None
 
     async def get_order(self, order_id: str) -> Optional[Dict[str, Any]]:
         """Get order by ID"""
