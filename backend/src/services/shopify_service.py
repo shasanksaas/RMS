@@ -32,12 +32,25 @@ class ShopifyService:
             return False
             
         try:
+            # First check integrations_shopify collection
             integration = await db.integrations_shopify.find_one({
                 "tenant_id": check_tenant_id,
                 "status": "connected"
             })
-            return integration is not None
+            if integration:
+                return True
+                
+            # Also check tenant document for shopify_integration field
+            tenant = await db.tenants.find_one({"id": check_tenant_id})
+            if tenant and tenant.get('shopify_integration'):
+                shopify_integration = tenant['shopify_integration']
+                return (shopify_integration.get('status') == 'connected' and 
+                       shopify_integration.get('access_token') and
+                       shopify_integration.get('shop_domain'))
+                       
+            return False
         except Exception as e:
+            print(f"Error checking Shopify connection: {e}")
             return False
     
     async def is_online(self) -> bool:
