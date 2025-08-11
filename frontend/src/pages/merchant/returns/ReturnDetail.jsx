@@ -38,8 +38,14 @@ const ReturnDetail = () => {
     try {
       setLoading(true);
       const apiUrl = getApiUrl();
+      let fullUrl = `${apiUrl}/api/returns/${id}`;
       
-      const response = await fetch(`${apiUrl}/api/returns/${id}`, {
+      // Force HTTPS to prevent mixed content errors
+      if (fullUrl.startsWith('http://')) {
+        fullUrl = fullUrl.replace('http://', 'https://');
+      }
+      
+      const response = await fetch(fullUrl, {
         headers: {
           'Content-Type': 'application/json',
           'X-Tenant-Id': tenantId
