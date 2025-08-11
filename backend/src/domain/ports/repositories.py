@@ -99,6 +99,15 @@ class OrderRepository(ABC):
         pass
     
     @abstractmethod
+    async def find_by_number(
+        self, 
+        order_number: str,
+        tenant_id: TenantId
+    ) -> Optional[Dict[str, Any]]:
+        """Find order by number only (primary lookup method)"""
+        pass
+    
+    @abstractmethod
     async def get_eligible_items(self, order_id: OrderId, tenant_id: TenantId) -> List[Dict[str, Any]]:
         """Get items eligible for return from an order"""
         pass
