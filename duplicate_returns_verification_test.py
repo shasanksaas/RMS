@@ -357,7 +357,7 @@ class DuplicateReturnsVerificationTest:
         print("\n🗄️ Testing Database Cleanup Verification...")
         
         # Get all returns for tenant-rms34 to verify cleanup
-        success, response, status = await self.make_request("GET", "/returns?pageSize=100")
+        success, response, status = await self.make_request("GET", "/returns/?pageSize=100")
         
         if not success:
             self.log_test("Database Cleanup Verification", False, 
