@@ -1,7 +1,7 @@
 """
 Tenant service - handles tenant business logic
 """
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from ..models import Tenant, TenantCreate, TenantUpdate, TenantSettings
