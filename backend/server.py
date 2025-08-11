@@ -51,6 +51,10 @@ from src.middleware.security import (
     tenant_context,
     get_current_tenant_id
 )
+# Import tenant isolation middleware
+from src.middleware.tenant_isolation import TenantIsolationMiddleware
+from src.middleware.empty_state_handler import empty_state_handler
+from src.services.tenant_service_enhanced import enhanced_tenant_service
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
