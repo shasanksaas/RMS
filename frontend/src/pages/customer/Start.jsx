@@ -28,12 +28,21 @@ const CustomerStart = () => {
       // Always use the configured backend URL for production
       let apiUrl = backendUrl || 'http://localhost:8001';
       
+      // Get tenant from URL or use default - customer portal should work for any tenant
+      const urlPath = window.location.pathname;
+      let tenantId = 'tenant-fashion-store'; // Default to tenant with demo data
+      
+      // Check if URL contains tenant info or use domain-based detection
+      if (window.location.hostname.includes('rms34') || localStorage.getItem('selectedTenant') === 'tenant-rms34') {
+        tenantId = 'tenant-rms34';
+      }
+      
       // Call Elite Portal Returns API for order lookup (dual-mode)
       const response = await fetch(`${apiUrl}/api/elite/portal/returns/lookup-order`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Tenant-Id': 'tenant-rms34' // Use appropriate tenant context
+          'X-Tenant-Id': tenantId
         },
         body: JSON.stringify({
           order_number: formData.orderNumber,
@@ -50,7 +59,8 @@ const CustomerStart = () => {
             order: responseData.order,
             orderNumber: formData.orderNumber, 
             email: formData.email,
-            mode: responseData.mode // Shopify, local, or fallback
+            mode: responseData.mode, // Shopify, local, or fallback
+            tenantId: tenantId
           } 
         });
       } else {
