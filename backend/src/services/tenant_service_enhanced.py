@@ -37,6 +37,15 @@ class TenantServiceEnhanced:
         
     async def initialize(self):
         """Initialize indexes for optimal performance and security"""
+        if not self.db:
+            raise ValueError("Database connection required for initialization")
+        
+        # Set collections if not already set
+        if not self.tenants_collection:
+            self.tenants_collection = self.db.tenants
+            self.users_collection = self.db.users
+            self.integrations_collection = self.db.integrations_shopify
+        
         try:
             # Tenant indexes
             tenant_indexes = [
