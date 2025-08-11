@@ -176,10 +176,37 @@ class LookupOrderForReturnHandler:
         self.shopify_service = shopify_service
     
     async def handle(self, query: LookupOrderForReturn) -> Dict[str, Any]:
-        """Lookup order for return creation"""
+        """Lookup order for return creation - prioritize synced database orders"""
         customer_email = Email(query.customer_email)
         
-        # First try Shopify lookup if connected
+        # First try local synced order lookup (same as merchant dashboard)
+        order = await self.order_repository.find_by_number_and_email(
+            query.order_number, customer_email, query.tenant_id
+        )
+        
+        if order:
+            # Convert MongoDB ObjectId to string for JSON serialization
+            serialized_order = self._serialize_order(order)
+            return {
+                "success": True,
+                "mode": "local",
+                "order": serialized_order
+            }
+        
+        # Also try finding order by number only (in case email doesn't match exactly)
+        order_by_number = await self.order_repository.find_by_number(
+            query.order_number, query.tenant_id
+        )
+        
+        if order_by_number:
+            serialized_order = self._serialize_order(order_by_number)
+            return {
+                "success": True,
+                "mode": "local",
+                "order": serialized_order
+            }
+        
+        # Fallback: Try Shopify lookup if connected and local lookup failed
         if await self.shopify_service.is_connected(query.tenant_id):
             shopify_order = await self.shopify_service.find_order_by_number(
                 query.order_number, query.tenant_id
@@ -199,20 +226,6 @@ class LookupOrderForReturnHandler:
                         "mode": "shopify",
                         "order": shopify_order
                     }
-        
-        # Fallback to local order lookup
-        order = await self.order_repository.find_by_number_and_email(
-            query.order_number, customer_email, query.tenant_id
-        )
-        
-        if order:
-            # Convert MongoDB ObjectId to string for JSON serialization
-            serialized_order = self._serialize_order(order)
-            return {
-                "success": True,
-                "mode": "local",
-                "order": serialized_order
-            }
         
         return {
             "success": False,
