@@ -470,7 +470,7 @@ async def get_order(order_id: str, tenant_id: str = Depends(get_tenant_id)):
         raise HTTPException(status_code=404, detail="Order not found")
     
     # Get related returns for this order
-    returns_cursor = db.return_requests.find({
+    returns_cursor = db.returns.find({
         "order_id": order_id,
         "tenant_id": tenant_id
     })
