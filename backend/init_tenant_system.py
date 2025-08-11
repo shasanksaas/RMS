@@ -27,12 +27,12 @@ async def create_tenant_indexes():
     try:
         # Tenant collection indexes
         tenant_indexes = [
-            IndexModel([("tenant_id",)], unique=True),
-            IndexModel([("status",)]),
-            IndexModel([("created_at",)]),
-            IndexModel([("claimed_at",)]),
-            IndexModel([("last_activity_at",)]),
-            IndexModel([("settings.created_by",)]),
+            IndexModel([("tenant_id", 1)], unique=True),
+            IndexModel([("status", 1)]),
+            IndexModel([("created_at", 1)]),
+            IndexModel([("claimed_at", 1)]),
+            IndexModel([("last_activity_at", 1)]),
+            IndexModel([("settings.created_by", 1)]),
         ]
         
         await db.tenants.create_indexes(tenant_indexes)
