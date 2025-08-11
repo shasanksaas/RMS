@@ -70,13 +70,25 @@ const Resolution = () => {
     setLoading(true);
 
     try {
+      // Get the selected resolution and remove non-serializable properties
+      const selectedResolutionData = resolutionOptions.find(opt => opt.id === selectedResolution);
+      const serializableResolution = {
+        id: selectedResolutionData.id,
+        title: selectedResolutionData.title,
+        description: selectedResolutionData.description,
+        amount: selectedResolutionData.amount,
+        processing: selectedResolutionData.processing,
+        color: selectedResolutionData.color,
+        badge: selectedResolutionData.badge
+      };
+
       // Navigate immediately without delay
       navigate('/returns/confirm', {
         state: {
           orderNumber,
           email,
           selectedItems,
-          resolution: resolutionOptions.find(opt => opt.id === selectedResolution)
+          resolution: serializableResolution
         }
       });
     } catch (error) {
