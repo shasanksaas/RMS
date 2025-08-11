@@ -734,15 +734,14 @@ class ShopifyService:
         # If not in database, fetch from Shopify using real-time API
         try:
             print(f"DEBUG: Fetching from Shopify API")
-            # Get tenant credentials
-            tenant = await db.tenants.find_one({"id": use_tenant_id})
-            if not tenant or not tenant.get('shopify_integration'):
-                print(f"DEBUG: No tenant or shopify_integration found")
+            # Get tenant credentials from integrations_shopify collection
+            integration = await db.integrations_shopify.find_one({"tenant_id": use_tenant_id})
+            if not integration:
+                print(f"DEBUG: No integration found in integrations_shopify")
                 return None
                 
-            shopify_integration = tenant.get('shopify_integration', {})
-            access_token = shopify_integration.get('access_token')
-            shop_domain = shopify_integration.get('shop_domain')
+            access_token = integration.get('access_token')
+            shop_domain = integration.get('shop_domain')
             
             if not access_token or not shop_domain:
                 return None
