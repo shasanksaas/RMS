@@ -189,18 +189,33 @@ async def get_return_detail(
             "tenant_id": tenant_id
         })
         
-        # Format items
+        # Format items from line_items
         formatted_items = []
-        for item in return_req.get("items", []):
+        for item in return_req.get("line_items", []):
+            # Extract unit price
+            unit_price_data = item.get("unit_price", {})
+            if isinstance(unit_price_data, dict):
+                price = float(unit_price_data.get("amount", 0))
+            else:
+                price = float(unit_price_data) if unit_price_data else 0
+            
+            # Extract reason
+            reason_data = item.get("reason", {})
+            reason_text = ""
+            if isinstance(reason_data, dict):
+                reason_text = reason_data.get("description", reason_data.get("code", ""))
+            else:
+                reason_text = str(reason_data) if reason_data else ""
+            
             formatted_items.append({
-                "fulfillment_line_item_id": item.get("fulfillment_line_item_id"),
+                "fulfillment_line_item_id": item.get("line_item_id"),
                 "title": item.get("title", ""),
                 "variant_title": item.get("variant_title"),
                 "sku": item.get("sku", ""),
                 "quantity": item.get("quantity", 0),
-                "price": item.get("price", 0),
-                "refundable_amount": item.get("refundable_amount", 0),
-                "reason": item.get("reason", ""),
+                "price": price,
+                "refundable_amount": price * item.get("quantity", 0),  # Calculate refundable amount
+                "reason": reason_text,
                 "condition": item.get("condition", ""),
                 "photos": item.get("photos", [])
             })
