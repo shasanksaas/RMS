@@ -63,8 +63,8 @@ const AllReturns = () => {
   const tenantId = 'tenant-rms34'; // Updated to match connected Shopify store
 
   const getApiUrl = () => {
-    // Always use the configured backend URL for production
-    return backendUrl || 'http://localhost:8001';
+    // Use the configured backend URL - no fallback since it's set in production
+    return backendUrl;
   };
 
   // Debounced search function
