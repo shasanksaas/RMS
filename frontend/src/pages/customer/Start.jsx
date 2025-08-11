@@ -28,26 +28,48 @@ const CustomerStart = () => {
       // Always use the configured backend URL for production
       let apiUrl = backendUrl || 'http://localhost:8001';
       
-      // Call backend API to validate order
-      const response = await fetch(`${apiUrl}/api/orders/lookup`, {
+      // Call Elite Portal Returns API for order lookup (dual-mode)
+      const response = await fetch(`${apiUrl}/api/elite/portal/returns/lookup-order`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-Tenant-Id': 'tenant-rms34' // Use appropriate tenant context
         },
         body: JSON.stringify({
           order_number: formData.orderNumber,
-          email: formData.email
+          customer_email: formData.email
         })
       });
 
-      if (response.ok) {
-        const orderData = await response.json();
+      const responseData = await response.json();
+
+      if (response.ok && responseData.success) {
         // Success - navigate to item selection with order data
         navigate('/returns/select', { 
           state: { 
-            order: orderData,
+            order: responseData.order,
             orderNumber: formData.orderNumber, 
-            email: formData.email 
+            email: formData.email,
+            mode: responseData.mode // Shopify, local, or fallback
+          } 
+        });
+      } else {
+        // Handle different response modes
+        if (responseData.mode === 'fallback') {
+          // Order not found - offer fallback mode
+          setError('Order not found. You can still submit a return request for manual review.');
+          // Could navigate to fallback form or show alternative options
+        } else {
+          setError(responseData.message || 'Unable to find your order. Please check your order number and email address.');
+        }
+      }
+    } catch (err) {
+      console.error('Order lookup error:', err);
+      setError('Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }; 
           } 
         });
       } else if (response.status === 404) {
