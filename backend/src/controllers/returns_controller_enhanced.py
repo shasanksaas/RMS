@@ -8,7 +8,13 @@ from datetime import datetime
 import re
 
 from src.middleware.security import get_tenant_id
-from src.config.database import db
+from motor.motor_asyncio import AsyncIOMotorClient
+import os
+
+# Use the same database connection as server.py
+mongo_url = os.environ['MONGO_URL']
+client = AsyncIOMotorClient(mongo_url)
+db = client[os.environ['DB_NAME']]
 
 router = APIRouter(prefix="/returns", tags=["returns"])
 
