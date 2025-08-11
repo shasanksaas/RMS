@@ -47,7 +47,14 @@ const Status = () => {
             ? parseFloat(data.estimated_refund.amount || 0)
             : parseFloat(data.estimated_refund || 0)
         },
-        items: data.line_items || [],
+        items: (data.line_items || []).map(item => ({
+          productName: item.title || 'Product',
+          quantity: item.quantity || 1,
+          reason: item.reason?.description || item.reason?.code || 'Not specified',
+          refundAmount: typeof item.unit_price === 'object' 
+            ? parseFloat(item.unit_price.amount || 0)
+            : parseFloat(item.unit_price || 0)
+        })),
         customer: {
           name: data.customer_name,
           email: data.customer_email
