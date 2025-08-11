@@ -736,6 +736,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Add tenant isolation middleware for multi-tenancy security
+tenant_isolation = TenantIsolationMiddleware()
+app.middleware("http")(tenant_isolation)
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
