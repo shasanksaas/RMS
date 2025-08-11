@@ -14,6 +14,7 @@ from src.config.database import get_database
 from src.services.auth_service import AuthService
 from src.services.tenant_service_enhanced import TenantServiceEnhanced
 from src.models.user import UserCreate
+from src.models.tenant import TenantCreate
 import uuid
 
 # Initialize services
