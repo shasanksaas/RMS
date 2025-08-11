@@ -548,20 +548,11 @@ class ShopifyService:
                                     }
                                 }
                             }
-                            fulfillmentOrders(first: 10) {
-                                edges {
-                                    node {
-                                        id
-                                        status
-                                        fulfillAt
-                                    }
-                                }
-                            }
                             createdAt
                             updatedAt
                             processedAt
-                            financialStatus
-                            fulfillmentStatus
+                            displayFinancialStatus
+                            displayFulfillmentStatus
                         }
                     }
                 }
