@@ -566,7 +566,7 @@ async def update_return_status(
         # Prepare update data
         update_timestamp = datetime.utcnow()
         update_data = {
-            "status": new_status,
+            "status": new_status.upper(),  # Store uppercase for consistency
             "updated_at": update_timestamp,
         }
         
