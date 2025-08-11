@@ -153,7 +153,8 @@ class Return:
                 customer_email=self.customer_email,
                 channel=self.channel,
                 estimated_refund=self.estimated_refund,
-                occurred_at=datetime.utcnow()
+                occurred_at=datetime.utcnow(),
+                correlation_id=None  # Will be set by command handler if available
             ))
         elif new_status == ReturnStatus.APPROVED:
             self.add_domain_event(ReturnApproved(
