@@ -235,9 +235,7 @@ const AllReturns = () => {
 
   const handleStatusUpdate = async (returnId, newStatus) => {
     try {
-      const apiUrl = getApiUrl();
-      
-      const response = await fetch(`${apiUrl}/api/returns/${returnId}/status`, {
+      const response = await fetch(buildApiUrl(`/api/returns/${returnId}/status`), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
