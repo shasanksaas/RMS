@@ -27,15 +27,18 @@ const Confirm = () => {
       // Get backend URL
       const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
       
-      // Determine tenant ID (consistent with the order lookup)
-      let tenantId = 'tenant-rms34'; // Default to Shopify-connected tenant
-      if (window.location.hostname.includes('fashion') || localStorage.getItem('selectedTenant') === 'tenant-fashion-store') {
-        tenantId = 'tenant-fashion-store';
+      // Use the passed tenant ID or determine it
+      let currentTenantId = tenantId;
+      if (!currentTenantId) {
+        currentTenantId = 'tenant-rms34'; // Default to Shopify-connected tenant
+        if (window.location.hostname.includes('fashion') || localStorage.getItem('selectedTenant') === 'tenant-fashion-store') {
+          currentTenantId = 'tenant-fashion-store';
+        }
       }
 
-      // Prepare return request data
+      // Prepare return request data using the real order ID
       const returnRequestData = {
-        order_id: orderNumber, // This might need to be the actual order ID
+        order_id: order.id || order._id, // Use the real order ID from database
         customer_email: email,
         return_method: 'prepaid_label', // Default method
         items: selectedItems.map(item => ({
