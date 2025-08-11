@@ -846,12 +846,15 @@ class TenantManagementTester:
         try:
             # Try to authenticate existing merchant and test tenant access
             merchant_login_data = {
+                "tenant_id": "tenant-fashion-forward-demo",
                 "email": self.existing_merchant_credentials["email"],
                 "password": self.existing_merchant_credentials["password"],
                 "remember_me": False
             }
             
-            async with self.session.post(f"{self.base_url}/auth/login", json=merchant_login_data) as response:
+            headers = {"X-Tenant-Id": "tenant-fashion-forward-demo"}
+            
+            async with self.session.post(f"{self.base_url}/users/login", json=merchant_login_data, headers=headers) as response:
                 response_text = await response.text()
                 
                 if response.status == 200:
