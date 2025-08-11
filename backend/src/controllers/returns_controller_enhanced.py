@@ -261,6 +261,14 @@ async def get_returns(
             if not customer_name and customer_email:
                 customer_name = customer_email.split('@')[0].replace('.', ' ').replace('_', ' ').title()
             
+            # Extract and format reason data
+            reason_data = return_req.get("reason", {})
+            reason_text = ""
+            if isinstance(reason_data, dict):
+                reason_text = reason_data.get("description", reason_data.get("code", reason_data.get("text", "")))
+            elif isinstance(reason_data, str):
+                reason_text = reason_data
+            
             formatted_returns.append({
                 "id": return_req["id"],
                 "order_number": order_number,
@@ -271,6 +279,7 @@ async def get_returns(
                 "decision": return_req.get("decision", ""),
                 "item_count": item_count,
                 "estimated_refund": estimated_refund,
+                "reason": reason_text,  # Include reason in response
                 "created_at": created_at_str,
                 "updated_at": updated_at_str
             })
