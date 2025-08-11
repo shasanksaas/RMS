@@ -704,7 +704,9 @@ async def get_configuration():
 
 # Include routers in the api_router first
 api_router.include_router(auth_router)
+api_router.include_router(public_signup_router)  # Public merchant signup
 api_router.include_router(users_router)  # User management system
+api_router.include_router(tenant_management_router)  # Admin tenant management
 api_router.include_router(integration_router)
 api_router.include_router(webhook_router)
 api_router.include_router(testing_router)
