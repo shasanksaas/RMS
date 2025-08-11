@@ -115,29 +115,38 @@ class TenantManagementTester:
         """Try alternative admin authentication methods"""
         logger.info("🔄 Trying alternative admin authentication")
         
-        # Try without tenant_id for admin
-        try:
-            login_data = {
-                "email": self.admin_credentials["email"],
-                "password": self.admin_credentials["password"],
-                "remember_me": True
-            }
-            
-            async with self.session.post(f"{self.base_url}/auth/login", json=login_data) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    self.admin_token = data.get("access_token")
-                    logger.info("✅ Alternative admin authentication successful")
-                    return True
-                else:
-                    logger.warning("⚠️ Admin authentication not available - will test with mock token")
-                    self.admin_token = "mock_admin_token_for_testing"
-                    return False
-                    
-        except Exception as e:
-            logger.warning(f"⚠️ Alternative admin auth failed: {e}")
-            self.admin_token = "mock_admin_token_for_testing"
-            return False
+        # Try with different tenant contexts for admin
+        admin_tenant_contexts = ["admin", "system", "tenant-fashion-forward-demo"]
+        
+        for tenant_context in admin_tenant_contexts:
+            try:
+                login_data = {
+                    "tenant_id": tenant_context,
+                    "email": self.admin_credentials["email"],
+                    "password": self.admin_credentials["password"],
+                    "remember_me": True
+                }
+                
+                headers = {"X-Tenant-Id": tenant_context}
+                
+                async with self.session.post(f"{self.base_url}/users/login", json=login_data, headers=headers) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        self.admin_token = data.get("access_token")
+                        user_info = data.get("user", {})
+                        logger.info(f"✅ Admin authentication successful with tenant context: {tenant_context}, role: {user_info.get('role')}")
+                        return True
+                    else:
+                        logger.debug(f"Admin auth failed for tenant {tenant_context}: {response.status}")
+                        
+            except Exception as e:
+                logger.debug(f"Admin auth exception for tenant {tenant_context}: {e}")
+                continue
+        
+        # If no admin user found, use mock token for testing RBAC
+        logger.warning("⚠️ No admin user found - will test RBAC with mock token")
+        self.admin_token = "mock_admin_token_for_rbac_testing"
+        return False
 
     async def test_admin_tenant_management_apis(self):
         """Test Admin Tenant Management APIs"""
