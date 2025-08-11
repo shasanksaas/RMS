@@ -233,7 +233,7 @@ const Register: React.FC = () => {
       // Construct Google OAuth URL with registration context
       const googleAuthUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
       googleAuthUrl.searchParams.set('client_id', '286821938662-8jjcepu96llg0v1g6maskbptmp34o15u.apps.googleusercontent.com');
-      googleAuthUrl.searchParams.set('redirect_uri', 'https://2df859a5-1f9c-46d3-81c6-dff0c2023545.preview.emergentagent.com/auth/google/callback');
+      googleAuthUrl.searchParams.set('redirect_uri', window.location.origin + '/auth/google/callback');
       googleAuthUrl.searchParams.set('response_type', 'code');
       googleAuthUrl.searchParams.set('scope', 'openid email profile');
       googleAuthUrl.searchParams.set('access_type', 'offline');
