@@ -574,30 +574,39 @@ class ShopifyService:
             
             # Execute real-time GraphQL query
             print(f"DEBUG: Making GraphQL query to {graphql_url} for order {search_order_number}")
+            print(f"DEBUG: Headers: {headers}")
+            print(f"DEBUG: Payload: {json.dumps(payload, indent=2)}")
+            
             async with aiohttp.ClientSession() as session:
-                async with session.post(graphql_url, json=payload, headers=headers) as response:
+                async with session.post(graphql_url, json=payload, headers=headers, timeout=aiohttp.ClientTimeout(total=30)) as response:
                     print(f"DEBUG: GraphQL response status: {response.status}")
+                    response_text = await response.text()
+                    print(f"DEBUG: GraphQL response text: {response_text}")
+                    
                     if response.status == 200:
-                        data = await response.json()
-                        print(f"DEBUG: GraphQL response data keys: {list(data.keys()) if data else 'None'}")
-                        
-                        if 'errors' in data:
-                            print(f"DEBUG: GraphQL errors: {data['errors']}")
+                        try:
+                            data = json.loads(response_text)
+                            print(f"DEBUG: GraphQL response data keys: {list(data.keys()) if data else 'None'}")
+                            
+                            if 'errors' in data:
+                                print(f"DEBUG: GraphQL errors: {data['errors']}")
+                                return None
+                                
+                            orders = data.get('data', {}).get('orders', {}).get('edges', [])
+                            print(f"DEBUG: Found {len(orders)} orders matching {search_order_number}")
+                            
+                            if orders:
+                                order_node = orders[0]['node']
+                                
+                                # Transform GraphQL response to standard format
+                                result = self._transform_graphql_order(order_node)
+                                print(f"DEBUG: Transformed order result: {bool(result)}")
+                                return result
+                        except json.JSONDecodeError as e:
+                            print(f"DEBUG: JSON decode error: {e}")
                             return None
-                            
-                        orders = data.get('data', {}).get('orders', {}).get('edges', [])
-                        print(f"DEBUG: Found {len(orders)} orders matching {search_order_number}")
-                        
-                        if orders:
-                            order_node = orders[0]['node']
-                            
-                            # Transform GraphQL response to standard format
-                            result = self._transform_graphql_order(order_node)
-                            print(f"DEBUG: Transformed order result: {bool(result)}")
-                            return result
                     else:
-                        error_text = await response.text()
-                        print(f"DEBUG: Shopify API error {response.status}: {error_text}")
+                        print(f"DEBUG: Shopify API error {response.status}: {response_text}")
                         return None
                         
         except Exception as e:
