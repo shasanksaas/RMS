@@ -176,61 +176,43 @@ class LookupOrderForReturnHandler:
         self.shopify_service = shopify_service
     
     async def handle(self, query: LookupOrderForReturn) -> Dict[str, Any]:
-        """Lookup order for return creation - same logic as merchant dashboard"""
+        """Real-time Shopify API lookup for customer portal - NO cached data"""
         
-        # Primary lookup: Find order by number only (same as merchant dashboard)
-        order_by_number = await self.order_repository.find_by_number(
-            query.order_number, query.tenant_id
-        )
-        
-        if order_by_number:
-            serialized_order = self._serialize_order(order_by_number)
-            return {
-                "success": True,
-                "mode": "local",
-                "order": serialized_order
-            }
-        
-        # Secondary: Try with email if provided (for validation)
-        if query.customer_email:
-            try:
-                customer_email = Email(query.customer_email)
-                order_with_email = await self.order_repository.find_by_number_and_email(
-                    query.order_number, customer_email, query.tenant_id
-                )
-                
-                if order_with_email:
-                    serialized_order = self._serialize_order(order_with_email)
-                    return {
-                        "success": True,
-                        "mode": "local",
-                        "order": serialized_order
-                    }
-            except Exception as e:
-                print(f"Email validation failed: {e}")
-                pass
-        
-        # Last resort: Try Shopify real-time lookup (if synced data not available)
+        # ALWAYS do real-time Shopify lookup first - NO database lookups
         if await self.shopify_service.is_connected(query.tenant_id):
             try:
+                # Real-time GraphQL query to Shopify API
                 shopify_order = await self.shopify_service.find_order_by_number(
                     query.order_number, query.tenant_id
                 )
                 
                 if shopify_order:
+                    # Return live Shopify data - no static data allowed
                     return {
                         "success": True,
-                        "mode": "shopify",
+                        "mode": "shopify_live",
                         "order": shopify_order
                     }
+                else:
+                    return {
+                        "success": False,
+                        "mode": "not_found",
+                        "message": f"Order #{query.order_number} not found in Shopify store"
+                    }
+                    
             except Exception as e:
-                print(f"Shopify lookup failed: {e}")
-        
-        return {
-            "success": False,
-            "mode": "fallback",
-            "message": "Order not found. Please proceed with manual entry."
-        }
+                print(f"Real-time Shopify lookup failed: {e}")
+                return {
+                    "success": False,
+                    "mode": "error",
+                    "message": f"Error connecting to Shopify: {str(e)}"
+                }
+        else:
+            return {
+                "success": False,
+                "mode": "not_connected",
+                "message": "Shopify store not connected. Please contact support."
+            }
     
     def _serialize_order(self, order: Dict[str, Any]) -> Dict[str, Any]:
         """Convert MongoDB order document to JSON-serializable format"""
