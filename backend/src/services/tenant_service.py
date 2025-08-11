@@ -57,11 +57,11 @@ class TenantService:
         
         return await self.get_tenant_by_id(tenant_id)
     
-    async def update_tenant_settings(self, tenant_id: str, settings: TenantSettings) -> Optional[Tenant]:
+    async def update_tenant_settings(self, tenant_id: str, settings: Dict[str, Any]) -> Optional[Tenant]:
         """Update tenant settings"""
         await self.collection.update_one(
             {"id": tenant_id, "is_active": True},
-            {"$set": {"settings": settings.dict()}}
+            {"$set": {"settings": settings}}
         )
         
         return await self.get_tenant_by_id(tenant_id)
