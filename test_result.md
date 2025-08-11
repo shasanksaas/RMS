@@ -57,8 +57,10 @@
 ##   test_priority: "high_first"  # or "sequential" or "stuck_first"
 ##
 ## agent_communication:
-##     -agent: "main"  # or "testing" or "user"
-##     -message: "Communication message between agents"
+  - agent: "user"
+    message: "Reported duplicate entries showing on AllReturns.jsx page - 'lot of duplicates pls fix that and again no static data strictly all dynamic real live data'"
+  - agent: "main"
+    message: "Investigating duplicate issue in AllReturns.jsx. Need to test backend API first to verify if duplicates are coming from backend or if it's a frontend rendering issue. Will check /api/returns/ endpoint response structure and identify root cause."
 
 # Protocol Guidelines for Main agent
 #
