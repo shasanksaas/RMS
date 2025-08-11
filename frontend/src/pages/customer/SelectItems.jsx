@@ -78,22 +78,6 @@ const SelectItems = () => {
       setLoading(false);
     }
   }, [orderNumber, email, orderData, navigate]);
-        {
-          id: 'item-3',
-          productName: 'Gift Card',
-          productImage: '/placeholder-product.jpg',
-          sku: 'GIFT-001',
-          quantity: 1,
-          price: 50.00,
-          eligible: false,
-          ineligibleReason: 'Gift cards cannot be returned'
-        }
-      ]
-    };
-
-    setOrder(mockOrder);
-    setLoading(false);
-  }, [orderNumber, email, navigate]);
 
   const returnReasons = [
     { value: 'wrong_size', label: 'Wrong size' },
