@@ -88,7 +88,10 @@ const Resolution = () => {
           orderNumber,
           email,
           selectedItems,
-          resolution: serializableResolution
+          resolution: serializableResolution,
+          order: order, // Pass complete order data
+          mode: mode,
+          tenantId: tenantId
         }
       });
     } catch (error) {
