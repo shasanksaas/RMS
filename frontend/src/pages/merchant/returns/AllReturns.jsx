@@ -124,7 +124,12 @@ const AllReturns = () => {
       setError('');
       
       const apiUrl = getApiUrl();
-      const fullUrl = `${apiUrl}/api/returns`;
+      let fullUrl = `${apiUrl}/api/returns`;
+      
+      // Force HTTPS to prevent mixed content errors
+      if (fullUrl.startsWith('http://')) {
+        fullUrl = fullUrl.replace('http://', 'https://');
+      }
       
       console.log('Making request to:', fullUrl);
       
