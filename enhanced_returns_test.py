@@ -123,7 +123,7 @@ class EnhancedReturnsTestSuite:
             headers = {"X-Tenant-Id": tenant_id}
             
             # Test 1: GET /api/returns/ (enhanced controller)
-            success, response, status = await self.make_request("GET", "/returns", headers=headers)
+            success, response, status = await self.make_request("GET", "/returns/", headers=headers)
             
             if success and "returns" in response:
                 self.log_test(f"Enhanced Returns API: GET /returns for {tenant_id}", True, 
