@@ -479,7 +479,7 @@ class TenantManagementTester:
         
         test_name = "Check Tenant Status"
         
-        # Test with existing tenant
+        # Test with existing tenant from review request
         try:
             async with self.session.get(f"{self.base_url}/auth/tenant-status/{self.existing_tenant_id}") as response:
                 response_text = await response.text()
@@ -514,6 +514,44 @@ class TenantManagementTester:
                 "response_code": None
             })
             logger.error(f"❌ {test_name}: Exception - {e}")
+        
+        # Test all expected tenant IDs from review request
+        for tenant_id in self.expected_tenant_ids:
+            test_name_specific = f"Check Expected Tenant Status - {tenant_id}"
+            try:
+                async with self.session.get(f"{self.base_url}/auth/tenant-status/{tenant_id}") as response:
+                    response_text = await response.text()
+                    
+                    if response.status == 200:
+                        data = await response.json() if response_text else {}
+                        is_valid = data.get("valid", False)
+                        is_available = data.get("available", False)
+                        
+                        self.test_results["public_merchant_signup"].append({
+                            "test": test_name_specific,
+                            "status": "✅ PASS" if is_valid else "⚠️ NOT_FOUND",
+                            "details": f"Tenant {tenant_id} - Valid: {is_valid}, Available: {is_available}",
+                            "response_code": response.status
+                        })
+                        logger.info(f"✅ {test_name_specific}: Valid={is_valid}, Available={is_available}")
+                        
+                    else:
+                        self.test_results["public_merchant_signup"].append({
+                            "test": test_name_specific,
+                            "status": "❌ FAIL",
+                            "details": f"Unexpected response: {response.status} - {response_text[:200]}",
+                            "response_code": response.status
+                        })
+                        logger.error(f"❌ {test_name_specific}: Failed - {response.status}")
+                        
+            except Exception as e:
+                self.test_results["public_merchant_signup"].append({
+                    "test": test_name_specific,
+                    "status": "❌ ERROR",
+                    "details": f"Exception: {str(e)}",
+                    "response_code": None
+                })
+                logger.error(f"❌ {test_name_specific}: Exception - {e}")
         
         # Test with invalid tenant
         test_name_invalid = "Check Invalid Tenant Status"
