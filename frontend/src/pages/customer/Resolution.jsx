@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from '../../components/ui/alert';
 const Resolution = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { orderNumber, email, selectedItems } = location.state || {};
+  const { orderNumber, email, selectedItems, order, mode, tenantId } = location.state || {};
   
   const [selectedResolution, setSelectedResolution] = useState('');
   const [loading, setLoading] = useState(false);
