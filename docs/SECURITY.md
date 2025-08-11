@@ -418,7 +418,7 @@ from fastapi.middleware.cors import CORSMiddleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://your-app.preview.emergentagent.com",
+        "https://08371864-d592-4183-9894-6a29b3c874f2.preview.emergentagent.com",
         "https://your-custom-domain.com"
     ],
     allow_credentials=True,
