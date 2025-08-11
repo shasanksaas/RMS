@@ -161,7 +161,8 @@ class Return:
                 return_id=self.id,
                 tenant_id=self.tenant_id,
                 approved_by=actor,
-                occurred_at=datetime.utcnow()
+                occurred_at=datetime.utcnow(),
+                correlation_id=None
             ))
         elif new_status == ReturnStatus.DECLINED:
             self.add_domain_event(ReturnRejected(
@@ -169,7 +170,8 @@ class Return:
                 tenant_id=self.tenant_id,
                 rejected_by=actor,
                 reason=reason,
-                occurred_at=datetime.utcnow()
+                occurred_at=datetime.utcnow(),
+                correlation_id=None
             ))
     
     def approve(self, approver: str, override_policy: bool = False, notes: str = "") -> None:
