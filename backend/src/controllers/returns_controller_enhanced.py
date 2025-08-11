@@ -288,16 +288,15 @@ async def get_return_detail(
                 "photos": item.get("photos", [])
             })
         
-        # Build Shopify admin URLs
-        tenant = await db.tenants.find_one({"id": tenant_id})
-        shop_domain = tenant.get("shopify_store", "") if tenant else ""
+        # Get Shopify integration details for URLs
+        shopify_integration = await db.integrations_shopify.find_one({
+            "tenant_id": tenant_id,
+            "is_active": True
+        })
         
-        shopify_order_url = None
-        shopify_return_url = None
-        
-        if shop_domain and order:
-            shopify_order_url = f"https://{shop_domain}/admin/orders/{order.get('shopify_order_id')}"
-            # Shopify return URL would be similar if return exists in Shopify
+        shop_domain = shopify_integration.get("shop_domain") if shopify_integration else "unknown-store"
+        shopify_order_url = f"https://{shop_domain}.myshopify.com/admin/orders/{return_req.get('order_id')}" if return_req.get('order_id') else None
+        shopify_return_url = f"https://{shop_domain}.myshopify.com/admin/returns" if shopify_integration else None
         
         # Extract estimated refund
         estimated_refund_data = return_req.get("estimated_refund", {})
