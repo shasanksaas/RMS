@@ -249,6 +249,7 @@ const ReturnDetail = () => {
           </Button>
         </Link>
         <Alert className="border-red-200 bg-red-50">
+          <AlertTriangle className="h-4 w-4" />
           <AlertDescription className="text-red-800">
             {error}
           </AlertDescription>
@@ -271,13 +272,48 @@ const ReturnDetail = () => {
   }
 
   const getStatusColor = (status) => {
-    const colors = {
-      requested: 'bg-yellow-100 text-yellow-800',
-      approved: 'bg-blue-100 text-blue-800',
-      denied: 'bg-red-100 text-red-800',
-      resolved: 'bg-green-100 text-green-800'
+    const statusColors = {
+      requested: 'bg-yellow-100 text-yellow-800 border-yellow-300',
+      approved: 'bg-green-100 text-green-800 border-green-300',
+      denied: 'bg-red-100 text-red-800 border-red-300',
+      rejected: 'bg-red-100 text-red-800 border-red-300',
+      processing: 'bg-blue-100 text-blue-800 border-blue-300',
+      completed: 'bg-gray-100 text-gray-800 border-gray-300',
+      archived: 'bg-gray-100 text-gray-800 border-gray-300'
     };
-    return colors[status] || colors.requested;
+    return statusColors[status?.toLowerCase()] || statusColors.requested;
+  };
+
+  const formatCurrency = (amount, currency = 'USD') => {
+    if (!amount && amount !== 0) return '₹ 0.00';
+    const symbol = currency === 'INR' ? '₹' : '$';
+    return `${symbol} ${Number(amount).toFixed(2)}`;
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleString('en-IN', {
+      year: 'numeric',
+      month: 'short', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getRefundBreakdown = () => {
+    const breakdown = returnRequest.estimated_refund?.breakdown || {};
+    const currency = returnRequest.currency || 'INR';
+    
+    return {
+      itemTotal: breakdown.item_total || 0,
+      taxRefund: breakdown.tax_refund || 0,
+      discount: breakdown.discount || 0,
+      incentive: breakdown.incentive || 0,
+      returnFee: breakdown.return_fee || breakdown.processing_fee || 0,
+      finalAmount: returnRequest.estimated_refund?.amount || 0,
+      currency
+    };
   };
 
   return (
