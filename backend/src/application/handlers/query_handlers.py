@@ -193,18 +193,22 @@ class LookupOrderForReturnHandler:
         
         # Secondary: Try with email if provided (for validation)
         if query.customer_email:
-            customer_email = Email(query.customer_email)
-            order_with_email = await self.order_repository.find_by_number_and_email(
-                query.order_number, customer_email, query.tenant_id
-            )
-            
-            if order_with_email:
-                serialized_order = self._serialize_order(order_with_email)
-                return {
-                    "success": True,
-                    "mode": "local",
-                    "order": serialized_order
-                }
+            try:
+                customer_email = Email(query.customer_email)
+                order_with_email = await self.order_repository.find_by_number_and_email(
+                    query.order_number, customer_email, query.tenant_id
+                )
+                
+                if order_with_email:
+                    serialized_order = self._serialize_order(order_with_email)
+                    return {
+                        "success": True,
+                        "mode": "local",
+                        "order": serialized_order
+                    }
+            except Exception as e:
+                print(f"Email validation failed: {e}")
+                pass
         
         # Last resort: Try Shopify real-time lookup (if synced data not available)
         if await self.shopify_service.is_connected(query.tenant_id):
