@@ -142,7 +142,7 @@ async def get_returns(
             
             formatted_returns.append({
                 "id": return_req["id"],
-                "order_number": order.get("order_number", "") if order else "",
+                "order_number": order_number,
                 "order_id": return_req.get("order_id", ""),
                 "customer_name": customer_name,
                 "customer_email": customer_email,
