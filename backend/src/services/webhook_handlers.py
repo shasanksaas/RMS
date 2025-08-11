@@ -405,7 +405,7 @@ class WebhookProcessor:
                 {"id": current_return["id"], "tenant_id": tenant_id},
                 {
                     "$set": {
-                        "status": "denied",
+                        "status": "DENIED",  # Store uppercase for consistency
                         "decision": "denied", 
                         "decision_made_at": datetime.utcnow(),
                         "decision_made_by": "shopify",
