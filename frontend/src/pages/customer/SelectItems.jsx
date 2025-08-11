@@ -132,14 +132,14 @@ const SelectItems = () => {
             sku: item.sku,
             name: item.productName,
             title: item.productName,
-            price: item.price,
+            price: item.price || 0,  // Ensure price is never undefined
             quantity: 1,
             maxQuantity: item.quantity,
             reason: '',
             notes: '',
             // Add all the required API fields
             line_item_id: item.id,
-            unit_price: item.price,
+            unit_price: item.price || 0,  // Ensure unit_price is never undefined
             variant_title: item.variant || null,
             condition: 'used',
             photos: []
