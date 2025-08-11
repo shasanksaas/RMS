@@ -651,23 +651,23 @@ class WebhookProcessor:
             }
             
             # Add status-specific fields
-            if app_status == "approved":
+            if app_status == "APPROVED":
                 update_data.update({
                     "decision": "approved",
                     "decision_made_at": datetime.utcnow(),
                     "decision_made_by": "shopify",
                     "approved_at": datetime.utcnow()
                 })
-            elif app_status in ["denied", "rejected"]:
+            elif app_status in ["DENIED", "REJECTED"]:
                 update_data.update({
                     "decision": "denied",
                     "decision_made_at": datetime.utcnow(),
                     "decision_made_by": "shopify",
                     "declined_at": datetime.utcnow()
                 })
-            elif app_status == "completed":
+            elif app_status == "COMPLETED":
                 update_data["completed_at"] = datetime.utcnow()
-            elif app_status == "cancelled":
+            elif app_status == "CANCELLED":
                 update_data["cancelled_at"] = datetime.utcnow()
             
             # Update return in our database
