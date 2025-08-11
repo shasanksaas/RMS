@@ -58,3 +58,7 @@ class ShopifyServiceAdapter(ShopifyServicePort):
             "amount": float(return_obj.estimated_refund.amount),
             "status": "success"
         }
+    
+    async def get_order_for_return(self, order_id: str, tenant_id: str) -> Optional[Dict[str, Any]]:
+        """Get order by ID for return creation - delegates to underlying service"""
+        return await self.shopify_service.get_order_for_return(order_id, tenant_id)
