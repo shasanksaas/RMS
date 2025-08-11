@@ -143,7 +143,10 @@ const SelectItems = () => {
       state: {
         orderNumber,
         email,
-        selectedItems: selectedItemsArray
+        selectedItems: selectedItemsArray,
+        order: order, // Pass the complete order data
+        mode: mode,
+        tenantId: tenantId
       }
     });
   };
