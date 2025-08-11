@@ -686,8 +686,6 @@ async def update_return_status(
     except Exception as e:
         print(f"❌ Error updating return status: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to update status: {str(e)}")
-    except Exception as e:
-        print(f"Error updating return status: {e}")
         raise HTTPException(status_code=500, detail="Failed to update return status")
 
 
