@@ -93,21 +93,13 @@ const Confirm = () => {
 
       } else {
         // Handle API error
-        console.error('API Error Response:', responseData);
         const errorMessage = responseData.detail || responseData.message || `API Error: ${response.status}`;
         throw new Error(errorMessage);
       }
 
     } catch (error) {
       console.error('Return submission error:', error);
-      console.error('Error details:', error.message);
-      
-      // Show more detailed error message
-      const errorMsg = error.message.includes('fetch') 
-        ? 'Network error - please check your connection and try again'
-        : error.message || 'Something went wrong. Please try again.';
-        
-      alert(`Return creation failed: ${errorMsg}`);
+      alert(`Return creation failed: ${error.message}`);
       setSubmitting(false);
     }
   };
