@@ -674,6 +674,18 @@ frontend:
         agent: "main"
         comment: "📱 COMPREHENSIVE MOBILE RESPONSIVENESS COMPLETE! Implemented full mobile compatibility across all application components: Layout Components (MerchantLayout, SearchBar, TenantSwitcher, UserProfile), Dashboard with responsive grids, Returns Management with mobile card view, Settings Pages with mobile-optimized forms, Customer Portal with mobile-first design. Added consistent breakpoints (mobile: 390px, tablet: 768px, desktop: 1920px+), touch-manipulation classes, and proper responsive typography. All pages now provide seamless experience across device sizes."
 
+  - task: "Duplicate Returns Display Issue Fix"
+    implemented: false
+    working: false
+    file: "src/pages/merchant/returns/AllReturns.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "User reported duplicate entries on AllReturns.jsx page. Identified potential issues: (1) React key using index could cause rendering problems (2) Double deduplication logic in loadReturns and filterReturns (3) Complex state management with both allReturns and filteredReturns. Need to test backend first, then fix frontend rendering logic to ensure unique display."
+
   - task: "Functional Settings Management UI"
     implemented: true
     working: true
