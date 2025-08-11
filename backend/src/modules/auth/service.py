@@ -650,17 +650,6 @@ class ShopifyAuthService:
                     }
                 }
             )
-        
-        # Required scopes for Returns Management
-        self.scopes = [
-            "read_orders", "write_orders", "read_products", "write_products",
-            "read_customers", "write_customers", "read_inventory", "write_inventory",
-            "read_fulfillments", "write_fulfillments", "read_returns", "write_returns",
-            "read_refunds", "write_refunds", "read_locations", "read_shipping"
-        ]
-        
-        # Repository will be initialized when needed
-        self.repo = None
     
     def validate_shop_domain(self, shop: str) -> bool:
         """Validate shop domain format"""
