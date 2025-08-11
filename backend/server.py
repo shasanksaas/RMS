@@ -62,8 +62,8 @@ security_middleware = SecurityMiddleware()
 rate_limiting_middleware = RateLimitingMiddleware()  
 audit_middleware = AuditMiddleware()
 
-# Create the main app without a prefix
-app = FastAPI(title="Returns Management SaaS API", version="1.0.0")
+# Create the main app without a prefix and disable automatic redirect
+app = FastAPI(title="Returns Management SaaS API", version="1.0.0", redirect_slashes=False)
 
 @app.on_event("startup")
 async def startup_db_client():
