@@ -58,7 +58,6 @@ const Confirm = () => {
       };
 
       console.log('Sending return request data:', JSON.stringify(returnRequestData, null, 2));
-      console.log('Order object received:', order);
 
       // Call Elite Portal Returns API to create return
       const response = await fetch(`${backendUrl}/api/elite/portal/returns/create`, {
@@ -71,7 +70,6 @@ const Confirm = () => {
       });
 
       const responseData = await response.json();
-      console.log('Response:', responseData);
 
       if (response.ok && responseData.success) {
         // Success - create return request object
