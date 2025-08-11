@@ -100,7 +100,9 @@ class CreateReturnRequestHandler:
             )
             
             # Save return
+            print(f"DEBUG: Saving return {return_obj.id.value} for tenant {return_obj.tenant_id.value}")
             await self.return_repository.save(return_obj)
+            print(f"DEBUG: Return saved successfully")
             
             # Publish domain events
             for event in return_obj.get_domain_events():
