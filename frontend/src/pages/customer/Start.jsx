@@ -231,8 +231,8 @@ const CustomerStart = () => {
       <Alert>
         <AlertCircle className="h-4 w-4 flex-shrink-0" />
         <AlertDescription className="text-sm">
-          <strong>Demo Mode:</strong> Try using order number "ORD-12345" with email "sarah.johnson@example.com", 
-          or order number "ORD-12346" with email "mike.chen@example.com" to test with real seeded data.
+          <strong>Demo Mode:</strong> Try using order number <strong>"ORD-0001"</strong> with email <strong>"m.brown@email.com"</strong>, 
+          or order number <strong>"ORD-0003"</strong> with email <strong>"john.smith@email.com"</strong> to test with real seeded data.
         </AlertDescription>
       </Alert>
     </div>
