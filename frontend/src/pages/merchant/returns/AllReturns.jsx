@@ -671,8 +671,8 @@ const AllReturns = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {filteredReturns.map((returnRequest, index) => (
-                      <tr key={`${returnRequest.id}-${index}`} className="hover:bg-gray-50">
+                    {filteredReturns.map((returnRequest) => (
+                      <tr key={returnRequest.id} className="hover:bg-gray-50">
                         <td className="py-4 px-4">
                           <input
                             type="checkbox"
@@ -683,7 +683,7 @@ const AllReturns = () => {
                         </td>
                         <td className="py-4 px-4">
                           <div>
-                            <div className="font-medium">{returnRequest.customer_name}</div>
+                            <div className="font-medium">{returnRequest.customer_name || 'N/A'}</div>
                             <div className="text-sm text-gray-500">{returnRequest.customer_email}</div>
                           </div>
                         </td>
@@ -692,28 +692,66 @@ const AllReturns = () => {
                         </td>
                         <td className="py-4 px-4">
                           <div className="text-sm">
-                            {returnRequest.items && returnRequest.items.length > 0 ? 
-                              returnRequest.items.map((item, idx) => (
-                                <div key={`item-${idx}`}>
-                                  {item.product_name} (×{item.quantity})
+                            {(() => {
+                              const items = returnRequest.line_items || returnRequest.items || [];
+                              if (items.length === 0) {
+                                return <span className="text-gray-400">No items</span>;
+                              }
+                              return (
+                                <div>
+                                  {items.slice(0, 2).map((item, idx) => (
+                                    <div key={idx}>
+                                      {item.title || item.product_name || 'Product'} (×{item.quantity || 1})
+                                    </div>
+                                  ))}
+                                  {items.length > 2 && (
+                                    <div className="text-gray-400">+{items.length - 2} more</div>
+                                  )}
                                 </div>
-                              )) :
-                              <span className="text-gray-400">No items</span>
-                            }
+                              );
+                            })()}
                           </div>
                         </td>
                         <td className="py-4 px-4">
-                          <span className="text-sm">{formatReason(returnRequest.reason)}</span>
+                          <span className="text-sm">
+                            {(() => {
+                              // Handle different reason formats dynamically
+                              const reasonData = returnRequest.return_reason_category || returnRequest.reason;
+                              if (typeof reasonData === 'object' && reasonData !== null) {
+                                return reasonData.description || reasonData.code || 'Not specified';
+                              }
+                              return reasonData || 'Not specified';
+                            })()}
+                          </span>
                         </td>
                         <td className="py-4 px-4">
-                          <span className="font-medium">${returnRequest.refund_amount}</span>
+                          <span className="font-medium">
+                            {(() => {
+                              const refund = returnRequest.estimated_refund;
+                              if (typeof refund === 'object' && refund !== null) {
+                                const amount = refund.amount || 0;
+                                const currency = refund.currency || 'USD';
+                                const symbol = currency === 'INR' ? '₹' : '$';
+                                return `${symbol}${Number(amount).toFixed(2)}`;
+                              } else if (returnRequest.refund_amount) {
+                                return `$${Number(returnRequest.refund_amount).toFixed(2)}`;
+                              }
+                              return '$0.00';
+                            })()}
+                          </span>
                         </td>
                         <td className="py-4 px-4">
                           {getStatusBadge(returnRequest.status)}
                         </td>
                         <td className="py-4 px-4">
                           <span className="text-sm text-gray-500">
-                            {new Date(returnRequest.created_at).toLocaleDateString()}
+                            {returnRequest.created_at ? 
+                              new Date(returnRequest.created_at).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric', 
+                                year: 'numeric'
+                              }) : 'N/A'
+                            }
                           </span>
                         </td>
                         <td className="py-4 px-4">
@@ -723,31 +761,17 @@ const AllReturns = () => {
                                 <Eye className="h-4 w-4" />
                               </Link>
                             </Button>
-                            {returnRequest.status === 'requested' && (
-                              <>
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm" 
-                                  className="text-green-600 hover:text-green-700 touch-manipulation"
-                                  onClick={() => handleStatusUpdate(returnRequest.id, 'approved')}
-                                  title="Approve Return"
-                                >
-                                  <CheckCircle className="h-4 w-4" />
-                                </Button>
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm" 
-                                  className="text-red-600 hover:text-red-700 touch-manipulation"
-                                  onClick={() => handleStatusUpdate(returnRequest.id, 'denied')}
-                                  title="Deny Return"
-                                >
-                                  <XCircle className="h-4 w-4" />
-                                </Button>
-                              </>
-                            )}
-                            <Button variant="ghost" size="sm" className="touch-manipulation">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
+                            <select
+                              value={returnRequest.status || 'requested'}
+                              onChange={(e) => handleStatusUpdate(returnRequest.id, e.target.value)}
+                              className="text-xs border rounded px-2 py-1 bg-white"
+                            >
+                              <option value="requested">Requested</option>
+                              <option value="approved">Approved</option>
+                              <option value="denied">Denied</option>
+                              <option value="processing">Processing</option>
+                              <option value="completed">Completed</option>
+                            </select>
                           </div>
                         </td>
                       </tr>
