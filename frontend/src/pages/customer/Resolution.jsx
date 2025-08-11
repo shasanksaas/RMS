@@ -10,16 +10,6 @@ const Resolution = () => {
   const location = useLocation();
   const { orderNumber, email, selectedItems, order, mode, tenantId } = location.state || {};
   
-  // Debug logging
-  console.log('Resolution component received data:', {
-    orderNumber,
-    email,
-    order: order,
-    order_id: order?.id,
-    mode,
-    tenantId
-  });
-  
   const [selectedResolution, setSelectedResolution] = useState('');
   const [loading, setLoading] = useState(false);
 
