@@ -709,7 +709,6 @@ api_router.include_router(admin_drafts_router)
 # Elite-Grade Controllers
 api_router.include_router(elite_portal_router)
 api_router.include_router(elite_admin_router)
-# api_router.include_router(returns_router)  # Commented out - using returns_enhanced_router instead
 api_router.include_router(shopify_test_router)
 api_router.include_router(rules_router)
 api_router.include_router(unified_returns_router)
