@@ -62,7 +62,7 @@ const TenantManager = () => {
   // Load tenants
   useEffect(() => {
     loadTenants();
-  }, [pagination.page, statusFilter]);
+  }, [loadTenants]);
 
   const loadTenants = useCallback(async () => {
     try {
