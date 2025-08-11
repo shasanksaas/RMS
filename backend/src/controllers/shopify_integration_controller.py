@@ -22,12 +22,16 @@ async def get_shopify_integration_status(tenant_id: str = Depends(get_tenant_id)
     Returns connection status, sync status, and data counts
     """
     try:
+        print(f"DEBUG: Getting integration status for tenant: {tenant_id}")
+        
         # First check integrations_shopify collection
         integration = await db.integrations_shopify.find_one({"tenant_id": tenant_id})
+        print(f"DEBUG: Integration from integrations_shopify: {integration is not None}")
         
         # Also check tenant record for shopify_integration field (fallback)
         tenant = await db.tenants.find_one({"id": tenant_id})
         tenant_integration = tenant.get("shopify_integration") if tenant else None
+        print(f"DEBUG: Tenant integration: {tenant_integration is not None}")
         
         # Use integration data from either source
         shopify_integration = None
@@ -36,7 +40,10 @@ async def get_shopify_integration_status(tenant_id: str = Depends(get_tenant_id)
         elif tenant_integration:
             shopify_integration = tenant_integration
         else:
+            print("DEBUG: No integration found")
             return {"connected": False}
+        
+        print(f"DEBUG: Using integration data, status: {shopify_integration.get('status')}")
         
         # Check if properly connected
         is_connected = (shopify_integration.get("status") == "connected" and 
@@ -44,6 +51,7 @@ async def get_shopify_integration_status(tenant_id: str = Depends(get_tenant_id)
                        shopify_integration.get("shop_domain"))
         
         if not is_connected:
+            print("DEBUG: Integration not properly connected")
             return {"connected": False}
         
         # Get order counts
