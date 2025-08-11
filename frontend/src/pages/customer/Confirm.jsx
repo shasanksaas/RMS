@@ -58,6 +58,8 @@ const Confirm = () => {
       };
 
       console.log('Sending return request data:', JSON.stringify(returnRequestData, null, 2));
+      console.log('Using tenant ID:', currentTenantId);
+      console.log('Backend URL:', backendUrl);
 
       // Call Elite Portal Returns API to create return
       const response = await fetch(`${backendUrl}/api/elite/portal/returns/create`, {
@@ -69,7 +71,11 @@ const Confirm = () => {
         body: JSON.stringify(returnRequestData)
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
+      
       const responseData = await response.json();
+      console.log('Response data:', JSON.stringify(responseData, null, 2));
 
       if (response.ok && responseData.success) {
         // Success - create return request object
