@@ -112,7 +112,9 @@ async def get_shopify_integration_status(tenant_id: str = Depends(get_tenant_id)
         
     except Exception as e:
         print(f"Error getting Shopify integration status: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get integration status")
+        import traceback
+        print(f"Full traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"Failed to get integration status: {str(e)}")
 
 
 @router.post("/resync")
