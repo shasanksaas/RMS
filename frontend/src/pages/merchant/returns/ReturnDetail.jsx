@@ -21,10 +21,12 @@ const ReturnDetail = () => {
   const tenantId = 'tenant-fashion-store'; // TODO: Get from auth context
 
   const getApiUrl = () => {
-    if (backendUrl && backendUrl.includes('preview.emergentagent.com')) {
-      return 'http://localhost:8001';
+    // Force HTTPS to prevent mixed content issues
+    let url = backendUrl;
+    if (url && url.startsWith('http://')) {
+      url = url.replace('http://', 'https://');
     }
-    return backendUrl || 'http://localhost:8001';
+    return url;
   };
 
   useEffect(() => {
