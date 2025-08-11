@@ -702,3 +702,141 @@ class ShopifyService:
                         return order
         
         return None
+    
+    async def get_order_for_return(self, order_id: str, tenant_id: str = None) -> Optional[Dict[str, Any]]:
+        """Get order by ID for return creation - uses real-time Shopify API"""
+        use_tenant_id = tenant_id or self.tenant_id
+        
+        if not use_tenant_id:
+            return None
+        
+        # First check local database
+        order = await db.orders.find_one({"id": order_id, "tenant_id": use_tenant_id})
+        if order:
+            return order
+            
+        # If not in database, fetch from Shopify using real-time API
+        try:
+            # Get tenant credentials
+            tenant = await db.tenants.find_one({"id": use_tenant_id})
+            if not tenant or not tenant.get('shopify_integration'):
+                return None
+                
+            shopify_integration = tenant.get('shopify_integration', {})
+            access_token = shopify_integration.get('access_token')
+            shop_domain = shopify_integration.get('shop_domain')
+            
+            if not access_token or not shop_domain:
+                return None
+            
+            # Decrypt the access token if it's encrypted
+            if access_token and access_token.startswith('gAAAAAB'):
+                try:
+                    access_token = self.auth_service._decrypt_secret(access_token)
+                except Exception as e:
+                    print(f"Failed to decrypt access token: {e}")
+                    return None
+            
+            # Real-time GraphQL query to get specific order by ID
+            graphql_url = f"https://{shop_domain}/admin/api/2024-10/graphql.json"
+            
+            query = """
+            query getOrder($id: ID!) {
+                order(id: $id) {
+                    id
+                    name
+                    email
+                    phone
+                    totalPriceSet {
+                        shopMoney {
+                            amount
+                            currencyCode
+                        }
+                    }
+                    customer {
+                        id
+                        email
+                        firstName
+                        lastName
+                        phone
+                        displayName
+                    }
+                    lineItems(first: 50) {
+                        edges {
+                            node {
+                                id
+                                title
+                                quantity
+                                variant {
+                                    id
+                                    title
+                                    sku
+                                    price
+                                }
+                                originalUnitPriceSet {
+                                    shopMoney {
+                                        amount
+                                        currencyCode
+                                    }
+                                }
+                                product {
+                                    id
+                                    title
+                                    productType
+                                    vendor
+                                }
+                            }
+                        }
+                    }
+                    createdAt
+                    updatedAt
+                    processedAt
+                    displayFinancialStatus
+                    displayFulfillmentStatus
+                }
+            }
+            """
+            
+            # Convert order ID to GraphQL format
+            gql_order_id = f"gid://shopify/Order/{order_id}"
+            
+            variables = {"id": gql_order_id}
+            
+            headers = {
+                "Content-Type": "application/json",
+                "X-Shopify-Access-Token": access_token
+            }
+            
+            payload = {
+                "query": query,
+                "variables": variables
+            }
+            
+            # Execute real-time GraphQL query
+            async with aiohttp.ClientSession() as session:
+                async with session.post(graphql_url, json=payload, headers=headers, timeout=aiohttp.ClientTimeout(total=30)) as response:
+                    if response.status == 200:
+                        try:
+                            data = await response.json()
+                            
+                            if 'errors' in data:
+                                print(f"GraphQL errors: {data['errors']}")
+                                return None
+                                
+                            order_data = data.get('data', {}).get('order')
+                            
+                            if order_data:
+                                # Transform GraphQL response to standard format
+                                return self._transform_graphql_order(order_data)
+                        except json.JSONDecodeError as e:
+                            print(f"JSON decode error: {e}")
+                            return None
+                    else:
+                        print(f"Shopify API error {response.status}")
+                        return None
+                        
+        except Exception as e:
+            print(f"Error fetching order for return: {e}")
+            return None
+        
+        return None
