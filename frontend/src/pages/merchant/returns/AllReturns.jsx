@@ -61,9 +61,13 @@ const AllReturns = () => {
   // Get backend URL and tenant from environment
   const backendUrl = process.env.REACT_APP_BACKEND_URL;
   const tenantId = 'tenant-rms34'; // Updated to match connected Shopify store
+  
+  // Debug: Log the backend URL
+  console.log('Backend URL from env:', backendUrl);
 
   const getApiUrl = () => {
     // Use the configured backend URL - no fallback since it's set in production
+    console.log('Using backend URL:', backendUrl);
     return backendUrl;
   };
 
