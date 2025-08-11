@@ -46,10 +46,36 @@ const Confirm = () => {
         }
       }
 
+      // If order ID is missing, try to fetch order data again
+      let orderToUse = order;
+      if (!order?.id && orderNumber && email) {
+        console.log('Order ID missing, fetching order data...');
+        
+        const lookupResponse = await fetch(`${backendUrl}/api/elite/portal/returns/lookup-order`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Tenant-Id': currentTenantId
+          },
+          body: JSON.stringify({
+            order_number: orderNumber,
+            customer_email: email
+          })
+        });
+
+        const lookupData = await lookupResponse.json();
+        if (lookupResponse.ok && lookupData.success) {
+          orderToUse = lookupData.order;
+          console.log('Successfully fetched order data:', orderToUse);
+        } else {
+          throw new Error('Could not fetch order data for return creation');
+        }
+      }
+
       // Prepare return request data using the real order ID
       const returnRequestData = {
-        order_id: String(order?.id || order?.order_id || orderNumber), // Multiple fallbacks for order ID
-        customer_email: email || order?.customer_email, // Use the email from form or order
+        order_id: String(orderToUse?.id || orderToUse?.order_id), // Use the fetched or passed order
+        customer_email: email || orderToUse?.customer_email,
         return_method: 'prepaid_label',
         items: Object.values(selectedItems).map(item => ({
           line_item_id: String(item.line_item_id || item.id), // Ensure string format
