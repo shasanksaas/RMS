@@ -61,6 +61,8 @@
     message: "Reported duplicate entries showing on AllReturns.jsx page - 'lot of duplicates pls fix that and again no static data strictly all dynamic real live data'"
   - agent: "main"
     message: "Investigating duplicate issue in AllReturns.jsx. Need to test backend API first to verify if duplicates are coming from backend or if it's a frontend rendering issue. Will check /api/returns/ endpoint response structure and identify root cause."
+  - agent: "testing"
+    message: "🚨 URGENT: BACKEND DUPLICATE ISSUE CONFIRMED! Completed comprehensive investigation of /api/returns/ endpoint for tenant-rms34. CRITICAL FINDINGS: Backend is serving 12 duplicate return records for the same order (1001) + customer (shashankshekharofficial15@gmail.com). This is NOT a frontend rendering issue - the MongoDB 'returns' collection contains actual duplicate documents with different UUIDs but identical business data. Timeline shows all duplicates created within 5 hours during development/testing. ROOT CAUSE: Backend data insertion process is creating multiple return records for same order+customer combination without proper deduplication. IMPACT: User correctly reports 'lot of duplicates' because API literally returns 12 returns for same order. IMMEDIATE ACTION REQUIRED: (1) Implement business rule validation to prevent multiple returns per order (2) Add deduplication logic in API response (3) Clean up existing duplicate data in MongoDB (4) Add unique constraints on order+customer combinations. This is a critical data integrity issue requiring urgent backend fixes."
 
 # Protocol Guidelines for Main agent
 #
