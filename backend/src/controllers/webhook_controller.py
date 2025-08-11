@@ -189,9 +189,8 @@ async def process_shopify_webhook(
         # Process webhook data
         result = await webhook_processor.process_webhook(
             topic=topic,
-            tenant_id=tenant_id,
             shop_domain=shop_domain,
-            webhook_data=webhook_data
+            payload=webhook_data
         )
         
         if result.get("success"):
