@@ -328,7 +328,7 @@ class DuplicateReturnsVerificationTest:
         page_sizes = [5, 10, 25]
         
         for page_size in page_sizes:
-            success, response, status = await self.make_request("GET", f"/returns?pageSize={page_size}&page=1")
+            success, response, status = await self.make_request("GET", f"/returns/?pageSize={page_size}&page=1")
             
             if not success:
                 self.log_test(f"Pagination (pageSize={page_size})", False, 
