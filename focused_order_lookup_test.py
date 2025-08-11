@@ -7,7 +7,7 @@ import asyncio
 import aiohttp
 import json
 
-BACKEND_URL = "https://08371864-d592-4183-9894-6a29b3c874f2.preview.emergentagent.com/api"
+BACKEND_URL = "https://bca17508-3160-4c8a-b1ab-4beee6e50918.preview.emergentagent.com/api"
 
 async def test_order_lookup_endpoints():
     """Test the specific endpoints requested in the review"""

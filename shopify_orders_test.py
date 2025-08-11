@@ -12,7 +12,7 @@ from datetime import datetime
 from typing import Dict, List, Any, Optional
 
 # Configuration
-BACKEND_URL = "https://08371864-d592-4183-9894-6a29b3c874f2.preview.emergentagent.com/api"
+BACKEND_URL = "https://bca17508-3160-4c8a-b1ab-4beee6e50918.preview.emergentagent.com/api"
 SHOPIFY_STORE = "rms34.myshopify.com"
 TENANT_ID = "tenant-rms34"
 

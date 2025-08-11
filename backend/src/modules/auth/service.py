@@ -29,7 +29,7 @@ class ShopifyAuthService:
         self.api_version = os.environ.get('SHOPIFY_API_VERSION', '2025-07')
         
         # Set base redirect URI
-        self.base_redirect_uri = os.environ.get('SHOPIFY_REDIRECT_URI', 'https://08371864-d592-4183-9894-6a29b3c874f2.preview.emergentagent.com/api/auth/shopify/callback')
+        self.base_redirect_uri = os.environ.get('SHOPIFY_REDIRECT_URI', 'https://bca17508-3160-4c8a-b1ab-4beee6e50918.preview.emergentagent.com/api/auth/shopify/callback')
         
         # Encryption key for securing tokens (use KMS in production)
         encryption_key_str = os.environ.get('ENCRYPTION_KEY')
@@ -276,7 +276,7 @@ class ShopifyAuthService:
             ]
             
             # Base webhook endpoint
-            webhook_base_url = "https://08371864-d592-4183-9894-6a29b3c874f2.preview.emergentagent.com/api/webhooks/shopify"
+            webhook_base_url = "https://bca17508-3160-4c8a-b1ab-4beee6e50918.preview.emergentagent.com/api/webhooks/shopify"
             
             # Register each webhook
             for topic in webhook_topics:

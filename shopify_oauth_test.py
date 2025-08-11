@@ -11,7 +11,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://08371864-d592-4183-9894-6a29b3c874f2.preview.emergentagent.com"
+BACKEND_URL = "https://bca17508-3160-4c8a-b1ab-4beee6e50918.preview.emergentagent.com"
 TEST_SHOP = "rms34"
 TEST_SHOP_DOMAIN = f"{TEST_SHOP}.myshopify.com"
 

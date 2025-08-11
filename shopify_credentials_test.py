@@ -20,7 +20,7 @@ import json
 from datetime import datetime
 
 # Use the external backend URL for testing
-BACKEND_URL = "https://08371864-d592-4183-9894-6a29b3c874f2.preview.emergentagent.com"
+BACKEND_URL = "https://bca17508-3160-4c8a-b1ab-4beee6e50918.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 # Updated credentials from user - REAL VALUES REMOVED FOR SECURITY
