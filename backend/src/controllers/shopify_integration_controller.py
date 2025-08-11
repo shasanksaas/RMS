@@ -88,7 +88,7 @@ async def get_shopify_integration_status(tenant_id: str = Depends(get_tenant_id)
         
         return {
             "connected": True,
-            "shop": tenant.get("shopify_store"),
+            "shop": shopify_integration.get("shop_domain"),
             "installedAt": shopify_integration.get("installed_at"),
             "lastSyncAt": shopify_integration.get("last_sync"),
             "lastWebhookAt": shopify_integration.get("last_webhook_at"),
