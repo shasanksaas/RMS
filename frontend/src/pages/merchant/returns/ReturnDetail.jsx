@@ -523,15 +523,34 @@ const ReturnDetail = () => {
                     <div key={index} className="border-l-4 border-blue-200 pl-4">
                       <div className="flex items-start justify-between">
                         <div>
-                          <p className="font-medium text-gray-900">{event.description || event.action}</p>
+                          <p className="font-medium text-gray-900">
+                            {event.description || event.action || 'Action performed'}
+                          </p>
                           <p className="text-sm text-gray-600">{formatDate(event.timestamp)}</p>
+                          {event.details && typeof event.details === 'object' && event.details.reason && (
+                            <p className="text-xs text-gray-500 mt-1">{event.details.reason}</p>
+                          )}
                         </div>
                         <span className="text-xs bg-gray-100 px-2 py-1 rounded">
-                          {event.performed_by === 'system' ? 'SYSTEM' : 'ADMIN'}
+                          {event.performed_by === 'system' || event.actor === 'system' ? 'SYSTEM' : 
+                           event.performed_by === 'customer' || event.actor === 'customer' ? 'CUSTOMER' : 'ADMIN'}
                         </span>
                       </div>
                     </div>
                   ))}
+
+                  {/* Add some default timeline entries if audit log is empty */}
+                  {(!returnRequest.audit_log || returnRequest.audit_log.length === 0) && (
+                    <div className="border-l-4 border-blue-200 pl-4">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="font-medium text-gray-900">Return request created</p>
+                          <p className="text-sm text-gray-600">{formatDate(returnRequest.created_at)}</p>
+                        </div>
+                        <span className="text-xs bg-gray-100 px-2 py-1 rounded">CUSTOMER</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </CardContent>
