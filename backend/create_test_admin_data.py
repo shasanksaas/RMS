@@ -10,10 +10,10 @@ from datetime import datetime, timezone
 # Add the src directory to the Python path
 sys.path.append('/app/backend/src')
 
-from config.database import get_database
-from services.user_service import UserService
-from services.tenant_service_enhanced import TenantServiceEnhanced
-from models.user import UserCreate
+from src.config.database import get_database
+from src.services.auth_service import AuthService
+from src.services.tenant_service_enhanced import TenantServiceEnhanced
+from src.models.user import UserCreate
 import uuid
 
 async def create_test_admin_user():
@@ -21,7 +21,7 @@ async def create_test_admin_user():
     print("Creating test admin user...")
     
     db = await get_database()
-    user_service = UserService(db)
+    user_service = AuthService(db)
     
     # Check if admin already exists
     try:
@@ -111,7 +111,7 @@ async def create_test_merchant_users():
     print("Creating test merchant users...")
     
     db = await get_database()
-    user_service = UserService(db)
+    user_service = AuthService(db)
     
     # Test merchant users
     test_merchants = [
