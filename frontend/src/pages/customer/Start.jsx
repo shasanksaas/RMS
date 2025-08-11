@@ -227,13 +227,12 @@ const CustomerStart = () => {
         </Button>
       </div>
 
-      {/* Demo Instructions */}
+      {/* Live Integration Status */}
       <Alert>
         <AlertCircle className="h-4 w-4 flex-shrink-0" />
         <AlertDescription className="text-sm">
-          <strong>Shopify Integration Active:</strong> This portal is connected to <strong>rms34.myshopify.com</strong>. 
-          Create a test order in your Shopify store with a customer email to test the live integration, 
-          or try demo data: <strong>"ORD-0001"</strong> with <strong>"m.brown@email.com"</strong>.
+          <strong>Live Shopify Integration:</strong> This portal is connected to your Shopify store. 
+          Enter your actual order number and email address to start your return.
         </AlertDescription>
       </Alert>
     </div>
