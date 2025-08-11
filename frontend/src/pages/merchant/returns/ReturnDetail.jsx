@@ -76,7 +76,7 @@ const ReturnDetail = () => {
 
   const loadTimeline = async () => {
     try {
-      const response = await fetch(buildApiUrl(`/api/returns/${id}/timeline`), {
+      const response = await fetch(buildApiUrl(`/api/returns/${id}/timeline/`), {
         headers: {
           'Content-Type': 'application/json',
           'X-Tenant-Id': tenantId
