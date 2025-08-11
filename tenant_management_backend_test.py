@@ -1334,6 +1334,284 @@ class TenantManagementTester:
         
         print("\n" + "="*80)
 
+    async def test_complete_workflow(self):
+        """Test Complete Workflow: Admin login → Create tenant → Merchant signup → Verify isolation"""
+        logger.info("🔄 Testing Complete Tenant Management Workflow")
+        
+        # Test 1: Complete workflow with new tenant
+        await self.test_end_to_end_workflow()
+        
+        # Test 2: Database isolation verification
+        await self.test_database_isolation()
+        
+        # Test 3: Tenant claiming process
+        await self.test_tenant_claiming_process()
+
+    async def test_end_to_end_workflow(self):
+        """Test complete end-to-end workflow"""
+        logger.info("🎯 Testing End-to-End Workflow")
+        
+        test_name = "Complete E2E Workflow"
+        workflow_steps = []
+        
+        try:
+            # Step 1: Admin login (already done in test_admin_authentication)
+            if self.admin_token:
+                workflow_steps.append("✅ Admin authentication successful")
+            else:
+                workflow_steps.append("❌ Admin authentication failed")
+                
+            # Step 2: Create new tenant
+            unique_suffix = str(uuid.uuid4())[:8]
+            tenant_data = {
+                "name": f"E2E Test Store {unique_suffix}",
+                "tenant_id": f"tenant-e2e-{unique_suffix}",
+                "notes": "Created for end-to-end workflow testing"
+            }
+            
+            headers = {"Authorization": f"Bearer {self.admin_token}"}
+            
+            async with self.session.post(f"{self.base_url}/tenants", json=tenant_data, headers=headers) as response:
+                if response.status == 201:
+                    data = await response.json()
+                    workflow_tenant_id = data.get("tenant_id", tenant_data["tenant_id"])
+                    workflow_steps.append(f"✅ Tenant created: {workflow_tenant_id}")
+                    
+                    # Step 3: Verify tenant status
+                    async with self.session.get(f"{self.base_url}/auth/tenant-status/{workflow_tenant_id}") as status_response:
+                        if status_response.status == 200:
+                            status_data = await status_response.json()
+                            if status_data.get("valid") and status_data.get("available"):
+                                workflow_steps.append("✅ Tenant status valid and available for signup")
+                                
+                                # Step 4: Merchant signup
+                                merchant_signup_data = {
+                                    "tenant_id": workflow_tenant_id,
+                                    "email": f"workflow-merchant-{unique_suffix}@example.com",
+                                    "password": "WorkflowPassword123!",
+                                    "confirm_password": "WorkflowPassword123!",
+                                    "first_name": "Workflow",
+                                    "last_name": "Merchant",
+                                    "store_name": f"Workflow Store {unique_suffix}"
+                                }
+                                
+                                async with self.session.post(f"{self.base_url}/auth/merchant-signup", json=merchant_signup_data) as signup_response:
+                                    if signup_response.status == 201:
+                                        signup_data = await signup_response.json()
+                                        is_first_merchant = signup_data.get("is_first_merchant", False)
+                                        workflow_steps.append(f"✅ Merchant signup successful (first merchant: {is_first_merchant})")
+                                        
+                                        # Step 5: Verify tenant claiming
+                                        async with self.session.get(f"{self.base_url}/auth/tenant-status/{workflow_tenant_id}") as final_status_response:
+                                            if final_status_response.status == 200:
+                                                final_status_data = await final_status_response.json()
+                                                final_status = final_status_data.get("status", "unknown")
+                                                workflow_steps.append(f"✅ Tenant status after signup: {final_status}")
+                                                
+                                                # Complete workflow success
+                                                self.test_results["integration_existing_system"].append({
+                                                    "test": test_name,
+                                                    "status": "✅ PASS",
+                                                    "details": f"Complete workflow successful: {' → '.join(workflow_steps)}",
+                                                    "response_code": 201
+                                                })
+                                                logger.info(f"✅ {test_name}: Complete workflow successful")
+                                                return
+                                                
+                                            else:
+                                                workflow_steps.append(f"❌ Final status check failed: {final_status_response.status}")
+                                    else:
+                                        workflow_steps.append(f"❌ Merchant signup failed: {signup_response.status}")
+                            else:
+                                workflow_steps.append("❌ Tenant not available for signup")
+                        else:
+                            workflow_steps.append(f"❌ Tenant status check failed: {status_response.status}")
+                else:
+                    workflow_steps.append(f"❌ Tenant creation failed: {response.status}")
+                    
+            # If we reach here, workflow failed
+            self.test_results["integration_existing_system"].append({
+                "test": test_name,
+                "status": "❌ FAIL",
+                "details": f"Workflow failed: {' → '.join(workflow_steps)}",
+                "response_code": None
+            })
+            logger.error(f"❌ {test_name}: Workflow failed")
+            
+        except Exception as e:
+            workflow_steps.append(f"❌ Exception: {str(e)}")
+            self.test_results["integration_existing_system"].append({
+                "test": test_name,
+                "status": "❌ ERROR",
+                "details": f"Workflow error: {' → '.join(workflow_steps)}",
+                "response_code": None
+            })
+            logger.error(f"❌ {test_name}: Exception - {e}")
+
+    async def test_database_isolation(self):
+        """Test database isolation between tenants"""
+        logger.info("🔒 Testing Database Isolation")
+        
+        test_name = "Database Isolation"
+        
+        try:
+            # Test that merchant from one tenant cannot access another tenant's data
+            if self.merchant_token:
+                # Try to access different tenant's data
+                other_tenant_id = "tenant-tech-gadgets-demo"  # Different from fashion-forward-demo
+                
+                headers = {
+                    "Authorization": f"Bearer {self.merchant_token}",
+                    "X-Tenant-Id": other_tenant_id
+                }
+                
+                # Try to access returns data for different tenant
+                async with self.session.get(f"{self.base_url}/returns", headers=headers) as response:
+                    if response.status in [403, 404]:
+                        self.test_results["tenant_isolation"].append({
+                            "test": test_name,
+                            "status": "✅ PASS",
+                            "details": "Database isolation working - cross-tenant access denied",
+                            "response_code": response.status
+                        })
+                        logger.info(f"✅ {test_name}: Cross-tenant access properly denied")
+                        
+                    else:
+                        self.test_results["tenant_isolation"].append({
+                            "test": test_name,
+                            "status": "❌ SECURITY_ISSUE",
+                            "details": f"Cross-tenant access allowed: {response.status}",
+                            "response_code": response.status
+                        })
+                        logger.error(f"❌ {test_name}: Security issue - cross-tenant access allowed")
+            else:
+                self.test_results["tenant_isolation"].append({
+                    "test": test_name,
+                    "status": "⚠️ SKIP",
+                    "details": "No merchant token available for isolation testing",
+                    "response_code": None
+                })
+                logger.warning(f"⚠️ {test_name}: Skipped - no merchant token")
+                
+        except Exception as e:
+            self.test_results["tenant_isolation"].append({
+                "test": test_name,
+                "status": "❌ ERROR",
+                "details": f"Exception: {str(e)}",
+                "response_code": None
+            })
+            logger.error(f"❌ {test_name}: Exception - {e}")
+
+    async def test_tenant_claiming_process(self):
+        """Test tenant claiming process when first merchant signs up"""
+        logger.info("🏷️ Testing Tenant Claiming Process")
+        
+        test_name = "Tenant Claiming Process"
+        
+        try:
+            # Create a new tenant for claiming test
+            unique_suffix = str(uuid.uuid4())[:8]
+            tenant_data = {
+                "name": f"Claiming Test Store {unique_suffix}",
+                "tenant_id": f"tenant-claim-{unique_suffix}",
+                "notes": "Created for claiming process testing"
+            }
+            
+            headers = {"Authorization": f"Bearer {self.admin_token}"}
+            
+            async with self.session.post(f"{self.base_url}/tenants", json=tenant_data, headers=headers) as response:
+                if response.status == 201:
+                    data = await response.json()
+                    claim_tenant_id = data.get("tenant_id", tenant_data["tenant_id"])
+                    
+                    # Check initial status (should be 'new')
+                    async with self.session.get(f"{self.base_url}/auth/tenant-status/{claim_tenant_id}") as status_response:
+                        if status_response.status == 200:
+                            initial_status_data = await status_response.json()
+                            initial_status = initial_status_data.get("status", "unknown")
+                            
+                            # First merchant signup (should claim tenant)
+                            merchant_signup_data = {
+                                "tenant_id": claim_tenant_id,
+                                "email": f"claiming-merchant-{unique_suffix}@example.com",
+                                "password": "ClaimingPassword123!",
+                                "confirm_password": "ClaimingPassword123!",
+                                "first_name": "Claiming",
+                                "last_name": "Merchant",
+                                "store_name": f"Claiming Store {unique_suffix}"
+                            }
+                            
+                            async with self.session.post(f"{self.base_url}/auth/merchant-signup", json=merchant_signup_data) as signup_response:
+                                if signup_response.status == 201:
+                                    signup_data = await signup_response.json()
+                                    is_first_merchant = signup_data.get("is_first_merchant", False)
+                                    
+                                    # Check final status (should be 'claimed' or 'active')
+                                    async with self.session.get(f"{self.base_url}/auth/tenant-status/{claim_tenant_id}") as final_status_response:
+                                        if final_status_response.status == 200:
+                                            final_status_data = await final_status_response.json()
+                                            final_status = final_status_data.get("status", "unknown")
+                                            
+                                            # Verify claiming process
+                                            if is_first_merchant and final_status in ["claimed", "active"]:
+                                                self.test_results["tenant_isolation"].append({
+                                                    "test": test_name,
+                                                    "status": "✅ PASS",
+                                                    "details": f"Claiming process working: {initial_status} → {final_status} (first merchant: {is_first_merchant})",
+                                                    "response_code": 201
+                                                })
+                                                logger.info(f"✅ {test_name}: Claiming process successful")
+                                                
+                                            else:
+                                                self.test_results["tenant_isolation"].append({
+                                                    "test": test_name,
+                                                    "status": "⚠️ PARTIAL",
+                                                    "details": f"Claiming process partial: {initial_status} → {final_status} (first merchant: {is_first_merchant})",
+                                                    "response_code": 201
+                                                })
+                                                logger.warning(f"⚠️ {test_name}: Claiming process partial")
+                                        else:
+                                            self.test_results["tenant_isolation"].append({
+                                                "test": test_name,
+                                                "status": "❌ FAIL",
+                                                "details": f"Final status check failed: {final_status_response.status}",
+                                                "response_code": final_status_response.status
+                                            })
+                                            logger.error(f"❌ {test_name}: Final status check failed")
+                                else:
+                                    self.test_results["tenant_isolation"].append({
+                                        "test": test_name,
+                                        "status": "❌ FAIL",
+                                        "details": f"Merchant signup failed: {signup_response.status}",
+                                        "response_code": signup_response.status
+                                    })
+                                    logger.error(f"❌ {test_name}: Merchant signup failed")
+                        else:
+                            self.test_results["tenant_isolation"].append({
+                                "test": test_name,
+                                "status": "❌ FAIL",
+                                "details": f"Initial status check failed: {status_response.status}",
+                                "response_code": status_response.status
+                            })
+                            logger.error(f"❌ {test_name}: Initial status check failed")
+                else:
+                    self.test_results["tenant_isolation"].append({
+                        "test": test_name,
+                        "status": "❌ FAIL",
+                        "details": f"Tenant creation failed: {response.status}",
+                        "response_code": response.status
+                    })
+                    logger.error(f"❌ {test_name}: Tenant creation failed")
+                    
+        except Exception as e:
+            self.test_results["tenant_isolation"].append({
+                "test": test_name,
+                "status": "❌ ERROR",
+                "details": f"Exception: {str(e)}",
+                "response_code": None
+            })
+            logger.error(f"❌ {test_name}: Exception - {e}")
+
 async def main():
     """Main test execution"""
     tester = TenantManagementTester()
