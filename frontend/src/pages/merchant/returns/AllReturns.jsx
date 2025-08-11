@@ -595,14 +595,16 @@ const AllReturns = () => {
                     <div>
                       <span className="text-gray-500 text-sm">Items:</span>
                       <div className="text-sm">
-                        {returnRequest.items && returnRequest.items.length > 0 ? 
-                          returnRequest.items.map((item, idx) => (
-                            <div key={idx}>
-                              {item.product_name} (×{item.quantity})
-                            </div>
-                          )) :
-                          <span className="text-gray-400">No items</span>
-                        }
+                        {(() => {
+                          const items = returnRequest.line_items || returnRequest.items || [];
+                          return items.length > 0 ? 
+                            items.map((item, idx) => (
+                              <div key={idx}>
+                                {item.title || item.product_name || 'Product'} (×{item.quantity || 1})
+                              </div>
+                            )) :
+                            <span className="text-gray-400">No items</span>
+                        })()}
                       </div>
                     </div>
 
