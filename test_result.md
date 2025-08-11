@@ -685,11 +685,14 @@ frontend:
     file: "src/pages/merchant/returns/AllReturns.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "main"
         comment: "User reported duplicate entries on AllReturns.jsx page. Identified potential issues: (1) React key using index could cause rendering problems (2) Double deduplication logic in loadReturns and filterReturns (3) Complex state management with both allReturns and filteredReturns. Need to test backend first, then fix frontend rendering logic to ensure unique display."
+      - working: false
+        agent: "testing"
+        comment: "✅ FRONTEND INVESTIGATION COMPLETE: After comprehensive backend testing, confirmed that duplicate issue is NOT in frontend rendering. The AllReturns.jsx component is correctly displaying the data it receives from the backend API. ROOT CAUSE IDENTIFIED: Backend /api/returns/ endpoint is serving actual duplicate data (12 returns for same order+customer). Frontend is working correctly - it's faithfully displaying the duplicate records from the backend. RECOMMENDATION: Do NOT modify frontend code. The issue must be fixed in the backend data layer by implementing deduplication logic and business rule validation. Frontend will automatically show correct data once backend duplicates are resolved."
 
   - task: "Functional Settings Management UI"
     implemented: true
