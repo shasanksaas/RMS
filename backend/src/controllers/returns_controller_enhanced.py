@@ -501,6 +501,7 @@ async def get_return_detail(
             # URLs
             "shopify_order_url": shopify_order_url,
             "shopify_return_url": shopify_return_url,
+            "shop_domain": shop_domain,  # Explicit shop domain for frontend
             
             # Order Context
             "order_info": {
