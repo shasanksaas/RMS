@@ -52,8 +52,9 @@ class CreateReturnRequestHandler:
             # Order not in local database, try to fetch from Shopify
             try:
                 if await self.shopify_service.is_connected(command.tenant_id.value):
-                    # Use the Shopify service to find the order by ID
-                    shopify_order = await self.shopify_service.get_order(command.order_id.value, command.tenant_id.value)
+                    # Create a shopify service instance for this tenant
+                    tenant_shopify_service = type(self.shopify_service)(command.tenant_id.value)
+                    shopify_order = await tenant_shopify_service.get_order(command.order_id.value)
                     if shopify_order:
                         order = shopify_order
                     else:
