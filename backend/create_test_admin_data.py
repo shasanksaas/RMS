@@ -24,11 +24,10 @@ async def create_test_admin_user():
     print("Creating test admin user...")
     
     db = await get_database()
-    user_service = AuthService(db)
     
-    # Check if admin already exists
+    # Check if admin already exists (admin users have no tenant_id)
     try:
-        existing_admin = await user_service.get_user_by_email("admin@test.com")
+        existing_admin = await auth_service.get_user_by_email(None, "admin@test.com")
         if existing_admin:
             print("✅ Admin user already exists: admin@test.com")
             return existing_admin
@@ -46,7 +45,7 @@ async def create_test_admin_user():
     )
     
     try:
-        admin_user = await user_service.create_user(admin_data)
+        admin_user = await auth_service.create_user(admin_data, created_by=None)
         print(f"✅ Created admin user: {admin_user.email}")
         return admin_user
     except Exception as e:
