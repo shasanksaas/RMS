@@ -454,6 +454,16 @@ class ShopifyService:
             shop_domain = shopify_integration.get('shop_domain')
             
             print(f"DEBUG: Raw access_token from DB: {access_token}")
+            
+            # Decrypt the access token if it's encrypted
+            if access_token and access_token.startswith('gAAAAAB'):
+                try:
+                    access_token = self.auth_service._decrypt_secret(access_token)
+                    print(f"DEBUG: Successfully decrypted access token")
+                except Exception as e:
+                    print(f"DEBUG: Failed to decrypt access token: {e}")
+                    return None
+            
             print(f"DEBUG: Found tenant {use_tenant_id}, shop_domain: {shop_domain}, has_token: {bool(access_token)}")
             
             if not access_token or not shop_domain:
