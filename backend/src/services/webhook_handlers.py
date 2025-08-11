@@ -666,18 +666,47 @@ class WebhookProcessor:
                 if reason_text:
                     update_data["reason"] = reason_text
             
-            # Update estimated refund if provided
-            if payload.get("refund_amount") or payload.get("total_refund"):
-                refund_amount = payload.get("refund_amount", payload.get("total_refund", 0))
-                if refund_amount:
+            # Update estimated refund if provided (prioritize Shopify amounts)
+            if payload.get("refund_amount") or payload.get("total_refund") or payload.get("amount"):
+                shopify_amount = (payload.get("refund_amount") or 
+                                 payload.get("total_refund") or 
+                                 payload.get("amount") or 0)
+                if shopify_amount:
                     try:
                         update_data["estimated_refund"] = {
-                            "amount": float(refund_amount),
+                            "amount": float(shopify_amount),
                             "currency": payload.get("currency", "USD"),
-                            "updated_from_shopify": True
+                            "updated_from_shopify": True,
+                            "sync_timestamp": datetime.utcnow()
                         }
+                        print(f"💰 Updated refund amount to ${shopify_amount} from Shopify for return {current_return['id']}")
                     except (ValueError, TypeError):
                         pass
+            
+            # Also check for line items with updated pricing
+            if payload.get("return_line_items"):
+                line_items = payload.get("return_line_items", [])
+                if line_items and isinstance(line_items, list):
+                    total_refund = 0
+                    for item in line_items:
+                        if isinstance(item, dict):
+                            quantity = int(item.get("quantity", 1))
+                            # Check multiple possible price fields from Shopify
+                            price = (item.get("price") or 
+                                   item.get("unit_price") or 
+                                   item.get("refund_amount") or 0)
+                            if price:
+                                total_refund += quantity * float(price)
+                    
+                    if total_refund > 0:
+                        update_data["estimated_refund"] = {
+                            "amount": total_refund,
+                            "currency": payload.get("currency", "USD"),
+                            "updated_from_shopify": True,
+                            "calculated_from_line_items": True,
+                            "sync_timestamp": datetime.utcnow()
+                        }
+                        print(f"💰 Calculated refund amount ${total_refund} from line items for return {current_return['id']}")
             
             # Add status-specific fields
             if app_status == "APPROVED":
