@@ -31,18 +31,24 @@ class TenantManagementTester:
             "integration_existing_system": []
         }
         
-        # Test data
+        # Test data - Updated based on review request
         self.admin_credentials = {
-            "email": "admin@returns-manager.com",
-            "password": "AdminPassword123!"
+            "email": "admin@test.com",
+            "password": "admin123"
         }
         
         self.existing_merchant_credentials = {
-            "email": "merchant@test.com", 
-            "password": "MerchantPass123!"
+            "email": "merchant1@test.com", 
+            "password": "merchant123"
         }
         
-        self.existing_tenant_id = "tenant-rms34"
+        # Expected tenant IDs from review request
+        self.expected_tenant_ids = [
+            "tenant-fashion-forward-demo",
+            "tenant-tech-gadgets-demo", 
+            "tenant-home-garden-demo"
+        ]
+        self.existing_tenant_id = "tenant-fashion-forward-demo"
 
     async def run_comprehensive_tests(self):
         """Run all tenant management system tests"""
