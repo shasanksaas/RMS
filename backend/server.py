@@ -650,73 +650,74 @@ async def create_return_request(return_data: ReturnRequestCreate, tenant_id: str
     return return_request
 
 
-@api_router.get("/returns", response_model=Dict[str, Any])
-async def get_return_requests(
-    tenant_id: str = Depends(get_tenant_id),
-    page: int = Query(1, ge=1),
-    limit: int = Query(20, ge=1, le=100),
-    search: Optional[str] = Query(None),
-    status_filter: str = Query("all"),
-    sort_by: str = Query("created_at"),
-    sort_order: str = Query("desc")
-):
-    """Get paginated and filtered return requests"""
-    
-    # Build filter query
-    filter_query = {"tenant_id": tenant_id}
-    
-    # Status filter
-    if status_filter != "all":
-        filter_query["status"] = status_filter
-    
-    # Search filter
-    if search:
-        filter_query["$or"] = [
-            {"customer_name": {"$regex": search, "$options": "i"}},
-            {"customer_email": {"$regex": search, "$options": "i"}},
-            {"order_id": {"$regex": search, "$options": "i"}}
-        ]
-    
-    # Get total count for pagination
-    total_count = await db.return_requests.count_documents(filter_query)
-    
-    # Calculate pagination
-    skip = (page - 1) * limit
-    total_pages = (total_count + limit - 1) // limit
-    
-    # Build sort order
-    sort_direction = -1 if sort_order == "desc" else 1
-    
-    # Get paginated results with stable sort (always include _id as secondary sort)
-    returns_cursor = db.return_requests.find(filter_query).sort([
-        (sort_by, sort_direction),
-        ("_id", sort_direction)  # Stable sort
-    ]).skip(skip).limit(limit)
-    
-    returns = await returns_cursor.to_list(limit)
-    
-    # Convert ObjectId to string for JSON serialization
-    for ret in returns:
-        if '_id' in ret:
-            ret['_id'] = str(ret['_id'])
-    
-    return {
-        "items": returns,  # Return raw data without model validation
-        "pagination": {
-            "current_page": page,
-            "total_pages": total_pages,
-            "total_count": total_count,
-            "per_page": limit,
-            "has_next": page < total_pages,
-            "has_prev": page > 1
-        },
-        "filters_applied": {
-            "search": search,
-            "status_filter": status_filter,
-            "sort_by": sort_by,
-            "sort_order": sort_order
-        }
-    }
+# @api_router.get("/returns", response_model=Dict[str, Any])
+# async def get_return_requests(
+#     tenant_id: str = Depends(get_tenant_id),
+#     page: int = Query(1, ge=1),
+#     limit: int = Query(20, ge=1, le=100),
+#     search: Optional[str] = Query(None),
+#     status_filter: str = Query("all"),
+#     sort_by: str = Query("created_at"),
+#     sort_order: str = Query("desc")
+# ):
+#     """Get paginated and filtered return requests"""
+#     
+#     # Build filter query
+#     filter_query = {"tenant_id": tenant_id}
+#     
+#     # Status filter
+#     if status_filter != "all":
+#         filter_query["status"] = status_filter
+#     
+#     # Search filter
+#     if search:
+#         filter_query["$or"] = [
+#             {"customer_name": {"$regex": search, "$options": "i"}},
+#             {"customer_email": {"$regex": search, "$options": "i"}},
+#             {"order_id": {"$regex": search, "$options": "i"}}
+#         ]
+#     
+#     # Get total count for pagination
+#     total_count = await db.return_requests.count_documents(filter_query)
+#     
+#     # Calculate pagination
+#     skip = (page - 1) * limit
+#     total_pages = (total_count + limit - 1) // limit
+#     
+#     # Build sort order
+#     sort_direction = -1 if sort_order == "desc" else 1
+#     
+#     # Get paginated results with stable sort (always include _id as secondary sort)
+#     returns_cursor = db.return_requests.find(filter_query).sort([
+#         (sort_by, sort_direction),
+#         ("_id", sort_direction)  # Stable sort
+#     ]).skip(skip).limit(limit)
+#     
+#     returns = await returns_cursor.to_list(limit)
+#     
+#     # Convert ObjectId to string for JSON serialization
+#     for ret in returns:
+#         if '_id' in ret:
+#             ret['_id'] = str(ret['_id'])
+#     
+#     return {
+#         "items": returns,  # Return raw data without model validation
+#         "pagination": {
+#             "current_page": page,
+#             "total_pages": total_pages,
+#             "total_count": total_count,
+#             "per_page": limit,
+#             "has_next": page < total_pages,
+#             "has_prev": page > 1
+#         },
+#         "filters_applied": {
+#             "search": search,
+#             "status_filter": status_filter,
+#             "sort_by": sort_by,
+#             "sort_order": sort_order
+#         }
+#     }
+# COMMENTED OUT - Using returns_enhanced_router instead which queries 'returns' collection
 
 @api_router.get("/returns/{return_id}", response_model=ReturnRequest)
 async def get_return_request(return_id: str, tenant_id: str = Depends(get_tenant_id)):
