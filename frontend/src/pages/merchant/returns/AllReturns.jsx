@@ -276,11 +276,9 @@ const AllReturns = () => {
     
     setBulkActionLoading(true);
     try {
-      const apiUrl = getApiUrl();
-      
       // Process each selected return
       const promises = selectedReturns.map(returnId => 
-        fetch(`${apiUrl}/api/returns/${returnId}/status`, {
+        fetch(buildApiUrl(`/api/returns/${returnId}/status`), {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
