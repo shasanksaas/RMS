@@ -94,8 +94,119 @@ This application is a **production-ready, enterprise-grade Returns Management Sa
 - **CRACO** - Create React App Configuration Override
 - **ESLint & Prettier** - Code quality and formatting
 
-## 🏗 System Architecture
+## 🏗️ System Architecture
 
+### **Hexagonal Architecture (Ports & Adapters)**
+The application follows Hexagonal Architecture principles for maximum modularity, testability, and maintainability:
+
+```mermaid
+graph TB
+    subgraph "Application Core"
+        Domain[Domain Layer]
+        Application[Application Layer]
+        Commands[Commands & Queries]
+        Handlers[Command & Query Handlers]
+        Events[Domain Events]
+    end
+    
+    subgraph "Ports (Interfaces)"
+        RepoPort[Repository Ports]
+        ServicePort[Service Ports]
+        EventPort[Event Ports]
+    end
+    
+    subgraph "Adapters (Implementations)"
+        MongoAdapter[MongoDB Adapter]
+        ShopifyAdapter[Shopify API Adapter]
+        EmailAdapter[Email Service Adapter]
+        WebhookAdapter[Webhook Handlers]
+    end
+    
+    subgraph "External Systems"
+        MongoDB[(MongoDB)]
+        Shopify[Shopify API]
+        EmailService[Email Service]
+        FileStorage[File Storage]
+    end
+    
+    Domain --> Commands
+    Commands --> Handlers
+    Handlers --> RepoPort
+    Handlers --> ServicePort
+    Handlers --> Events
+    
+    RepoPort --> MongoAdapter
+    ServicePort --> ShopifyAdapter
+    ServicePort --> EmailAdapter
+    EventPort --> WebhookAdapter
+    
+    MongoAdapter --> MongoDB
+    ShopifyAdapter --> Shopify
+    EmailAdapter --> EmailService
+    WebhookAdapter --> FileStorage
+```
+
+### **CQRS (Command Query Responsibility Segregation)**
+Separates read and write operations for optimal performance and scalability:
+
+```mermaid
+graph LR
+    subgraph "Command Side (Write)"
+        CreateReturn[Create Return Command]
+        UpdateStatus[Update Status Command]
+        ProcessRefund[Process Refund Command]
+        CommandHandler[Command Handlers]
+        WriteDB[(Write Database)]
+    end
+    
+    subgraph "Query Side (Read)"
+        GetReturns[Get Returns Query]
+        GetAnalytics[Get Analytics Query]
+        SearchReturns[Search Returns Query]
+        QueryHandler[Query Handlers]
+        ReadDB[(Read Database)]
+    end
+    
+    CreateReturn --> CommandHandler
+    UpdateStatus --> CommandHandler
+    ProcessRefund --> CommandHandler
+    CommandHandler --> WriteDB
+    
+    GetReturns --> QueryHandler
+    GetAnalytics --> QueryHandler
+    SearchReturns --> QueryHandler
+    QueryHandler --> ReadDB
+    
+    WriteDB -.->|Event Sourcing| ReadDB
+```
+
+### **Multi-Tenant Architecture**
+Enterprise-grade tenant isolation ensuring data security and scalability:
+
+```mermaid
+graph TB
+    subgraph "Request Flow"
+        Client[Client Request]
+        Gateway[API Gateway]
+        TenantMiddleware[Tenant Middleware]
+        Controller[Controller Layer]
+        Service[Service Layer]
+        Repository[Repository Layer]
+        Database[(MongoDB)]
+    end
+    
+    Client --> Gateway
+    Gateway --> TenantMiddleware
+    TenantMiddleware --> Controller
+    Controller --> Service
+    Service --> Repository
+    Repository --> Database
+    
+    TenantMiddleware -.->|Inject X-Tenant-Id| Controller
+    Repository -.->|Filter by tenant_id| Database
+```
+
+### **Service Communication Architecture**
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   Customer      │    │   Merchant      │    │   Admin         │
@@ -108,29 +219,52 @@ This application is a **production-ready, enterprise-grade Returns Management Sa
                     ┌─────────────────┐
                     │   React App     │
                     │   (Port 3000)   │
+                    │   ┌───────────┐ │
+                    │   │ Nginx     │ │
+                    │   │ Ingress   │ │
+                    │   └───────────┘ │
                     └─────────────────┘
                                  │
-                                 │ API Calls
-                                 │
-                    ┌─────────────────┐
-                    │   FastAPI       │
-                    │   (Port 8001)   │
-                    │   /api/*        │
-                    └─────────────────┘
-                                 │
-                    ┌─────────────────┐
-                    │   MongoDB       │
-                    │   (Port 27017)  │
-                    └─────────────────┘
+                        ┌────────┴────────┐
+                        │                 │
+                ┌─────────────────┐ ┌─────────────────┐
+                │   FastAPI       │ │   Kubernetes    │
+                │   (Port 8001)   │ │   Ingress       │
+                │   /api/*        │ │   Controller    │
+                └─────────────────┘ └─────────────────┘
+                         │                       │
+            ┌────────────┼──────────────┐       │
+            │            │              │       │
+  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
+  │  MongoDB    │ │  Shopify    │ │  External   │
+  │ (Port 27017)│ │     API     │ │  Services   │
+  │ Multi-Tenant│ │   GraphQL   │ │ (Email, S3) │
+  └─────────────┘ └─────────────┘ └─────────────┘
 ```
 
-### Multi-Tenant Data Flow
-```
-External Request → Security Middleware → Tenant Validation → Repository Layer → MongoDB
-                                      ↓
-                              X-Tenant-Id Header
-                                      ↓
-                              Data Isolation Filter
+### **Event-Driven Architecture**
+Domain events enable loose coupling and real-time processing:
+
+```mermaid
+sequenceDiagram
+    participant C as Customer
+    participant API as API Layer
+    participant CMD as Command Handler
+    participant EVT as Event Bus
+    participant WH as Webhook Handler
+    participant SH as Shopify Service
+    participant EMAIL as Email Service
+    participant DB as Database
+    
+    C->>API: Submit Return Request
+    API->>CMD: CreateReturnCommand
+    CMD->>DB: Save Return
+    CMD->>EVT: ReturnCreatedEvent
+    EVT->>WH: Process Event
+    EVT->>EMAIL: Send Confirmation
+    EVT->>SH: Update Shopify
+    WH->>SH: Register Webhook
+    EMAIL->>C: Confirmation Email
 ```
 
 ## 📋 Prerequisites
