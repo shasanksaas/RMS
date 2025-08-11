@@ -73,22 +73,32 @@ class TenantManagementTester:
         logger.info("🔐 Testing Admin Authentication")
         
         try:
-            # Test admin login
+            # Test admin login with credentials from review request
             login_data = {
-                "tenant_id": "admin",  # Admin users might use special tenant
                 "email": self.admin_credentials["email"],
                 "password": self.admin_credentials["password"],
                 "remember_me": True
             }
             
             async with self.session.post(f"{self.base_url}/auth/login", json=login_data) as response:
+                response_text = await response.text()
+                
                 if response.status == 200:
                     data = await response.json()
                     self.admin_token = data.get("access_token")
-                    logger.info("✅ Admin authentication successful")
-                    return True
+                    user_info = data.get("user", {})
+                    
+                    # Verify admin role
+                    if user_info.get("role") == "admin":
+                        logger.info("✅ Admin authentication successful with correct role")
+                        return True
+                    else:
+                        logger.warning(f"⚠️ User authenticated but role is: {user_info.get('role')}")
+                        self.admin_token = data.get("access_token")  # Still use token for testing
+                        return True
+                        
                 else:
-                    error_text = await response.text()
+                    error_text = response_text
                     logger.error(f"❌ Admin authentication failed: {response.status} - {error_text}")
                     
                     # Try alternative admin login approach
