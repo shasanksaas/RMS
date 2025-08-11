@@ -53,20 +53,23 @@ This application is a **production-ready, enterprise-grade Returns Management Sa
 
 ## 📋 Table of Contents
 
-- [Tech Stack](#tech-stack)
-- [System Architecture](#system-architecture)
-- [Prerequisites](#prerequisites)
-- [Local Development Setup](#local-development-setup)
-- [Environment Configuration](#environment-configuration)
-- [Database Setup](#database-setup)
-- [Running the Application](#running-the-application)
-- [API Documentation](#api-documentation)
-- [Project Structure](#project-structure)
-- [Key Components](#key-components)
-- [Database Schema](#database-schema)
-- [Testing](#testing)
-- [Deployment](#deployment)
-- [Troubleshooting](#troubleshooting)
+- [🌟 Project Overview](#-project-overview)
+- [🏗️ System Architecture](#️-system-architecture)
+- [🛠 Technology Stack](#-technology-stack)
+- [📊 Database Architecture](#-database-architecture)
+- [🔐 Authentication & Security](#-authentication--security)
+- [🛍️ Shopify Integration](#️-shopify-integration)
+- [📡 API Documentation](#-api-documentation)
+- [🎮 Controllers & Endpoints](#-controllers--endpoints)
+- [📁 Project Structure](#-project-structure)
+- [⚙️ Configuration Management](#️-configuration-management)
+- [🚀 Development Setup](#-development-setup)
+- [🔧 Advanced Features](#-advanced-features)
+- [🧪 Testing Strategy](#-testing-strategy)
+- [🚢 Deployment Guide](#-deployment-guide)
+- [📈 Monitoring & Observability](#-monitoring--observability)
+- [🔍 Troubleshooting](#-troubleshooting)
+- [🤝 Contributing](#-contributing)
 
 ## 🛠 Tech Stack
 
