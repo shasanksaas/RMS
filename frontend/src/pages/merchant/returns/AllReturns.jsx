@@ -348,15 +348,32 @@ const AllReturns = () => {
   };
 
   const formatReason = (reason) => {
+    if (!reason || reason === '') {
+      return 'Not specified';
+    }
+    
+    // If it's already a readable string from Shopify, return it as is
+    if (reason.length > 10 && reason.includes(' ')) {
+      return reason;
+    }
+    
     const reasons = {
       wrong_size: 'Wrong Size',
-      wrong_color: 'Wrong Color',
+      wrong_color: 'Wrong Color', 
       defective: 'Defective',
       not_as_described: 'Not as Described',
       changed_mind: 'Changed Mind',
-      damaged_in_shipping: 'Damaged in Shipping'
+      damaged_in_shipping: 'Damaged in Shipping',
+      // Add common Shopify reason formats
+      size_too_small: 'Size Too Small',
+      size_too_large: 'Size Too Large',
+      color_not_as_expected: 'Color Not as Expected',
+      quality_issues: 'Quality Issues',
+      damaged: 'Damaged',
+      defective_item: 'Defective Item'
     };
-    return reasons[reason] || reason;
+    
+    return reasons[reason?.toLowerCase()] || reason || 'Not specified';
   };
 
   if (loading) {
