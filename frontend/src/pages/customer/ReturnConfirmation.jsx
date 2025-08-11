@@ -44,7 +44,7 @@ const ReturnConfirmation = () => {
         `${process.env.REACT_APP_BACKEND_URL}/api/returns/${returnId}`,
         {
           headers: {
-            'X-Tenant-Id': localStorage.getItem('currentTenant') || 'tenant-fashion-store'
+            'X-Tenant-Id': localStorage.getItem('currentTenant') || 'tenant-rms34'
           }
         }
       );
