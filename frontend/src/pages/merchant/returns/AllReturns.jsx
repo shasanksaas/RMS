@@ -66,9 +66,13 @@ const AllReturns = () => {
   console.log('Backend URL from env:', backendUrl);
 
   const getApiUrl = () => {
-    // Use the configured backend URL - no fallback since it's set in production
-    console.log('Using backend URL:', backendUrl);
-    return backendUrl;
+    // Force HTTPS to prevent mixed content issues
+    let url = backendUrl;
+    if (url && url.startsWith('http://')) {
+      url = url.replace('http://', 'https://');
+    }
+    console.log('Forced HTTPS URL:', url);
+    return url;
   };
 
   // Debounced search function
