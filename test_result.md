@@ -743,7 +743,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Real-time Shopify API Customer Portal Lookup Testing - COMPLETED"
+    - "Duplicate Returns Issue Investigation"
+    - "Duplicate Returns Display Issue Fix"
   stuck_tasks: 
     - "GraphQL Service for Returns Operations"
     - "Sync Service with Initial Backfill"
