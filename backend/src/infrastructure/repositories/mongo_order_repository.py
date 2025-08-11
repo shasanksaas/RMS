@@ -43,6 +43,19 @@ class MongoOrderRepository(OrderRepository):
         
         return document
     
+    async def find_by_number(
+        self, 
+        order_number: str,
+        tenant_id: TenantId
+    ) -> Optional[Dict[str, Any]]:
+        """Find order by number only (ignoring customer email)"""
+        document = await self.collection.find_one({
+            "order_number": order_number,
+            "tenant_id": tenant_id.value
+        })
+        
+        return document
+    
     async def get_eligible_items(self, order_id: OrderId, tenant_id: TenantId) -> List[Dict[str, Any]]:
         """Get items eligible for return from an order"""
         order = await self.get_by_id(order_id, tenant_id)
