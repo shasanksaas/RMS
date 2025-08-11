@@ -58,76 +58,22 @@ const AllReturns = () => {
     }
   };
 
-  // Get backend URL and tenant from environment
+  // Get backend URL and tenant from environment  
   const backendUrl = process.env.REACT_APP_BACKEND_URL;
-  const tenantId = 'tenant-rms34'; // Updated to match connected Shopify store
+  const tenantId = 'tenant-rms34';
 
-  const getApiUrl = () => {
-    // Force HTTPS to prevent mixed content issues
-    let url = backendUrl;
-    if (url && url.startsWith('http://')) {
-      url = url.replace('http://', 'https://');
-    }
-    return url;
+  const buildApiUrl = (endpoint) => {
+    const apiUrl = backendUrl || 'http://localhost:8001';
+    return `${apiUrl}${endpoint}`;
   };
 
-  // Debounced search function
-  const debounce = useCallback((func, delay) => {
-    let timeoutId;
-    return (...args) => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => func.apply(null, args), delay);
-    };
-  }, []);
-
-  // Filter and search logic
-  const filterReturns = useCallback((returnsData, searchTerm, statusFilter) => {
-    let filtered = [...returnsData];
-
-    // Apply search filter
-    if (searchTerm.trim()) {
-      const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter(returnItem => 
-        returnItem.customer_name?.toLowerCase().includes(searchLower) ||
-        returnItem.customer_email?.toLowerCase().includes(searchLower) ||
-        returnItem.order_number?.toLowerCase().includes(searchLower) ||
-        returnItem.id?.toLowerCase().includes(searchLower)
-      );
-    }
-
-    // Apply status filter
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(returnItem => returnItem.status === statusFilter);
-    }
-
-    return filtered;
-  }, []);
-
-  // Memoized filtered results
-  const displayReturns = useMemo(() => {
-    return filterReturns(allReturns, filters.search, filters.status);
-  }, [allReturns, filters.search, filters.status, filterReturns]);
-
-  // Update filtered returns whenever display returns change
-  useEffect(() => {
-    setFilteredReturns(displayReturns);
-  }, [displayReturns]);
-
-  // Load returns from backend
+  // Load returns from backend - OPTIMIZED with no duplicates
   const loadReturns = async () => {
     try {
       setLoading(true);
       setError('');
       
-      const apiUrl = getApiUrl();
-      let fullUrl = `${apiUrl}/api/returns/`;  // Added trailing slash
-      
-      // Force HTTPS to prevent mixed content errors
-      if (fullUrl.startsWith('http://')) {
-        fullUrl = fullUrl.replace('http://', 'https://');
-      }
-      
-      const response = await fetch(fullUrl, {
+      const response = await fetch(buildApiUrl('/api/returns/'), {
         headers: {
           'Content-Type': 'application/json',
           'X-Tenant-Id': tenantId
@@ -136,20 +82,34 @@ const AllReturns = () => {
 
       if (response.ok) {
         const data = await response.json();
-        const returnsData = data.returns || []; // Fixed: use 'returns' instead of 'items'
-        setAllReturns(returnsData);
+        const returnsData = data.returns || [];
+        
+        // Remove any potential duplicates by ID and ensure all data is clean
+        const uniqueReturns = returnsData.reduce((acc, returnItem) => {
+          // Skip if we already have this return ID
+          if (!acc.find(existing => existing.id === returnItem.id)) {
+            // Ensure all required fields exist (no static fallbacks)
+            if (returnItem.id && returnItem.customer_email && returnItem.order_number) {
+              acc.push(returnItem);
+            }
+          }
+          return acc;
+        }, []);
+        
+        setAllReturns(uniqueReturns);
         setPagination(data.pagination || {});
-        setError(''); // Clear any previous errors
-      } else {
-        console.warn('Returns API failed');
+        setError('');
+      } else if (response.status === 404) {
         setAllReturns([]);
-        setPagination({ total_items: 0, current_page: 1, total_pages: 1, per_page: 20 });
+        setError('No returns found');
+      } else {
+        setAllReturns([]);
+        setError(`Failed to load returns: ${response.statusText}`);
       }
     } catch (err) {
       console.error('Error loading returns:', err);
       setAllReturns([]);
-      setPagination({ total_items: 0, current_page: 1, total_pages: 1, per_page: 20 });
-      setError('Failed to load returns. Please try again.');
+      setError('Unable to connect to server. Please check your connection.');
     } finally {
       setLoading(false);
     }
