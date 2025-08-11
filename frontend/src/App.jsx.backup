@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import ErrorBoundary from './components/ErrorBoundary';
-import { authService } from './services/authService';
 
 // Auth Components
-import Login from './components/auth/Login';
-import Register from './components/auth/Register';
+import AuthProvider from './contexts/AuthContext';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+import AuthGuard from './components/auth/AuthGuard';
+import Login from './components/auth/Login.tsx';
+import Register from './components/auth/Register.tsx';
 import GoogleCallback from './components/auth/GoogleCallback';
 import ForgotPassword from './components/auth/ForgotPassword';
 import { ToastProvider } from './components/ui/use-toast';
@@ -52,84 +54,6 @@ import AdminCatalog from './pages/admin/Catalog';
 
 import './App.css';
 
-// Simple Auth Context
-const AuthContext = React.createContext();
-
-export const useAuth = () => {
-  const context = React.useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
-
-// Simple Auth Provider
-const SimpleAuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const token = localStorage.getItem('auth_token');
-    const userInfo = localStorage.getItem('user_info');
-    
-    if (token && userInfo) {
-      try {
-        setUser(JSON.parse(userInfo));
-        setIsAuthenticated(true);
-      } catch (e) {
-        localStorage.clear();
-      }
-    }
-    
-    setIsLoading(false);
-  }, []);
-
-  const login = async (loginData) => {
-    const response = await authService.login(loginData);
-    localStorage.setItem('auth_token', response.access_token);
-    localStorage.setItem('user_info', JSON.stringify(response.user));
-    setUser(response.user);
-    setIsAuthenticated(true);
-    return response;
-  };
-
-  const logout = () => {
-    localStorage.clear();
-    setUser(null);
-    setIsAuthenticated(false);
-  };
-
-  return (
-    <AuthContext.Provider value={{ user, isAuthenticated, isLoading, login, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
-
-// Simple Protected Route
-const SimpleProtectedRoute = ({ children, requiredRole }) => {
-  const { isAuthenticated, isLoading, user } = useAuth();
-  const navigate = useNavigate();
-
-  if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/auth/login" replace />;
-  }
-
-  if (requiredRole && user?.role !== requiredRole) {
-    const redirectPath = user?.role === 'admin' ? '/admin/dashboard' : 
-                        user?.role === 'merchant' ? '/app/dashboard' : '/returns/start';
-    return <Navigate to={redirectPath} replace />;
-  }
-
-  return children;
-};
-
-// Main App Component
 const App = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   
@@ -149,23 +73,51 @@ const App = () => {
   return (
     <ErrorBoundary>
       <ToastProvider>
-        <SimpleAuthProvider>
+        <AuthProvider>
           <BrowserRouter>
             <Routes>
-              {/* Auth Routes */}
-              <Route path="/auth/login" element={<Login />} />
-              <Route path="/auth/register" element={<Register />} />
-              <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+              {/* Auth Routes (Public - No Authentication Required) */}
+              <Route path="/auth/login" element={
+                <ProtectedRoute requireAuth={false} redirectTo="/app/dashboard">
+                  <Login />
+                </ProtectedRoute>
+              } />
+              <Route path="/auth/register" element={
+                <ProtectedRoute requireAuth={false} redirectTo="/app/dashboard">
+                  <Register />
+                </ProtectedRoute>
+              } />
+              <Route path="/auth/forgot-password" element={
+                <ProtectedRoute requireAuth={false} redirectTo="/app/dashboard">
+                  <ForgotPassword />
+                </ProtectedRoute>
+              } />
               <Route path="/auth/google/callback" element={<GoogleCallback />} />
 
-              {/* Customer Portal Routes */}
+              {/* Customer Portal Routes (Some Public, Some Protected) */}
               <Route path="/returns" element={<CustomerLayout />}>
                 <Route path="start" element={<CustomerStart />} />
-                <Route path="create" element={<CustomerCreateReturn />} />
+                <Route path="create" element={
+                  <ProtectedRoute requiredRole="customer">
+                    <CustomerCreateReturn />
+                  </ProtectedRoute>
+                } />
                 <Route path="confirmation/:returnId" element={<CustomerReturnConfirmation />} />
-                <Route path="select" element={<CustomerSelectItems />} />
-                <Route path="resolution" element={<CustomerResolution />} />
-                <Route path="confirm" element={<CustomerConfirm />} />
+                <Route path="select" element={
+                  <ProtectedRoute requiredRole="customer">
+                    <CustomerSelectItems />
+                  </ProtectedRoute>
+                } />
+                <Route path="resolution" element={
+                  <ProtectedRoute requiredRole="customer">
+                    <CustomerResolution />
+                  </ProtectedRoute>
+                } />
+                <Route path="confirm" element={
+                  <ProtectedRoute requiredRole="customer">
+                    <CustomerConfirm />
+                  </ProtectedRoute>
+                } />
                 <Route path="status/:returnId" element={<CustomerStatus />} />
                 <Route index element={<Navigate to="/returns/start" replace />} />
               </Route>
@@ -174,11 +126,14 @@ const App = () => {
               <Route path="/portal/returns/start" element={<ReturnPortal />} />
               <Route path="/portal/returns/confirmation/:returnId" element={<CustomerReturnConfirmation />} />
 
-              {/* Merchant App Routes */}
+              {/* Legacy customer route */}
+              <Route path="/customer" element={<Navigate to="/returns/start" replace />} />
+
+              {/* Merchant App Routes (Protected - Merchant Role Required) */}
               <Route path="/app" element={
-                <SimpleProtectedRoute requiredRole="merchant">
+                <ProtectedRoute requiredRole="merchant">
                   <MerchantLayout isOnline={isOnline} />
-                </SimpleProtectedRoute>
+                </ProtectedRoute>
               }>
                 <Route path="dashboard" element={<Dashboard />} />
                 <Route path="returns" element={<AllReturns />} />
@@ -199,19 +154,18 @@ const App = () => {
                 <Route index element={<Navigate to="/app/dashboard" replace />} />
               </Route>
 
-              {/* Admin Routes */}
+              {/* Super Admin Routes (Protected - Admin Role Required) */}
               <Route path="/admin" element={
-                <SimpleProtectedRoute requiredRole="admin">
+                <ProtectedRoute requiredRole="admin">
                   <AdminLayout />
-                </SimpleProtectedRoute>
+                </ProtectedRoute>
               }>
-                <Route path="dashboard" element={<div>Admin Dashboard</div>} />
                 <Route path="tenants" element={<AdminTenants />} />
                 <Route path="ops" element={<AdminOperations />} />
                 <Route path="audit" element={<AdminAudit />} />
                 <Route path="flags" element={<AdminFeatureFlags />} />
                 <Route path="catalog" element={<AdminCatalog />} />
-                <Route index element={<Navigate to="/admin/dashboard" replace />} />
+                <Route index element={<Navigate to="/admin/tenants" replace />} />
               </Route>
 
               {/* Default Routes */}
@@ -220,7 +174,7 @@ const App = () => {
               <Route path="*" element={<Navigate to="/auth/login" replace />} />
             </Routes>
           </BrowserRouter>
-        </SimpleAuthProvider>
+        </AuthProvider>
       </ToastProvider>
     </ErrorBoundary>
   );
