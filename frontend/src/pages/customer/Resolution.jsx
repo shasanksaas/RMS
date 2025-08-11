@@ -70,9 +70,7 @@ const Resolution = () => {
     setLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
+      // Navigate immediately without delay
       navigate('/returns/confirm', {
         state: {
           orderNumber,
@@ -82,6 +80,7 @@ const Resolution = () => {
         }
       });
     } catch (error) {
+      console.error('Navigation error:', error);
       alert('Something went wrong. Please try again.');
       setLoading(false);
     }
