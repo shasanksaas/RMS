@@ -49,6 +49,14 @@ class ShopifyAuthService:
             self.encryption_key = Fernet.generate_key()
             self.cipher = Fernet(self.encryption_key)
         
+        # Required scopes for Returns Management
+        self.scopes = [
+            "read_orders", "write_orders", "read_products", "write_products",
+            "read_customers", "write_customers", "read_inventory", "write_inventory",
+            "read_fulfillments", "write_fulfillments", "read_returns", "write_returns",
+            "read_refunds", "write_refunds", "read_locations", "read_shipping"
+        ]
+        
     def generate_oauth_state(self) -> str:
         """Generate a secure random state token for CSRF protection"""
         return secrets.token_urlsafe(32)
