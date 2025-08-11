@@ -68,7 +68,6 @@ const AllReturns = () => {
     if (url && url.startsWith('http://')) {
       url = url.replace('http://', 'https://');
     }
-    console.log('Forced HTTPS URL:', url);
     return url;
   };
 
