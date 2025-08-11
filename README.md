@@ -1171,22 +1171,633 @@ TESTING=false
 4. **Monitor access to sensitive configuration**
 5. **Use different keys per environment (dev/staging/prod)**
 
-### Frontend Components
+## 🛍️ Shopify Integration
 
-#### 1. Layout System
-- **MerchantLayout**: Dashboard navigation and tenant switching
-- **CustomerLayout**: Clean, branded customer interface
-- **Responsive Design**: Mobile-first approach
+### **Comprehensive Shopify Integration Architecture**
 
-#### 2. State Management
-- **React Context**: Global state for user/tenant data
-- **Local Storage**: Persistence for user preferences
-- **Error Boundaries**: Graceful error handling
+The application provides **deep, production-ready integration** with Shopify, supporting both GraphQL and REST APIs for maximum compatibility and performance.
 
-#### 3. API Integration
-- **Axios Client**: Centralized HTTP handling
-- **Request Interceptors**: Automatic tenant header injection
-- **Error Handling**: User-friendly error messages
+#### **Integration Capabilities Overview**
+| Feature | Implementation | Benefits |
+|---------|---------------|----------|
+| **OAuth 2.0 Authentication** | Full flow with state validation | Secure, user-approved access |
+| **Real-time Data Sync** | GraphQL + REST API | Live order data, fast queries |
+| **Webhook Processing** | 14 webhook topics | Real-time event handling |
+| **Credential Encryption** | Fernet-based AES-128 | Secure token storage |
+| **Rate Limit Handling** | Exponential backoff | Shopify API compliance |
+| **Multi-Store Support** | Per-tenant isolation | Enterprise scalability |
+
+### **Shopify Service Layer (`/backend/src/services/shopify_service.py`)**
+
+#### **Core Service Architecture**
+```python
+class ShopifyService:
+    """
+    Comprehensive Shopify API service with GraphQL and REST support
+    """
+    
+    def __init__(self, tenant_id: str):
+        self.tenant_id = tenant_id
+        self.base_url = None
+        self.access_token = None
+        self.shop_domain = None
+        self._authenticated = False
+    
+    async def authenticate(self) -> bool:
+        """
+        Authenticates with Shopify using stored credentials
+        """
+        integration = await db.integrations_shopify.find_one({
+            "tenant_id": self.tenant_id,
+            "is_active": True
+        })
+        
+        if not integration:
+            raise ShopifyIntegrationError("No active Shopify integration found")
+        
+        # Decrypt access token
+        encrypted_token = integration["access_token"]
+        if encrypted_token.startswith('gAAAAAB'):  # Fernet encrypted
+            self.access_token = encryption_service.decrypt(encrypted_token)
+        else:
+            self.access_token = encrypted_token  # Legacy plain text
+        
+        self.shop_domain = integration["shop_domain"]
+        self.base_url = f"https://{self.shop_domain}.myshopify.com"
+        
+        # Validate credentials
+        if await self._test_connection():
+            self._authenticated = True
+            return True
+        
+        raise ShopifyIntegrationError("Invalid Shopify credentials")
+    
+    async def _test_connection(self) -> bool:
+        """Tests API connection and permissions"""
+        try:
+            async with aiohttp.ClientSession() as session:
+                headers = {
+                    "X-Shopify-Access-Token": self.access_token,
+                    "Content-Type": "application/json"
+                }
+                
+                async with session.get(
+                    f"{self.base_url}/admin/api/2025-07/shop.json",
+                    headers=headers
+                ) as response:
+                    return response.status == 200
+        except Exception:
+            return False
+```
+
+#### **GraphQL Query Service**
+```python
+class ShopifyGraphQLService:
+    """
+    High-performance GraphQL queries for Shopify data
+    """
+    
+    # GraphQL Query Templates
+    ORDER_QUERY = """
+    query getOrder($id: ID!) {
+        order(id: $id) {
+            id
+            name
+            processedAt
+            displayFulfillmentStatus
+            displayFinancialStatus
+            totalPriceSet {
+                shopMoney {
+                    amount
+                    currencyCode
+                }
+            }
+            customer {
+                id
+                firstName
+                lastName
+                displayName
+                email
+                phone
+            }
+            lineItems(first: 50) {
+                edges {
+                    node {
+                        id
+                        title
+                        variantTitle
+                        sku
+                        quantity
+                        originalUnitPriceSet {
+                            shopMoney {
+                                amount
+                                currencyCode
+                            }
+                        }
+                        product {
+                            id
+                            title
+                            handle
+                            vendor
+                        }
+                        variant {
+                            id
+                            title
+                            sku
+                            image {
+                                url(transform: {maxWidth: 300})
+                            }
+                        }
+                    }
+                }
+            }
+            shippingAddress {
+                firstName
+                lastName
+                company
+                address1
+                address2
+                city
+                province
+                country
+                zip
+                phone
+            }
+        }
+    }
+    """
+    
+    async def find_order_by_number(self, order_number: str) -> Optional[dict]:
+        """
+        Finds order by order number using GraphQL for performance
+        """
+        if not self._authenticated:
+            await self.authenticate()
+        
+        query = """
+        query findOrderByName($query: String!) {
+            orders(first: 1, query: $query) {
+                edges {
+                    node {
+                        id
+                        name
+                        processedAt
+                        displayFulfillmentStatus
+                        displayFinancialStatus
+                        totalPriceSet {
+                            shopMoney {
+                                amount
+                                currencyCode
+                            }
+                        }
+                        customer {
+                            id
+                            firstName
+                            lastName
+                            displayName
+                            email
+                        }
+                        lineItems(first: 50) {
+                            edges {
+                                node {
+                                    id
+                                    title
+                                    variantTitle
+                                    sku
+                                    quantity
+                                    originalUnitPriceSet {
+                                        shopMoney {
+                                            amount
+                                            currencyCode
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        """
+        
+        variables = {"query": f"name:{order_number}"}
+        
+        result = await self._execute_graphql(query, variables)
+        
+        if result and result.get('data', {}).get('orders', {}).get('edges'):
+            order_data = result['data']['orders']['edges'][0]['node']
+            return self._transform_graphql_order(order_data)
+        
+        return None
+    
+    async def get_order_for_return(self, order_id: str) -> Optional[dict]:
+        """
+        Gets complete order data optimized for return processing
+        """
+        if not self._authenticated:
+            await self.authenticate()
+        
+        # Convert to GraphQL ID if needed
+        gql_id = f"gid://shopify/Order/{order_id}" if not order_id.startswith('gid://') else order_id
+        
+        variables = {"id": gql_id}
+        
+        result = await self._execute_graphql(self.ORDER_QUERY, variables)
+        
+        if result and result.get('data', {}).get('order'):
+            order_data = result['data']['order']
+            return self._transform_graphql_order(order_data)
+        
+        return None
+    
+    async def _execute_graphql(self, query: str, variables: dict = None) -> dict:
+        """
+        Executes GraphQL query with error handling and rate limiting
+        """
+        payload = {
+            "query": query,
+            "variables": variables or {}
+        }
+        
+        headers = {
+            "X-Shopify-Access-Token": self.access_token,
+            "Content-Type": "application/json"
+        }
+        
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                f"{self.base_url}/admin/api/2025-07/graphql.json",
+                json=payload,
+                headers=headers
+            ) as response:
+                if response.status == 429:  # Rate limited
+                    retry_after = int(response.headers.get('Retry-After', 2))
+                    await asyncio.sleep(retry_after)
+                    return await self._execute_graphql(query, variables)
+                
+                if response.status != 200:
+                    raise ShopifyAPIError(f"GraphQL request failed: {response.status}")
+                
+                return await response.json()
+    
+    def _transform_graphql_order(self, order_data: dict) -> dict:
+        """
+        Transforms GraphQL order data to standard format
+        """
+        # Extract Shopify order ID from GraphQL ID
+        shopify_id = order_data['id'].split('/')[-1] if order_data['id'].startswith('gid://') else order_data['id']
+        
+        # Transform customer data
+        customer = order_data.get('customer', {})
+        customer_transformed = {}
+        if customer:
+            customer_transformed = {
+                'id': customer.get('id', '').split('/')[-1] if customer.get('id') else '',
+                'first_name': customer.get('firstName', ''),
+                'last_name': customer.get('lastName', ''),
+                'displayName': customer.get('displayName', ''),
+                'email': customer.get('email', '')
+            }
+        
+        # Transform line items
+        line_items = []
+        for edge in order_data.get('lineItems', {}).get('edges', []):
+            item = edge['node']
+            line_items.append({
+                'id': item['id'].split('/')[-1],
+                'title': item.get('title', ''),
+                'variant_title': item.get('variantTitle', ''),
+                'sku': item.get('sku', ''),
+                'quantity': item.get('quantity', 0),
+                'price': item.get('originalUnitPriceSet', {}).get('shopMoney', {}).get('amount', '0'),
+                'product_id': item.get('product', {}).get('id', '').split('/')[-1] if item.get('product', {}).get('id') else '',
+                'variant_id': item.get('variant', {}).get('id', '').split('/')[-1] if item.get('variant', {}).get('id') else ''
+            })
+        
+        # Transform main order data
+        transformed_order = {
+            'id': shopify_id,
+            'order_number': order_data.get('name', ''),
+            'name': order_data.get('name', ''),
+            'processed_at': order_data.get('processedAt', ''),
+            'financial_status': order_data.get('displayFinancialStatus', '').lower(),
+            'fulfillment_status': order_data.get('displayFulfillmentStatus', '').lower(),
+            'total_price': order_data.get('totalPriceSet', {}).get('shopMoney', {}).get('amount', '0'),
+            'currency': order_data.get('totalPriceSet', {}).get('shopMoney', {}).get('currencyCode', 'USD'),
+            'customer': customer_transformed,
+            'customer_name': f"{customer_transformed.get('first_name', '')} {customer_transformed.get('last_name', '')}".strip(),
+            'customer_email': customer_transformed.get('email', ''),
+            'customer_display_name': customer_transformed.get('displayName', ''),
+            'line_items': line_items,
+            'shipping_address': order_data.get('shippingAddress', {}),
+            'tenant_id': self.tenant_id,
+            'source': 'shopify_live',
+            'last_sync': datetime.utcnow().isoformat()
+        }
+        
+        return transformed_order
+```
+
+### **Webhook Processing System**
+
+#### **Webhook Handler (`/backend/src/services/webhook_handlers.py`)**
+```python
+class ShopifyWebhookHandler:
+    """
+    Processes Shopify webhooks for real-time data sync
+    """
+    
+    SUPPORTED_TOPICS = {
+        'orders/create': 'handle_order_created',
+        'orders/updated': 'handle_order_updated', 
+        'orders/paid': 'handle_order_paid',
+        'orders/cancelled': 'handle_order_cancelled',
+        'orders/fulfilled': 'handle_order_fulfilled',
+        'orders/partially_fulfilled': 'handle_order_partially_fulfilled',
+        'refunds/create': 'handle_refund_created',
+        'app/uninstalled': 'handle_app_uninstalled',
+        'customers/create': 'handle_customer_created',
+        'customers/update': 'handle_customer_updated',
+        'products/create': 'handle_product_created',
+        'products/update': 'handle_product_updated',
+        'inventory_levels/update': 'handle_inventory_update',
+        'carts/create': 'handle_cart_created'
+    }
+    
+    async def process_webhook(
+        self,
+        tenant_id: str,
+        topic: str,
+        payload: dict,
+        shop_domain: str,
+        webhook_id: str = None
+    ) -> bool:
+        """
+        Processes incoming webhook with error handling and retry logic
+        """
+        try:
+            # Log webhook received
+            await self._log_webhook(tenant_id, topic, payload, 'received')
+            
+            # Find handler method
+            handler_method = self.SUPPORTED_TOPICS.get(topic)
+            if not handler_method:
+                await self._log_webhook(tenant_id, topic, payload, 'unsupported')
+                return False
+            
+            # Execute handler
+            handler = getattr(self, handler_method)
+            await handler(tenant_id, payload, shop_domain)
+            
+            await self._log_webhook(tenant_id, topic, payload, 'processed')
+            return True
+            
+        except Exception as e:
+            await self._log_webhook(
+                tenant_id, topic, payload, 'error', 
+                error_details=str(e)
+            )
+            
+            # Schedule retry if applicable
+            await self._schedule_retry(tenant_id, topic, payload)
+            raise
+    
+    async def handle_order_created(self, tenant_id: str, payload: dict, shop_domain: str):
+        """Handles new order creation"""
+        order_data = self._transform_webhook_order(payload, tenant_id)
+        
+        # Insert or update order in database
+        await db.orders.update_one(
+            {"id": order_data["id"], "tenant_id": tenant_id},
+            {"$set": order_data},
+            upsert=True
+        )
+        
+        # Trigger business events
+        await self._emit_domain_event("OrderCreated", {
+            "tenant_id": tenant_id,
+            "order_id": order_data["id"],
+            "customer_email": order_data.get("customer_email"),
+            "total_price": float(order_data.get("total_price", 0))
+        })
+    
+    async def handle_order_updated(self, tenant_id: str, payload: dict, shop_domain: str):
+        """Handles order updates"""
+        order_data = self._transform_webhook_order(payload, tenant_id)
+        
+        # Update existing order
+        result = await db.orders.update_one(
+            {"id": order_data["id"], "tenant_id": tenant_id},
+            {"$set": order_data}
+        )
+        
+        if result.modified_count > 0:
+            await self._emit_domain_event("OrderUpdated", {
+                "tenant_id": tenant_id,
+                "order_id": order_data["id"],
+                "changes": self._detect_order_changes(payload)
+            })
+    
+    async def handle_app_uninstalled(self, tenant_id: str, payload: dict, shop_domain: str):
+        """
+        Handles app uninstallation - critical for compliance
+        """
+        # Mark integration as inactive
+        await db.integrations_shopify.update_one(
+            {"tenant_id": tenant_id, "shop_domain": shop_domain},
+            {
+                "$set": {
+                    "is_active": False,
+                    "uninstalled_at": datetime.utcnow(),
+                    "access_token": None  # Remove access token
+                }
+            }
+        )
+        
+        # Disable tenant (optional, based on business rules)
+        await db.tenants.update_one(
+            {"id": tenant_id},
+            {
+                "$set": {
+                    "shopify_connected": False,
+                    "integration_status": "disconnected"
+                }
+            }
+        )
+        
+        # Send notification to tenant
+        await notification_service.send_integration_disconnected_email(tenant_id)
+        
+        await self._emit_domain_event("ShopifyAppUninstalled", {
+            "tenant_id": tenant_id,
+            "shop_domain": shop_domain,
+            "uninstalled_at": datetime.utcnow().isoformat()
+        })
+```
+
+### **Webhook Registration & Management**
+
+#### **Webhook Controller (`/backend/src/controllers/webhook_controller.py`)**
+```python
+@router.post("/{topic}")
+async def receive_webhook(
+    topic: str,
+    request: Request,
+    background_tasks: BackgroundTasks
+):
+    """
+    Receives and validates Shopify webhooks
+    """
+    # Get raw body for HMAC verification
+    body = await request.body()
+    
+    # Verify webhook authenticity
+    hmac_header = request.headers.get('X-Shopify-Hmac-Sha256')
+    shop_domain = request.headers.get('X-Shopify-Shop-Domain')
+    
+    if not await verify_webhook_hmac(body, hmac_header):
+        raise HTTPException(status_code=401, detail="Invalid webhook signature")
+    
+    # Parse payload
+    try:
+        payload = json.loads(body.decode('utf-8'))
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Invalid JSON payload")
+    
+    # Find tenant by shop domain
+    integration = await db.integrations_shopify.find_one({
+        "shop_domain": shop_domain,
+        "is_active": True
+    })
+    
+    if not integration:
+        # Log orphaned webhook
+        await db.webhook_errors.insert_one({
+            "topic": topic,
+            "shop_domain": shop_domain,
+            "error": "No active integration found",
+            "payload_size": len(body),
+            "created_at": datetime.utcnow()
+        })
+        raise HTTPException(status_code=404, detail="Integration not found")
+    
+    tenant_id = integration["tenant_id"]
+    
+    # Process webhook asynchronously
+    background_tasks.add_task(
+        webhook_handler.process_webhook,
+        tenant_id,
+        topic,
+        payload,
+        shop_domain
+    )
+    
+    return {"success": True, "message": "Webhook received"}
+
+async def verify_webhook_hmac(body: bytes, hmac_header: str) -> bool:
+    """
+    Verifies webhook HMAC signature for security
+    """
+    if not hmac_header:
+        return False
+    
+    # Calculate expected HMAC
+    secret = settings.SHOPIFY_WEBHOOK_SECRET.encode('utf-8')
+    expected_hmac = base64.b64encode(
+        hmac.new(secret, body, hashlib.sha256).digest()
+    ).decode('utf-8')
+    
+    return hmac.compare_digest(expected_hmac, hmac_header)
+```
+
+### **Integration Management Dashboard**
+
+#### **Integration Status Controller**
+```python
+@router.get("/status")
+async def get_integration_status(tenant_id: str = Depends(get_tenant_id)):
+    """
+    Returns comprehensive Shopify integration status
+    """
+    integration = await db.integrations_shopify.find_one({
+        "tenant_id": tenant_id
+    })
+    
+    if not integration:
+        return {
+            "connected": False,
+            "status": "not_configured",
+            "message": "Shopify integration not configured"
+        }
+    
+    if not integration.get("is_active", False):
+        return {
+            "connected": False,
+            "status": "disconnected",
+            "message": "Shopify integration is disconnected",
+            "disconnected_at": integration.get("uninstalled_at")
+        }
+    
+    # Test connection
+    shopify_service = ShopifyService(tenant_id)
+    try:
+        await shopify_service.authenticate()
+        connection_test = await shopify_service._test_connection()
+        
+        if connection_test:
+            # Get additional integration metrics
+            stats = await get_integration_stats(tenant_id)
+            
+            return {
+                "connected": True,
+                "status": "active",
+                "shop_domain": integration["shop_domain"],
+                "connected_at": integration["connected_at"],
+                "scope": integration.get("scope", ""),
+                "last_sync": integration.get("last_sync"),
+                "stats": stats
+            }
+        else:
+            return {
+                "connected": False,
+                "status": "invalid_credentials",
+                "message": "Shopify credentials are invalid or expired"
+            }
+    
+    except Exception as e:
+        return {
+            "connected": False,
+            "status": "connection_error",
+            "message": f"Connection test failed: {str(e)}"
+        }
+
+async def get_integration_stats(tenant_id: str) -> dict:
+    """
+    Gets integration statistics for dashboard
+    """
+    # Count synced orders
+    orders_count = await db.orders.count_documents({"tenant_id": tenant_id})
+    
+    # Count webhooks processed (last 30 days)
+    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+    webhooks_count = await db.webhooks.count_documents({
+        "tenant_id": tenant_id,
+        "created_at": {"$gte": thirty_days_ago}
+    })
+    
+    # Count returns with Shopify data
+    returns_with_shopify_data = await db.returns.count_documents({
+        "tenant_id": tenant_id,
+        "source": "shopify_live"
+    })
+    
+    return {
+        "orders_synced": orders_count,
+        "webhooks_processed_30d": webhooks_count,
+        "returns_with_shopify_data": returns_with_shopify_data,
+        "sync_health": "healthy" if orders_count > 0 else "no_data"
+    }
+```
 
 ## 📊 Database Architecture
 
