@@ -353,7 +353,7 @@ class EnhancedReturnsTestSuite:
         
         for tenant_id in test_tenants:
             headers = {"X-Tenant-Id": tenant_id}
-            success, response, status = await self.make_request("GET", "/returns?limit=5", headers=headers)
+            success, response, status = await self.make_request("GET", "/returns/?limit=5", headers=headers)
             
             if success:
                 tenant_data[tenant_id] = len(response.get("returns", []))
