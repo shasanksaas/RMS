@@ -707,19 +707,29 @@ class ShopifyService:
         """Get order by ID for return creation - uses real-time Shopify API"""
         use_tenant_id = tenant_id or self.tenant_id
         
+        print(f"DEBUG get_order_for_return: order_id={order_id}, tenant_id={use_tenant_id}")
+        
         if not use_tenant_id:
+            print("DEBUG: No tenant_id provided")
             return None
         
         # First check local database
-        order = await db.orders.find_one({"id": order_id, "tenant_id": use_tenant_id})
-        if order:
-            return order
+        try:
+            print(f"DEBUG: Checking local database for order")
+            order = await db.orders.find_one({"id": order_id, "tenant_id": use_tenant_id})
+            if order:
+                print(f"DEBUG: Found order in local database")
+                return order
+        except Exception as e:
+            print(f"DEBUG: Database lookup error: {e}")
             
         # If not in database, fetch from Shopify using real-time API
         try:
+            print(f"DEBUG: Fetching from Shopify API")
             # Get tenant credentials
             tenant = await db.tenants.find_one({"id": use_tenant_id})
             if not tenant or not tenant.get('shopify_integration'):
+                print(f"DEBUG: No tenant or shopify_integration found")
                 return None
                 
             shopify_integration = tenant.get('shopify_integration', {})
