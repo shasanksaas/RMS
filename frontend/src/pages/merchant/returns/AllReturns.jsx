@@ -139,9 +139,7 @@ const AllReturns = () => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('API response data:', data); // Debug log
         const returnsData = data.returns || []; // Fixed: use 'returns' instead of 'items'
-        console.log('Returns data:', returnsData); // Debug log
         setAllReturns(returnsData);
         setPagination(data.pagination || {});
         setError(''); // Clear any previous errors
