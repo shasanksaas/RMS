@@ -451,6 +451,7 @@ class ShopifyService:
             access_token = shopify_integration.get('access_token')
             shop_domain = shopify_integration.get('shop_domain')
             
+            print(f"DEBUG: Raw access_token from DB: {access_token}")
             print(f"DEBUG: Found tenant {use_tenant_id}, shop_domain: {shop_domain}, has_token: {bool(access_token)}")
             
             if not access_token or not shop_domain:
