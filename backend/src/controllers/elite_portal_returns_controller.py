@@ -30,7 +30,7 @@ router = APIRouter(prefix="/elite/portal/returns", tags=["Elite Portal Returns"]
 # Request/Response Models
 class OrderLookupRequest(BaseModel):
     order_number: str = Field(..., min_length=1)
-    customer_email: str = Field(..., pattern=r'^[^@]+@[^@]+\.[^@]+$')
+    customer_email: Optional[str] = Field(None, pattern=r'^[^@]+@[^@]+\.[^@]+$')  # Optional for lookup
 
 
 class OrderLookupResponse(BaseModel):
