@@ -66,12 +66,8 @@ async def get_returns(
         sort_field = sort.lstrip("-+")
         sort_direction = -1 if sort.startswith("-") else 1
         
-        # Count total documents
-        total = await db.returns.count_documents(query)
-        
         # Calculate pagination
         skip = (page - 1) * page_size
-        total_pages = (total + page_size - 1) // page_size
         
         # Get returns with deduplication logic
         cursor = db.returns.find(query).sort(sort_field, sort_direction).skip(skip).limit(page_size)
@@ -113,11 +109,49 @@ async def get_returns(
         # Use deduplicated returns
         returns = list(unique_returns_map.values())
         
+        # Count total unique documents (after deduplication)
+        # For accurate pagination, we need to get ALL documents and deduplicate to get true count
+        all_cursor = db.returns.find(query).sort(sort_field, sort_direction)
+        all_documents = await all_cursor.to_list(length=None)
+        
+        # Apply same deduplication logic to all documents for accurate count
+        all_unique_returns_map = {}
+        for ret in all_documents:
+            order_id = ret.get("order_id", "")
+            customer_email = ret.get("customer_email", "").lower()
+            combination_key = f"{order_id}:{customer_email}"
+            
+            if combination_key not in all_unique_returns_map:
+                all_unique_returns_map[combination_key] = ret
+            else:
+                existing = all_unique_returns_map[combination_key]
+                current_date = ret.get("updated_at") or ret.get("created_at")
+                existing_date = existing.get("updated_at") or existing.get("created_at")
+                
+                if current_date and existing_date:
+                    if isinstance(current_date, str):
+                        try:
+                            current_date = datetime.fromisoformat(current_date.replace('Z', '+00:00'))
+                        except:
+                            pass
+                    if isinstance(existing_date, str):
+                        try:
+                            existing_date = datetime.fromisoformat(existing_date.replace('Z', '+00:00'))
+                        except:
+                            pass
+                    
+                    if current_date > existing_date:
+                        all_unique_returns_map[combination_key] = ret
+        
+        total = len(all_unique_returns_map)  # True deduplicated count
+        total_pages = (total + page_size - 1) // page_size
+        
         # Log deduplication activity
         duplicates_removed = len(all_returns) - len(returns)
         if duplicates_removed > 0:
             print(f"DEDUPLICATION: Removed {duplicates_removed} duplicate returns for tenant {tenant_id}")
             print(f"DEDUPLICATION: Original count: {len(all_returns)}, Deduplicated count: {len(returns)}")
+            print(f"DEDUPLICATION: Total unique returns: {total}")
         
         # OPTIMIZATION: Batch fetch all unique order IDs to avoid N+1 queries
         unique_order_ids = list(set(r.get("order_id") for r in returns if r.get("order_id")))
