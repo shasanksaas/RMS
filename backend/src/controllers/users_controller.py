@@ -164,7 +164,7 @@ async def get_current_user(
         )
 
 
-async def check_permission(required_permission: PermissionType):
+def check_permission(required_permission: PermissionType):
     """Check if user has required permission"""
     def permission_checker(current_user: Dict[str, Any] = Depends(get_current_user)):
         user_permissions = current_user.get("permissions", [])
