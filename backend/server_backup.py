@@ -598,8 +598,323 @@ async def simulate_return_rules(
     
     return simulation_result
 
-# ALL RETURNS ROUTES MOVED TO returns_controller_enhanced.py
-# This ensures the enhanced controller handles all /returns requests
+# Returns Management
+@api_router.post("/returns", response_model=ReturnRequest)
+async def create_return_request(return_data: ReturnRequestCreate, tenant_id: str = Depends(get_tenant_id)):
+    # Validate order exists
+    order = await db.orders.find_one({"id": return_data.order_id, "tenant_id": tenant_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    order_obj = Order(**order)
+    
+    # Calculate refund amount
+    refund_amount = sum(item.price * item.quantity for item in return_data.items_to_return)
+    
+    # Create return request
+    return_request = ReturnRequest(
+        **return_data.dict(),
+        tenant_id=tenant_id,
+        customer_email=order_obj.customer_email,
+        customer_name=order_obj.customer_name,
+        refund_amount=refund_amount
+    )
+    
+    # Apply rules engine (enhanced)
+    rules = await db.return_rules.find({"tenant_id": tenant_id, "is_active": True}).sort("priority", 1).to_list(100)
+    if rules:
+        # Use enhanced rules engine for consistent processing
+        simulation_result = RulesEngine.simulate_rules_application(
+            return_request=return_request.dict(),
+            order=order_obj.dict(),
+            rules=rules
+        )
+        
+        # Apply the final status from rules simulation
+        return_request.status = ReturnStatus(simulation_result["final_status"])
+        if simulation_result["final_notes"]:
+            return_request.notes = simulation_result["final_notes"]
+    
+    await db.return_requests.insert_one(return_request.dict())
+    
+    # Create initial audit log entry
+    audit_entry = ReturnStateMachine.create_audit_log_entry(
+        return_id=return_request.id,
+        from_status="new",
+        to_status=return_request.status.value,
+        notes=f"Return request created. {return_request.notes or ''}".strip(),
+        user_id="customer"
+    )
+    await db.audit_logs.insert_one(audit_entry)
+    
+    return return_request
+
+
+# @api_router.get("/returns", response_model=Dict[str, Any])
+# async def get_return_requests(
+#     tenant_id: str = Depends(get_tenant_id),
+#     page: int = Query(1, ge=1),
+#     limit: int = Query(20, ge=1, le=100),
+#     search: Optional[str] = Query(None),
+#     status_filter: str = Query("all"),
+#     sort_by: str = Query("created_at"),
+#     sort_order: str = Query("desc")
+# ):
+#     """Get paginated and filtered return requests"""
+#     
+#     # Build filter query
+#     filter_query = {"tenant_id": tenant_id}
+#     
+#     # Status filter
+#     if status_filter != "all":
+#         filter_query["status"] = status_filter
+#     
+#     # Search filter
+#     if search:
+#         filter_query["$or"] = [
+#             {"customer_name": {"$regex": search, "$options": "i"}},
+#             {"customer_email": {"$regex": search, "$options": "i"}},
+#             {"order_id": {"$regex": search, "$options": "i"}}
+#         ]
+#     
+#     # Get total count for pagination
+#     total_count = await db.return_requests.count_documents(filter_query)
+#     
+#     # Calculate pagination
+#     skip = (page - 1) * limit
+#     total_pages = (total_count + limit - 1) // limit
+#     
+#     # Build sort order
+#     sort_direction = -1 if sort_order == "desc" else 1
+#     
+#     # Get paginated results with stable sort (always include _id as secondary sort)
+#     returns_cursor = db.return_requests.find(filter_query).sort([
+#         (sort_by, sort_direction),
+#         ("_id", sort_direction)  # Stable sort
+#     ]).skip(skip).limit(limit)
+#     
+#     returns = await returns_cursor.to_list(limit)
+#     
+#     # Convert ObjectId to string for JSON serialization
+#     for ret in returns:
+#         if '_id' in ret:
+#             ret['_id'] = str(ret['_id'])
+#     
+#     return {
+#         "items": returns,  # Return raw data without model validation
+#         "pagination": {
+#             "current_page": page,
+#             "total_pages": total_pages,
+#             "total_count": total_count,
+#             "per_page": limit,
+#             "has_next": page < total_pages,
+#             "has_prev": page > 1
+#         },
+#         "filters_applied": {
+#             "search": search,
+#             "status_filter": status_filter,
+#             "sort_by": sort_by,
+#             "sort_order": sort_order
+#         }
+#     }
+# COMMENTED OUT - Using returns_enhanced_router instead which queries 'returns' collection
+
+@api_router.get("/returns/{return_id}", response_model=ReturnRequest)
+async def get_return_request(return_id: str, tenant_id: str = Depends(get_tenant_id)):
+    return_req = await db.return_requests.find_one({"id": return_id, "tenant_id": tenant_id})
+    if not return_req:
+        raise HTTPException(status_code=404, detail="Return request not found")
+    return ReturnRequest(**return_req)
+
+@api_router.put("/returns/{return_id}/status", response_model=ReturnRequest)
+async def update_return_status(return_id: str, status_update: ReturnStatusUpdate, tenant_id: str = Depends(get_tenant_id)):
+    return_req = await db.return_requests.find_one({"id": return_id, "tenant_id": tenant_id})
+    if not return_req:
+        raise HTTPException(status_code=404, detail="Return request not found")
+    
+    current_status = return_req["status"]
+    new_status = status_update.status.value
+    
+    # Validate state transition (allow idempotent updates)
+    if current_status != new_status and not ReturnStateMachine.can_transition(current_status, new_status):
+        valid_transitions = ReturnStateMachine.get_valid_transitions(current_status)
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Invalid transition from {current_status} to {new_status}. Valid transitions: {valid_transitions}"
+        )
+    
+    # Update the return request (idempotent)
+    update_data = {
+        "status": new_status,
+        "updated_at": datetime.utcnow()
+    }
+    
+    if status_update.notes:
+        update_data["notes"] = status_update.notes
+    if status_update.tracking_number:
+        update_data["tracking_number"] = status_update.tracking_number
+    
+    # Perform atomic update
+    result = await db.return_requests.update_one(
+        {"id": return_id, "tenant_id": tenant_id, "status": current_status},  # Include current status for concurrency
+        {"$set": update_data}
+    )
+    
+    if result.modified_count == 0:
+        # Either return was already updated or not found - check which
+        current_return = await db.return_requests.find_one({"id": return_id, "tenant_id": tenant_id})
+        if current_return and current_return["status"] == new_status:
+            # Already updated - idempotent operation
+            return ReturnRequest(**current_return)
+        else:
+            raise HTTPException(status_code=409, detail="Return status was modified by another request")
+    
+    # Create audit log entry
+    audit_entry = ReturnStateMachine.create_audit_log_entry(
+        return_id=return_id,
+        from_status=current_status,
+        to_status=new_status,
+        notes=status_update.notes,
+        user_id="system"  # In real app, get from authentication
+    )
+    await db.audit_logs.insert_one(audit_entry)
+    
+    updated_return = await db.return_requests.find_one({"id": return_id, "tenant_id": tenant_id})
+    return ReturnRequest(**updated_return)
+
+@api_router.post("/returns/{return_id}/resolve")
+async def resolve_return(
+    return_id: str, 
+    resolution: ReturnResolution, 
+    tenant_id: str = Depends(get_tenant_id)
+):
+    """Process return resolution (refund/exchange/store credit)"""
+    
+    # Validate return exists and is in correct state
+    return_req = await db.return_requests.find_one({"id": return_id, "tenant_id": tenant_id})
+    if not return_req:
+        raise HTTPException(status_code=404, detail="Return request not found")
+    
+    if return_req["status"] not in ["received", "approved"]:
+        raise HTTPException(status_code=400, detail="Return must be received or approved before resolution")
+    
+    resolution_record = None
+    
+    # Process based on resolution type
+    if resolution.resolution_type == "refund":
+        resolution_record = ReturnResolutionHandler.create_refund_record(
+            return_request_id=return_id,
+            amount=return_req["refund_amount"],
+            method=resolution.refund_method,
+            notes=resolution.notes
+        )
+        
+        # Store resolution record
+        await db.resolutions.insert_one(resolution_record)
+        
+        # Update return status to resolved
+        await db.return_requests.update_one(
+            {"id": return_id, "tenant_id": tenant_id},
+            {"$set": {
+                "status": "resolved",
+                "updated_at": datetime.utcnow(),
+                "resolution_type": "refund",
+                "resolution_id": resolution_record["id"]
+            }}
+        )
+        
+        message = f"{'Refund processed' if resolution.refund_method != 'manual' else 'Manual refund recorded'}"
+        
+    elif resolution.resolution_type == "exchange":
+        if not resolution.exchange_items:
+            raise HTTPException(status_code=400, detail="Exchange items required for exchange resolution")
+            
+        resolution_record = ReturnResolutionHandler.create_exchange_record(
+            return_request_id=return_id,
+            original_items=return_req["items_to_return"],
+            new_items=resolution.exchange_items,
+            notes=resolution.notes
+        )
+        
+        await db.resolutions.insert_one(resolution_record)
+        
+        await db.return_requests.update_one(
+            {"id": return_id, "tenant_id": tenant_id},
+            {"$set": {
+                "status": "resolved",
+                "updated_at": datetime.utcnow(),
+                "resolution_type": "exchange",
+                "resolution_id": resolution_record["id"]
+            }}
+        )
+        
+        message = f"Exchange processed - Outbound order: {resolution_record['outbound_order_id']}"
+        
+    elif resolution.resolution_type == "store_credit":
+        resolution_record = ReturnResolutionHandler.create_store_credit_record(
+            return_request_id=return_id,
+            customer_email=return_req["customer_email"],
+            amount=return_req["refund_amount"],
+            notes=resolution.notes
+        )
+        
+        await db.resolutions.insert_one(resolution_record)
+        
+        await db.return_requests.update_one(
+            {"id": return_id, "tenant_id": tenant_id},
+            {"$set": {
+                "status": "resolved", 
+                "updated_at": datetime.utcnow(),
+                "resolution_type": "store_credit",
+                "resolution_id": resolution_record["id"]
+            }}
+        )
+        
+        message = "Store credit issued"
+        
+    else:
+        raise HTTPException(status_code=400, detail="Invalid resolution type")
+    
+    # Create audit log
+    audit_entry = ReturnStateMachine.create_audit_log_entry(
+        return_id=return_id,
+        from_status=return_req["status"],
+        to_status="resolved",
+        notes=f"{resolution.resolution_type.title()} resolution: {message}",
+        user_id="system"
+    )
+    await db.audit_logs.insert_one(audit_entry)
+    
+    return {
+        "success": True,
+        "message": message,
+        "resolution_id": resolution_record["id"],
+        "resolution_type": resolution.resolution_type
+    }
+
+@api_router.get("/returns/{return_id}/audit-log")
+async def get_return_audit_log(return_id: str, tenant_id: str = Depends(get_tenant_id)):
+    """Get audit log/timeline for a return request"""
+    
+    # Verify return exists
+    return_req = await db.return_requests.find_one({"id": return_id, "tenant_id": tenant_id})
+    if not return_req:
+        raise HTTPException(status_code=404, detail="Return request not found")
+    
+    # Get audit log entries (convert ObjectId to string for JSON serialization)
+    audit_logs_cursor = db.audit_logs.find({"return_id": return_id}).sort("timestamp", 1)
+    audit_logs = []
+    async for log in audit_logs_cursor:
+        # Convert ObjectId to string
+        if '_id' in log:
+            log['_id'] = str(log['_id'])
+        audit_logs.append(log)
+    
+    return {
+        "return_id": return_id,
+        "timeline": audit_logs,
+        "current_status": return_req["status"]
+    }
 
 # Analytics
 @api_router.get("/analytics", response_model=Analytics)
