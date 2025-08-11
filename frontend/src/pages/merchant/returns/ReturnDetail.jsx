@@ -60,68 +60,7 @@ const ReturnDetail = () => {
     }
   };
 
-  const getMockReturnData = () => ({
-    id: id || 'RET-001',
-    order_number: 'ORD-12345',
-    customer_name: 'Sarah Johnson',
-    customer_email: 'sarah@example.com',
-    status: 'requested',
-    reason: 'wrong_size',
-    refund_amount: 49.99,
-    created_at: '2024-01-15T10:30:00Z',
-    items: [
-      {
-        product_name: 'Blue Cotton T-Shirt',
-        product_sku: 'SHIRT-001',
-        quantity: 1,
-        price: 49.99,
-        reason: 'Size too small'
-      }
-    ],
-    notes: 'Customer mentioned the medium size feels like a small. Would like to exchange for large.',
-    rule_explanation: {
-      steps: [
-        {
-          rule: 'Return Window Check',
-          result: 'PASS',
-          explanation: 'Order placed 3 days ago, within 30-day window'
-        },
-        {
-          rule: 'Product Eligibility',
-          result: 'PASS',
-          explanation: 'Clothing items are eligible for size exchanges'
-        },
-        {
-          rule: 'Auto-approve Rules',
-          result: 'PENDING',
-          explanation: 'Size exchanges require manual review'
-        }
-      ],
-      final_decision: 'PENDING_REVIEW',
-      recommendation: 'Approve - standard size exchange'
-    }
-  });
-
-  const getMockTimelineData = () => [
-    {
-      id: 1,
-      event: 'Return requested',
-      description: 'Customer submitted return request',
-      status: 'requested',
-      timestamp: '2024-01-15T10:30:00Z',
-      user: 'Customer'
-    },
-    {
-      id: 2,
-      event: 'Rule evaluation completed',
-      description: 'Return routed to manual review',
-      status: 'requested',
-      timestamp: '2024-01-15T10:31:00Z',
-      user: 'System'
-    }
-  ];
-
-  const handleApprove = async () => {
+  const handleUpdateStatus = async (newStatus, notes = '') => {
     setActionLoading(true);
     try {
       const response = await fetch(buildApiUrl(`/api/returns/${id}/status`), {
@@ -131,62 +70,30 @@ const ReturnDetail = () => {
           'X-Tenant-Id': tenantId
         },
         body: JSON.stringify({ 
-          status: 'approved',
-          notes: actionNotes 
+          status: newStatus,
+          notes: notes || actionNotes 
         })
       });
 
       if (response.ok) {
         await loadReturnDetails();
-        await loadTimeline();
         setActionNotes('');
         setError('');
       } else {
-        // Fallback to local update
-        setReturnRequest(prev => ({ ...prev, status: 'approved' }));
-        setActionNotes('');
+        setError(`Failed to update status: ${response.statusText}`);
       }
     } catch (err) {
-      console.error('Error approving return:', err);
-      setReturnRequest(prev => ({ ...prev, status: 'approved' }));
-      setActionNotes('');
+      console.error('Error updating status:', err);
+      setError('Unable to update return status. Please try again.');
     } finally {
       setActionLoading(false);
     }
   };
 
-  const handleDeny = async () => {
-    setActionLoading(true);
-    try {
-      const response = await fetch(buildApiUrl(`/api/returns/${id}/status`), {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Tenant-Id': tenantId
-        },
-        body: JSON.stringify({ 
-          status: 'denied',
-          notes: actionNotes 
-        })
-      });
-
-      if (response.ok) {
-        await loadReturnDetails();
-        await loadTimeline();
-        setActionNotes('');
-        setError('');
-      } else {
-        setReturnRequest(prev => ({ ...prev, status: 'denied' }));
-        setActionNotes('');
-      }
-    } catch (err) {
-      console.error('Error denying return:', err);
-      setReturnRequest(prev => ({ ...prev, status: 'denied' }));
-      setActionNotes('');
-    } finally {
-      setActionLoading(false);
-    }
-  };
+  const handleApprove = () => handleUpdateStatus('approved');
+  const handleDeny = () => handleUpdateStatus('denied');
+  const handleArchive = () => handleUpdateStatus('archived');
+  const handleReject = () => handleUpdateStatus('rejected');
 
   const handleIssueLabel = async () => {
     setActionLoading(true);
