@@ -72,63 +72,116 @@ const App = () => {
 
   return (
     <ErrorBoundary>
-      <BrowserRouter>
-        <Routes>
-          {/* Customer Portal Routes */}
-          <Route path="/returns" element={<CustomerLayout />}>
-            <Route path="start" element={<CustomerStart />} />
-            <Route path="create" element={<CustomerCreateReturn />} />
-            <Route path="confirmation/:returnId" element={<CustomerReturnConfirmation />} />
-            <Route path="select" element={<CustomerSelectItems />} />
-            <Route path="resolution" element={<CustomerResolution />} />
-            <Route path="confirm" element={<CustomerConfirm />} />
-            <Route path="status/:returnId" element={<CustomerStatus />} />
-            <Route index element={<Navigate to="/returns/start" replace />} />
-          </Route>
+      <ToastProvider>
+        <AuthProvider>
+          <BrowserRouter>
+            <Routes>
+              {/* Auth Routes (Public - No Authentication Required) */}
+              <Route path="/auth/login" element={
+                <ProtectedRoute requireAuth={false} redirectTo="/app/dashboard">
+                  <AuthGuard requireAuth={false} redirectOnAuth={true}>
+                    <Login />
+                  </AuthGuard>
+                </ProtectedRoute>
+              } />
+              <Route path="/auth/register" element={
+                <ProtectedRoute requireAuth={false} redirectTo="/app/dashboard">
+                  <AuthGuard requireAuth={false} redirectOnAuth={true}>
+                    <Register />
+                  </AuthGuard>
+                </ProtectedRoute>
+              } />
+              <Route path="/auth/forgot-password" element={
+                <ProtectedRoute requireAuth={false} redirectTo="/app/dashboard">
+                  <AuthGuard requireAuth={false} redirectOnAuth={true}>
+                    <ForgotPassword />
+                  </AuthGuard>
+                </ProtectedRoute>
+              } />
+              <Route path="/auth/google/callback" element={<GoogleCallback />} />
 
-          {/* Public Portal Routes */}
-          <Route path="/portal/returns/start" element={<ReturnPortal />} />
-          <Route path="/portal/returns/confirmation/:returnId" element={<CustomerReturnConfirmation />} />
+              {/* Customer Portal Routes (Some Public, Some Protected) */}
+              <Route path="/returns" element={<CustomerLayout />}>
+                <Route path="start" element={<CustomerStart />} />
+                <Route path="create" element={
+                  <ProtectedRoute requiredRole="customer">
+                    <CustomerCreateReturn />
+                  </ProtectedRoute>
+                } />
+                <Route path="confirmation/:returnId" element={<CustomerReturnConfirmation />} />
+                <Route path="select" element={
+                  <ProtectedRoute requiredRole="customer">
+                    <CustomerSelectItems />
+                  </ProtectedRoute>
+                } />
+                <Route path="resolution" element={
+                  <ProtectedRoute requiredRole="customer">
+                    <CustomerResolution />
+                  </ProtectedRoute>
+                } />
+                <Route path="confirm" element={
+                  <ProtectedRoute requiredRole="customer">
+                    <CustomerConfirm />
+                  </ProtectedRoute>
+                } />
+                <Route path="status/:returnId" element={<CustomerStatus />} />
+                <Route index element={<Navigate to="/returns/start" replace />} />
+              </Route>
 
-          {/* Legacy customer route */}
-          <Route path="/customer" element={<Navigate to="/returns/start" replace />} />
+              {/* Public Portal Routes */}
+              <Route path="/portal/returns/start" element={<ReturnPortal />} />
+              <Route path="/portal/returns/confirmation/:returnId" element={<CustomerReturnConfirmation />} />
 
-          {/* Merchant App Routes */}
-          <Route path="/app" element={<MerchantLayout isOnline={isOnline} />}>
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="returns" element={<AllReturns />} />
-            <Route path="returns/create" element={<CreateReturnMerchant />} />
-            <Route path="returns/:id" element={<ReturnDetail />} />
-            <Route path="orders" element={<Orders />} />
-            <Route path="orders/:orderId" element={<OrderDetail />} />
-            <Route path="rules" element={<Rules />} />
-            <Route path="workflows" element={<Workflows />} />
-            <Route path="analytics" element={<Analytics />} />
-            <Route path="billing" element={<Billing />} />
-            <Route path="settings/general" element={<GeneralSettings />} />
-            <Route path="settings/branding" element={<BrandingSettings />} />
-            <Route path="settings/email" element={<EmailSettings />} />
-            <Route path="settings/integrations" element={<IntegrationsSettings />} />
-            <Route path="settings/team" element={<TeamSettings />} />
-            <Route path="onboarding" element={<OnboardingWizard />} />
-            <Route index element={<Navigate to="/app/dashboard" replace />} />
-          </Route>
+              {/* Legacy customer route */}
+              <Route path="/customer" element={<Navigate to="/returns/start" replace />} />
 
-          {/* Super Admin Routes */}
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route path="tenants" element={<AdminTenants />} />
-            <Route path="ops" element={<AdminOperations />} />
-            <Route path="audit" element={<AdminAudit />} />
-            <Route path="flags" element={<AdminFeatureFlags />} />
-            <Route path="catalog" element={<AdminCatalog />} />
-            <Route index element={<Navigate to="/admin/tenants" replace />} />
-          </Route>
+              {/* Merchant App Routes (Protected - Merchant Role Required) */}
+              <Route path="/app" element={
+                <ProtectedRoute requiredRole="merchant">
+                  <MerchantLayout isOnline={isOnline} />
+                </ProtectedRoute>
+              }>
+                <Route path="dashboard" element={<Dashboard />} />
+                <Route path="returns" element={<AllReturns />} />
+                <Route path="returns/create" element={<CreateReturnMerchant />} />
+                <Route path="returns/:id" element={<ReturnDetail />} />
+                <Route path="orders" element={<Orders />} />
+                <Route path="orders/:orderId" element={<OrderDetail />} />
+                <Route path="rules" element={<Rules />} />
+                <Route path="workflows" element={<Workflows />} />
+                <Route path="analytics" element={<Analytics />} />
+                <Route path="billing" element={<Billing />} />
+                <Route path="settings/general" element={<GeneralSettings />} />
+                <Route path="settings/branding" element={<BrandingSettings />} />
+                <Route path="settings/email" element={<EmailSettings />} />
+                <Route path="settings/integrations" element={<IntegrationsSettings />} />
+                <Route path="settings/team" element={<TeamSettings />} />
+                <Route path="onboarding" element={<OnboardingWizard />} />
+                <Route index element={<Navigate to="/app/dashboard" replace />} />
+              </Route>
 
-          {/* Default Routes */}
-          <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
-          <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
-        </Routes>
-      </BrowserRouter>
+              {/* Super Admin Routes (Protected - Admin Role Required) */}
+              <Route path="/admin" element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminLayout />
+                </ProtectedRoute>
+              }>
+                <Route path="tenants" element={<AdminTenants />} />
+                <Route path="ops" element={<AdminOperations />} />
+                <Route path="audit" element={<AdminAudit />} />
+                <Route path="flags" element={<AdminFeatureFlags />} />
+                <Route path="catalog" element={<AdminCatalog />} />
+                <Route index element={<Navigate to="/admin/tenants" replace />} />
+              </Route>
+
+              {/* Default Routes */}
+              <Route path="/" element={<Navigate to="/auth/login" replace />} />
+              <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
+              <Route path="*" element={<Navigate to="/auth/login" replace />} />
+            </Routes>
+          </BrowserRouter>
+        </AuthProvider>
+      </ToastProvider>
     </ErrorBoundary>
   );
 };
