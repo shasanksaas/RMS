@@ -41,7 +41,17 @@ export const AuthProvider = ({ children }) => {
               setTenant(null);
               setIsAuthenticated(false);
             }
+          } else {
+            // No user info, not authenticated
+            setUser(null);
+            setTenant(null);
+            setIsAuthenticated(false);
           }
+        } else {
+          // Not authenticated
+          setUser(null);
+          setTenant(null);
+          setIsAuthenticated(false);
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
@@ -56,7 +66,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     initAuth();
-  }, []);
+  }, []); // Empty dependency array to run only once
 
   const login = async (loginData) => {
     try {
