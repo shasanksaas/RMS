@@ -160,40 +160,6 @@ const Status = () => {
 
     return timeline;
   };
-        {
-          id: 4,
-          title: 'Items in Transit',
-          description: 'We\'ll update you when we receive your return package',
-          status: 'pending',
-          timestamp: null,
-          icon: Truck
-        },
-        {
-          id: 5,
-          title: 'Return Processed',
-          description: 'Your refund will be issued once we process your return',
-          status: 'pending',
-          timestamp: null,
-          icon: RefreshCw
-        }
-      ],
-      items: [
-        {
-          productName: 'Blue Cotton T-Shirt',
-          quantity: 1,
-          reason: 'Wrong size',
-          refundAmount: 49.99
-        }
-      ],
-      estimatedCompletion: '2024-01-25T00:00:00Z',
-      trackingNumber: null,
-      labelUrl: '#download-label'
-    };
-
-    setReturnRequest(mockReturnRequest);
-    setLoading(false);
-  }, [returnId]);
-
   const getStatusBadge = (status) => {
     const config = {
       requested: { color: 'bg-yellow-100 text-yellow-800', label: 'Pending Review' },
