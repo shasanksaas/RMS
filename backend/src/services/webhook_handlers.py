@@ -345,23 +345,90 @@ class WebhookProcessor:
             return {"action": "error", "error": str(e)}
 
     async def handle_return_declined(self, shop_domain: str, payload: Dict[str, Any]) -> Dict[str, Any]:
-        """Handle return decline"""
-        return_id = str(payload.get("id"))
-        tenant_id = f"{shop_domain.replace('.myshopify.com', '')}.myshopify.com"
-        
-        await db.return_requests.update_one(
-            {"return_id": return_id, "tenant_id": tenant_id},
-            {
-                "$set": {
-                    "status": "denied",
-                    "decline_reason": payload.get("decline_reason"),
-                    "declined_at": datetime.utcnow(),
-                    "synced_at": datetime.utcnow()
-                }
+        """Handle return decline from Shopify - Two-way sync"""
+        try:
+            return_id = str(payload.get("id"))
+            order_id = str(payload.get("order_id", ""))
+            decline_reason = payload.get("decline_reason", "")
+            
+            # Correct tenant_id format (matches our app format)
+            tenant_id = f"tenant-{shop_domain.replace('.myshopify.com', '')}"
+            
+            print(f"🔄 Shopify webhook: Return {return_id} declined for {tenant_id}")
+            
+            # Find the return in our database
+            return_query = {}
+            if return_id:
+                return_query["$or"] = [
+                    {"shopify_return_id": return_id},
+                    {"id": return_id}
+                ]
+            if order_id:
+                if "$or" in return_query:
+                    return_query["$or"].append({"order_id": order_id})
+                else:
+                    return_query["order_id"] = order_id
+            
+            return_query["tenant_id"] = tenant_id
+            
+            current_return = await db.returns.find_one(return_query)
+            
+            if not current_return:
+                print(f"⚠️ No matching return found for Shopify return {return_id}, order {order_id}")
+                return {"action": "return_not_found", "return_id": return_id}
+            
+            # Check if status is already denied (prevent loops)
+            if current_return.get("status", "").lower() in ["denied", "rejected"]:
+                print(f"✅ Return {current_return['id']} already denied, skipping update")
+                return {"action": "no_change", "return_id": current_return["id"]}
+            
+            # Create audit entry for Shopify sync
+            audit_entry = {
+                "id": f"audit_shopify_{int(datetime.utcnow().timestamp() * 1000)}",
+                "action": "status_updated_from_shopify",
+                "performed_by": "shopify_webhook",
+                "timestamp": datetime.utcnow(),
+                "details": {
+                    "old_status": current_return.get("status", "unknown"),
+                    "new_status": "denied",
+                    "decline_reason": decline_reason,
+                    "shopify_return_id": return_id,
+                    "shopify_order_id": order_id,
+                    "source": "shopify_webhook"
+                },
+                "description": f"Status updated to DENIED via Shopify webhook",
+                "type": "shopify_sync"
             }
-        )
-        
-        return {"action": "return_declined", "return_id": return_id}
+            
+            # Update return in our database
+            update_result = await db.returns.update_one(
+                {"id": current_return["id"], "tenant_id": tenant_id},
+                {
+                    "$set": {
+                        "status": "denied",
+                        "decision": "denied", 
+                        "decision_made_at": datetime.utcnow(),
+                        "decision_made_by": "shopify",
+                        "shopify_return_id": return_id,
+                        "decline_reason": decline_reason,
+                        "declined_at": datetime.utcnow(),
+                        "synced_at": datetime.utcnow(),
+                        "updated_at": datetime.utcnow()
+                    },
+                    "$push": {"audit_log": audit_entry}
+                }
+            )
+            
+            if update_result.matched_count > 0:
+                print(f"✅ Updated return {current_return['id']} status to denied from Shopify")
+                return {"action": "return_declined", "return_id": current_return["id"], "shopify_return_id": return_id}
+            else:
+                print(f"❌ Failed to update return {current_return['id']}")
+                return {"action": "update_failed", "return_id": current_return["id"]}
+            
+        except Exception as e:
+            print(f"❌ Error handling return declined webhook: {e}")
+            return {"action": "error", "error": str(e)}
 
     async def handle_return_cancelled(self, shop_domain: str, payload: Dict[str, Any]) -> Dict[str, Any]:
         """Handle return cancellation"""
