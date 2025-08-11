@@ -22,32 +22,62 @@ const SelectItems = () => {
       return;
     }
 
-    // Mock order data
-    const mockOrder = {
-      orderNumber: orderNumber,
-      customerEmail: email,
-      orderDate: '2024-01-10T00:00:00Z',
-      items: [
-        {
-          id: 'item-1',
-          productName: 'Blue Cotton T-Shirt',
+    // Use real order data from API response
+    if (orderData && orderData.line_items) {
+      const realOrder = {
+        orderNumber: orderData.order_number || orderNumber,
+        customerEmail: orderData.customer_email || email,
+        orderDate: orderData.created_at,
+        total: orderData.total_price,
+        currency: orderData.currency || 'INR',
+        items: orderData.line_items.map(item => ({
+          id: item.id,
+          productName: item.title,
           productImage: '/placeholder-product.jpg',
-          sku: 'SHIRT-001',
-          size: 'Medium',
-          color: 'Blue',
-          quantity: 2,
-          price: 24.99,
+          sku: item.sku || 'N/A',
+          quantity: item.quantity,
+          price: item.unit_price || item.price,
           eligible: true
-        },
-        {
-          id: 'item-2',
-          productName: 'Wireless Headphones',
-          productImage: '/placeholder-product.jpg',
-          sku: 'AUDIO-001',
-          quantity: 1,
-          price: 199.99,
-          eligible: true
-        },
+        }))
+      };
+      
+      setOrder(realOrder);
+      setLoading(false);
+    } else {
+      // Fallback to mock data only if no real order data
+      console.warn('No real order data available, using fallback mock data');
+      const mockOrder = {
+        orderNumber: orderNumber,
+        customerEmail: email,
+        orderDate: '2024-01-10T00:00:00Z',
+        items: [
+          {
+            id: 'item-1',
+            productName: 'Blue Cotton T-Shirt',
+            productImage: '/placeholder-product.jpg',
+            sku: 'SHIRT-001',
+            size: 'Medium',
+            color: 'Blue',
+            quantity: 2,
+            price: 24.99,
+            eligible: true
+          },
+          {
+            id: 'item-2',
+            productName: 'Wireless Headphones',
+            productImage: '/placeholder-product.jpg',
+            sku: 'AUDIO-001',
+            quantity: 1,
+            price: 199.99,
+            eligible: true
+          }
+        ]
+      };
+      
+      setOrder(mockOrder);
+      setLoading(false);
+    }
+  }, [orderNumber, email, orderData, navigate]);
         {
           id: 'item-3',
           productName: 'Gift Card',
