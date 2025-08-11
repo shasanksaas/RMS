@@ -325,7 +325,7 @@ class EnhancedReturnsTestSuite:
         tech_headers = {"X-Tenant-Id": TEST_TENANT_TECH}
         
         # Get returns for fashion tenant
-        success_fashion, fashion_returns, status = await self.make_request("GET", "/returns", headers=fashion_headers)
+        success_fashion, fashion_returns, status = await self.make_request("GET", "/returns/", headers=fashion_headers)
         
         # Get returns for tech tenant
         success_tech, tech_returns, status = await self.make_request("GET", "/returns", headers=tech_headers)
