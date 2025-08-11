@@ -165,28 +165,37 @@ const Status = () => {
       requested: { color: 'bg-yellow-100 text-yellow-800', label: 'Pending Review' },
       approved: { color: 'bg-blue-100 text-blue-800', label: 'Approved' },
       denied: { color: 'bg-red-100 text-red-800', label: 'Denied' },
-      label_issued: { color: 'bg-purple-100 text-purple-800', label: 'Label Issued' },
-      in_transit: { color: 'bg-orange-100 text-orange-800', label: 'In Transit' },
-      received: { color: 'bg-indigo-100 text-indigo-800', label: 'Received' },
-      resolved: { color: 'bg-green-100 text-green-800', label: 'Complete' }
+      processing: { color: 'bg-purple-100 text-purple-800', label: 'Processing' },
+      completed: { color: 'bg-green-100 text-green-800', label: 'Complete' },
+      cancelled: { color: 'bg-gray-100 text-gray-800', label: 'Cancelled' }
     };
     
     const { color, label } = config[status] || config.requested;
     return <Badge className={color}>{label}</Badge>;
   };
 
-  const downloadLabel = () => {
-    console.log('Downloading return label...');
-    // In real app, this would download the actual label
-    alert('Return label download started');
-  };
-
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded" />
-          <div className="h-96 bg-gray-200 rounded" />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-pulse">
+            <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          </div>
+          <p className="text-gray-600">Loading your return status...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Alert className="max-w-md">
+            <AlertDescription>
+              Unable to load return status: {error}
+            </AlertDescription>
+          </Alert>
         </div>
       </div>
     );
@@ -194,30 +203,159 @@ const Status = () => {
 
   if (!returnRequest) {
     return (
-      <div className="max-w-4xl mx-auto text-center py-12">
-        <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Return Not Found</h2>
-        <p className="text-gray-600">The return request you're looking for doesn't exist or has been removed.</p>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Alert className="max-w-md">
+            <AlertDescription>
+              Return not found. Please check your return ID and try again.
+            </AlertDescription>
+          </Alert>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="text-center space-y-4">
-        <div>
-          <h1 className="text-4xl font-bold text-gray-900">Return Status</h1>
-          <p className="text-xl text-gray-600">Track your return progress</p>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Return Status
+          </h1>
+          <p className="text-gray-600">
+            Track the progress of your return request
+          </p>
         </div>
-      </div>
 
-      {/* Status Overview */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Return {returnRequest.id}</CardTitle>
+        {/* Return Overview Card */}
+        <Card className="mb-8">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-xl">
+                  Return #{returnRequest.id.slice(-8)}
+                </CardTitle>
+                <CardDescription>
+                  Order: {returnRequest.orderNumber}
+                </CardDescription>
+              </div>
+              <div className="text-right">
+                {getStatusBadge(returnRequest.status)}
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Resolution */}
+              <div>
+                <h3 className="text-sm font-medium text-gray-500 mb-2">Resolution</h3>
+                <div className="text-lg font-semibold">
+                  {returnRequest.resolution.title}
+                </div>
+                <div className="text-2xl font-bold text-green-600 mt-1">
+                  ${returnRequest.resolution.amount.toFixed(2)}
+                </div>
+              </div>
+
+              {/* Items Count */}
+              <div>
+                <h3 className="text-sm font-medium text-gray-500 mb-2">Items</h3>
+                <div className="text-lg font-semibold">
+                  {returnRequest.items.length} item{returnRequest.items.length !== 1 ? 's' : ''}
+                </div>
+              </div>
+
+              {/* Estimated Completion */}
+              <div>
+                <h3 className="text-sm font-medium text-gray-500 mb-2">Estimated Completion</h3>
+                <div className="text-lg font-semibold">
+                  {returnRequest.status === 'completed' ? 'Completed' : '7-10 business days'}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Timeline */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Return Progress</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {returnRequest.timeline.map((step, index) => (
+                <div key={step.id} className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <div className={`
+                      w-10 h-10 rounded-full flex items-center justify-center
+                      ${step.status === 'completed' 
+                        ? 'bg-green-100 text-green-600' 
+                        : step.status === 'current' 
+                        ? 'bg-blue-100 text-blue-600' 
+                        : 'bg-gray-100 text-gray-400'
+                      }
+                    `}>
+                      <step.icon className="h-5 w-5" />
+                    </div>
+                  </div>
+                  <div className="ml-4 flex-1">
+                    <div className="flex items-center justify-between">
+                      <h3 className={`text-lg font-medium ${
+                        step.status === 'completed' ? 'text-green-600' : 
+                        step.status === 'current' ? 'text-blue-600' : 'text-gray-500'
+                      }`}>
+                        {step.title}
+                      </h3>
+                      {step.timestamp && (
+                        <span className="text-sm text-gray-500">
+                          {new Date(step.timestamp).toLocaleDateString()}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-gray-600 mt-1">{step.description}</p>
+                    {step.actionable && (
+                      <Button className="mt-3" size="sm">
+                        <Download className="h-4 w-4 mr-2" />
+                        Download Return Label
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Items Being Returned */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Items Being Returned</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {returnRequest.items.map((item, index) => (
+                <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div className="flex-1">
+                    <h4 className="font-medium">{item.productName}</h4>
+                    <p className="text-sm text-gray-600">
+                      Qty: {item.quantity} • Reason: {item.reason}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-semibold">${item.refundAmount.toFixed(2)}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+export default Status;
               <CardDescription>Order {returnRequest.orderNumber}</CardDescription>
             </div>
             {getStatusBadge(returnRequest.status)}
