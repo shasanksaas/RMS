@@ -2,6 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import ErrorBoundary from './components/ErrorBoundary';
 
+// Auth Components
+import AuthProvider from './contexts/AuthContext';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+import AuthGuard from './components/auth/AuthGuard';
+import Login from './components/auth/Login';
+import Register from './components/auth/Register';
+import GoogleCallback from './components/auth/GoogleCallback';
+import ForgotPassword from './components/auth/ForgotPassword';
+import { ToastProvider } from './components/ui/use-toast';
+
 // Layout Components
 import MerchantLayout from './components/layout/MerchantLayout';
 import CustomerLayout from './components/layout/CustomerLayout';
