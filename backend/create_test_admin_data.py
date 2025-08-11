@@ -96,12 +96,12 @@ async def create_test_tenants():
             pass  # Tenant doesn't exist, create it
         
         try:
-            tenant = await tenant_service.create_tenant(
+            tenant_data = TenantCreate(
                 name=tenant_data["name"],
                 tenant_id=tenant_data["tenant_id"],
-                status=tenant_data["status"],
                 notes=tenant_data["notes"]
             )
+            tenant = await tenant_service.create_tenant(tenant_data, created_by_admin_id="admin@test.com")
             print(f"✅ Created tenant: {tenant.tenant_id} - {tenant.name}")
             created_tenants.append(tenant)
         except Exception as e:
