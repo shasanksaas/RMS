@@ -115,17 +115,57 @@ const AllReturns = () => {
     }
   };
 
-  // Initial load with auto-refresh
-  useEffect(() => {
-    loadReturns();
-    
-    // Auto-refresh returns every 30 seconds
-    const interval = setInterval(() => {
-      loadReturns();
-    }, 30000);
-    
-    return () => clearInterval(interval);
+  // Debounced search function
+  const debounce = useCallback((func, delay) => {
+    let timeoutId;
+    return (...args) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => func.apply(null, args), delay);
+    };
   }, []);
+
+  // Filter and search logic - IMPROVED with no duplicates
+  const filterReturns = useCallback((returnsData, searchTerm, statusFilter) => {
+    // First ensure no duplicates by creating a unique set
+    const uniqueReturns = returnsData.reduce((acc, returnItem) => {
+      if (!acc.find(existing => existing.id === returnItem.id)) {
+        acc.push(returnItem);
+      }
+      return acc;
+    }, []);
+
+    let filtered = [...uniqueReturns];
+
+    // Apply search filter (only on real data)
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase();
+      filtered = filtered.filter(returnItem => 
+        returnItem.customer_name?.toLowerCase().includes(searchLower) ||
+        returnItem.customer_email?.toLowerCase().includes(searchLower) ||
+        returnItem.order_number?.toLowerCase().includes(searchLower) ||
+        returnItem.id?.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Apply status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(returnItem => 
+        returnItem.status?.toLowerCase() === statusFilter.toLowerCase()
+      );
+    }
+
+    return filtered;
+  }, []);
+
+  // Memoized filtered results
+  const displayReturns = useMemo(() => {
+    return filterReturns(allReturns, filters.search, filters.status);
+  }, [allReturns, filters.search, filters.status, filterReturns]);
+
+  // Update filtered returns whenever display returns change
+  useEffect(() => {
+    setFilteredReturns(displayReturns);
+  }, [displayReturns]);
 
   // Debounced search handler
   const debouncedSearch = useMemo(
