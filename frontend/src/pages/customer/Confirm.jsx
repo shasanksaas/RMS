@@ -42,12 +42,12 @@ const Confirm = () => {
         customer_email: email,
         return_method: 'prepaid_label',
         items: Object.values(selectedItems).map(item => ({
-          line_item_id: item.line_item_id,
-          sku: item.sku,
+          line_item_id: String(item.line_item_id || item.id), // Ensure string format
+          sku: item.sku || 'N/A', // Default to 'N/A' if null
           title: item.title || item.name,
-          variant_title: item.variant_title,
-          quantity: item.quantity,
-          unit_price: item.unit_price || item.price,
+          variant_title: item.variant_title || null,
+          quantity: parseInt(item.quantity) || 1,
+          unit_price: parseFloat(item.unit_price || item.price) || 0,
           reason: item.reason || 'wrong_size',
           reason_description: item.reason_description || '',
           condition: item.condition || 'used',
