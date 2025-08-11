@@ -558,17 +558,17 @@ class WebhookProcessor:
             
             print(f"🔄 Shopify webhook: Return {return_id} status update to {shopify_status} for {tenant_id}")
             
-            # Map Shopify statuses to our app statuses
+            # Map Shopify statuses to our app statuses (uppercase for consistency)
             status_map = {
-                "requested": "requested",
-                "open": "approved",
-                "closed": "completed", 
-                "declined": "denied",
-                "canceled": "cancelled",
-                "cancelled": "cancelled"
+                "requested": "REQUESTED",
+                "open": "APPROVED",
+                "closed": "COMPLETED", 
+                "declined": "DENIED",
+                "canceled": "CANCELLED",
+                "cancelled": "CANCELLED"
             }
             
-            app_status = status_map.get(shopify_status, shopify_status)
+            app_status = status_map.get(shopify_status, shopify_status.upper())
             
             # Find the return in our database
             return_query = {}
