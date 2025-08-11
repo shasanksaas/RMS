@@ -387,7 +387,7 @@ class EnhancedReturnsTestSuite:
         headers = {"X-Tenant-Id": TEST_TENANT_FASHION}
         
         # Test 1: Verify response format matches frontend expectations
-        success, response, status = await self.make_request("GET", "/returns", headers=headers)
+        success, response, status = await self.make_request("GET", "/returns/", headers=headers)
         
         if success:
             # Test 2: Test 'returns' field (not 'items')
