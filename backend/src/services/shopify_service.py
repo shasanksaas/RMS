@@ -647,9 +647,9 @@ class ShopifyService:
                 line_items.append(line_item)
             
             # Extract customer information
-            customer = order_node.get('customer', {})
-            billing = order_node.get('billingAddress', {})
-            shipping = order_node.get('shippingAddress', {})
+            customer = order_node.get('customer') or {}  # Handle null customer
+            billing = order_node.get('billingAddress') or {}  # Handle null billing
+            shipping = order_node.get('shippingAddress') or {}  # Handle null shipping
             
             # Build standard order format
             transformed_order = {
