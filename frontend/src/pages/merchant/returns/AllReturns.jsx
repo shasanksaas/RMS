@@ -326,8 +326,17 @@ const AllReturns = () => {
   const getStatusBadge = (status) => {
     const config = {
       requested: { color: 'bg-yellow-100 text-yellow-800', label: 'Pending' },
+      REQUESTED: { color: 'bg-yellow-100 text-yellow-800', label: 'Pending' },
       approved: { color: 'bg-blue-100 text-blue-800', label: 'Approved' },
+      APPROVED: { color: 'bg-blue-100 text-blue-800', label: 'Approved' },
       denied: { color: 'bg-red-100 text-red-800', label: 'Denied' },
+      DENIED: { color: 'bg-red-100 text-red-800', label: 'Denied' },
+      processing: { color: 'bg-purple-100 text-purple-800', label: 'Processing' },
+      PROCESSING: { color: 'bg-purple-100 text-purple-800', label: 'Processing' },
+      completed: { color: 'bg-green-100 text-green-800', label: 'Completed' },
+      COMPLETED: { color: 'bg-green-100 text-green-800', label: 'Completed' },
+      cancelled: { color: 'bg-gray-100 text-gray-800', label: 'Cancelled' },
+      CANCELLED: { color: 'bg-gray-100 text-gray-800', label: 'Cancelled' },
       label_issued: { color: 'bg-purple-100 text-purple-800', label: 'Label Issued' },
       in_transit: { color: 'bg-orange-100 text-orange-800', label: 'In Transit' },
       received: { color: 'bg-indigo-100 text-indigo-800', label: 'Received' },
