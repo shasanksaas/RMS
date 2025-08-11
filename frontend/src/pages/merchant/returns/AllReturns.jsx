@@ -692,6 +692,9 @@ const AllReturns = () => {
                                 const currency = refund.currency || 'USD';
                                 const symbol = currency === 'INR' ? '₹' : '$';
                                 return `${symbol}${Number(amount).toFixed(2)}`;
+                              } else if (typeof refund === 'number' && refund > 0) {
+                                // Handle simple number format from API
+                                return `$${Number(refund).toFixed(2)}`;
                               } else if (returnRequest.refund_amount) {
                                 return `$${Number(returnRequest.refund_amount).toFixed(2)}`;
                               }
