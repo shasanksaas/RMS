@@ -317,9 +317,7 @@ const AllReturns = () => {
 
   const handleExport = async () => {
     try {
-      const apiUrl = getApiUrl();
-      
-      const response = await fetch(`${apiUrl}/api/returns/export?format=csv`, {
+      const response = await fetch(buildApiUrl('/api/returns/export?format=csv'), {
         headers: {
           'Content-Type': 'application/json',
           'X-Tenant-Id': tenantId
