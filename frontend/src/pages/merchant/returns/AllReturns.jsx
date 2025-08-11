@@ -253,21 +253,11 @@ const AllReturns = () => {
         );
         setError('');
       } else {
-        // Fallback to local state update if API fails
-        setAllReturns(prevReturns => 
-          prevReturns.map(ret => 
-            ret.id === returnId ? { ...ret, status: newStatus } : ret
-          )
-        );
+        setError(`Failed to update status: ${response.statusText}`);
       }
     } catch (err) {
       console.error('Error updating status:', err);
-      // Fallback to local state update
-      setAllReturns(prevReturns => 
-        prevReturns.map(ret => 
-          ret.id === returnId ? { ...ret, status: newStatus } : ret
-        )
-      );
+      setError('Unable to update return status. Please try again.');
     }
   };
 
@@ -303,12 +293,7 @@ const AllReturns = () => {
       
     } catch (err) {
       console.error('Error with bulk action:', err);
-      // Fallback to local state update
-      setAllReturns(prevReturns => 
-        prevReturns.map(ret => 
-          selectedReturns.includes(ret.id) ? { ...ret, status: newStatus } : ret
-        )
-      );
+      setError('Bulk action failed. Please try again.');
       setSelectedReturns([]);
     } finally {
       setBulkActionLoading(false);
@@ -336,15 +321,11 @@ const AllReturns = () => {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
       } else {
-        // Fallback CSV generation
-        const csvContent = generateCSV(filteredReturns);
-        downloadCSV(csvContent, `returns_export_${new Date().toISOString().split('T')[0]}.csv`);
+        setError('Export failed. Please try again.');
       }
     } catch (err) {
-      console.error('Export error:', err);
-      // Fallback CSV generation
-      const csvContent = generateCSV(filteredReturns);
-      downloadCSV(csvContent, `returns_export_${new Date().toISOString().split('T')[0]}.csv`);
+      console.error('Error exporting:', err);
+      setError('Unable to export data. Please try again.');
     }
   };
 
