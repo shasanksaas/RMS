@@ -21,6 +21,7 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
+  const { login: contextLogin } = useAuth(); // Use AuthContext login method
 
   const [formData, setFormData] = useState<LoginFormData>({
     tenantId: searchParams.get('tenant') || 'tenant-rms34',
