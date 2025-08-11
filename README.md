@@ -731,30 +731,445 @@ All API responses follow this structure:
 
 ## 🔧 Key Components
 
-### Backend Components
+## 🔐 Authentication & Security
 
-#### 1. Security Middleware (`src/middleware/security.py`)
-- **Tenant Validation**: Ensures all requests include valid `X-Tenant-Id`
-- **Rate Limiting**: Prevents API abuse
-- **Audit Logging**: Tracks all API access
-- **CORS**: Handles cross-origin requests
+### **Multi-Tenant Security Architecture**
 
-#### 2. Rules Engine (`src/utils/rules_engine.py`)
-- **Configurable Logic**: JSON-based rule definitions
-- **Simulation**: Test rules before applying
-- **Step-by-step Explanation**: Detailed rule evaluation
-- **Priority System**: Execute rules in order
+The application implements enterprise-grade security with multiple layers of protection:
 
-#### 3. State Machine (`src/utils/state_machine.py`)
-- **Valid Transitions**: Enforces business rules
-- **Audit Trail**: Tracks status changes
-- **Idempotent Operations**: Prevents duplicate state changes
+```mermaid
+graph TD
+    Request[Incoming Request] --> RateLimit[Rate Limiting]
+    RateLimit --> CORS[CORS Validation]
+    CORS --> TenantAuth[Tenant Authentication]
+    TenantAuth --> TenantValidation[Tenant Validation]
+    TenantValidation --> DataFilter[Data Isolation Filter]
+    DataFilter --> Controller[Controller Logic]
+    
+    TenantAuth -.->|X-Tenant-Id Header| TenantValidation
+    TenantValidation -.->|Inject tenant_id| DataFilter
+    DataFilter -.->|Filter all queries| Controller
+```
 
-#### 4. Shopify Integration (`src/modules/auth/service.py`)
-- **OAuth 2.0 Flow**: Secure merchant authentication
-- **Credential Encryption**: Fernet-based token security
-- **Webhook Registration**: Automatic webhook setup
-- **Data Synchronization**: Real-time order sync
+### **Security Middleware (`/backend/src/middleware/security.py`)**
+
+#### **1. Tenant Isolation Middleware**
+```python
+class TenantSecurityMiddleware:
+    """
+    Enforces strict tenant isolation for all requests
+    """
+    async def __call__(self, request: Request, call_next):
+        # Extract tenant ID from header
+        tenant_id = request.headers.get("X-Tenant-Id")
+        
+        # Validate tenant exists and is active
+        if not await self.validate_tenant(tenant_id):
+            raise HTTPException(
+                status_code=401, 
+                detail="Invalid or inactive tenant"
+            )
+        
+        # Inject tenant context into request
+        request.state.tenant_id = tenant_id
+        
+        # Log request for audit trail
+        await self.log_request(request, tenant_id)
+        
+        response = await call_next(request)
+        return response
+    
+    async def validate_tenant(self, tenant_id: str) -> bool:
+        """Validates tenant exists and is active"""
+        tenant = await db.tenants.find_one({
+            "id": tenant_id,
+            "is_active": True
+        })
+        return tenant is not None
+```
+
+#### **2. Rate Limiting by Tenant**
+```python
+class TenantRateLimiter:
+    """
+    Implements per-tenant rate limiting
+    """
+    RATE_LIMITS = {
+        "free": {"requests": 100, "window": 3600},      # 100/hour
+        "basic": {"requests": 1000, "window": 3600},    # 1K/hour  
+        "pro": {"requests": 10000, "window": 3600},     # 10K/hour
+        "enterprise": {"requests": 100000, "window": 3600}  # 100K/hour
+    }
+    
+    async def check_rate_limit(self, tenant_id: str, endpoint: str):
+        """Checks if request is within rate limits"""
+        # Implementation uses Redis for distributed rate limiting
+        pass
+```
+
+#### **3. CORS Security Configuration**
+```python
+# Secure CORS configuration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=os.getenv("CORS_ORIGINS", "").split(","),
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH"],
+    allow_headers=[
+        "X-Tenant-Id",
+        "Authorization", 
+        "Content-Type",
+        "Accept",
+        "Origin",
+        "User-Agent"
+    ],
+)
+```
+
+### **Shopify OAuth 2.0 Integration**
+
+#### **OAuth Flow Architecture**
+```mermaid
+sequenceDiagram
+    participant M as Merchant
+    participant App as Returns App
+    participant Shopify as Shopify API
+    participant DB as Database
+    
+    M->>App: 1. Initiate Integration
+    App->>M: 2. Redirect to Shopify OAuth
+    M->>Shopify: 3. Authorize App
+    Shopify->>App: 4. OAuth Callback + Code
+    App->>Shopify: 5. Exchange Code for Token
+    Shopify->>App: 6. Access Token + Shop Info
+    App->>DB: 7. Store Encrypted Credentials
+    App->>M: 8. Integration Success
+```
+
+#### **OAuth Controller (`/backend/src/controllers/shopify_integration_controller.py`)**
+```python
+@router.post("/oauth/initiate")
+async def initiate_oauth(
+    request: ShopifyOAuthRequest,
+    tenant_id: str = Depends(get_tenant_id)
+):
+    """
+    Initiates Shopify OAuth flow
+    """
+    # Generate secure state parameter
+    state = secrets.token_urlsafe(32)
+    
+    # Store state for validation
+    await redis_client.setex(
+        f"oauth_state:{state}", 
+        300,  # 5 minutes
+        tenant_id
+    )
+    
+    # Construct OAuth URL
+    oauth_url = (
+        f"https://{request.shop_domain}.myshopify.com/admin/oauth/authorize"
+        f"?client_id={settings.SHOPIFY_API_KEY}"
+        f"&scope={REQUIRED_SCOPES}"
+        f"&redirect_uri={settings.SHOPIFY_REDIRECT_URI}"
+        f"&state={state}"
+    )
+    
+    return {"authorization_url": oauth_url, "state": state}
+
+@router.post("/oauth/callback")
+async def oauth_callback(
+    code: str,
+    state: str,
+    shop: str,
+    tenant_id: str = Depends(get_tenant_id)
+):
+    """
+    Handles OAuth callback and token exchange
+    """
+    # Validate state parameter
+    stored_tenant = await redis_client.get(f"oauth_state:{state}")
+    if not stored_tenant or stored_tenant.decode() != tenant_id:
+        raise HTTPException(status_code=400, detail="Invalid state parameter")
+    
+    # Exchange code for access token
+    async with aiohttp.ClientSession() as session:
+        token_data = {
+            "client_id": settings.SHOPIFY_API_KEY,
+            "client_secret": settings.SHOPIFY_API_SECRET,
+            "code": code
+        }
+        
+        async with session.post(
+            f"https://{shop}.myshopify.com/admin/oauth/access_token",
+            json=token_data
+        ) as response:
+            if response.status != 200:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Failed to exchange OAuth code"
+                )
+            
+            token_response = await response.json()
+            access_token = token_response["access_token"]
+    
+    # Encrypt and store credentials
+    encrypted_token = encryption_service.encrypt(access_token)
+    
+    await db.integrations_shopify.update_one(
+        {"tenant_id": tenant_id},
+        {
+            "$set": {
+                "tenant_id": tenant_id,
+                "shop_domain": shop,
+                "access_token": encrypted_token,
+                "scope": token_response.get("scope", ""),
+                "connected_at": datetime.utcnow(),
+                "is_active": True
+            }
+        },
+        upsert=True
+    )
+    
+    # Set up webhooks
+    await webhook_service.register_webhooks(tenant_id, shop, access_token)
+    
+    return {"success": True, "message": "Integration completed successfully"}
+```
+
+### **Data Encryption & Security**
+
+#### **Credential Encryption Service**
+```python
+class EncryptionService:
+    """
+    Handles encryption/decryption of sensitive data
+    """
+    def __init__(self):
+        # 32-byte encryption key from environment
+        key = os.getenv("ENCRYPTION_KEY").encode()
+        self.fernet = Fernet(key)
+    
+    def encrypt(self, data: str) -> str:
+        """Encrypts sensitive string data"""
+        return self.fernet.encrypt(data.encode()).decode()
+    
+    def decrypt(self, encrypted_data: str) -> str:
+        """Decrypts sensitive string data"""
+        return self.fernet.decrypt(encrypted_data.encode()).decode()
+    
+    def encrypt_dict(self, data: dict) -> dict:
+        """Encrypts dictionary values"""
+        encrypted = {}
+        for key, value in data.items():
+            if key in SENSITIVE_FIELDS:
+                encrypted[key] = self.encrypt(str(value))
+            else:
+                encrypted[key] = value
+        return encrypted
+
+# Usage in services
+class ShopifyService:
+    async def get_access_token(self, tenant_id: str) -> str:
+        integration = await db.integrations_shopify.find_one({
+            "tenant_id": tenant_id,
+            "is_active": True
+        })
+        
+        if not integration:
+            raise ValueError("Shopify integration not found")
+        
+        # Decrypt access token
+        encrypted_token = integration["access_token"]
+        return encryption_service.decrypt(encrypted_token)
+```
+
+### **Request Validation & Sanitization**
+
+#### **Input Validation with Pydantic**
+```python
+from pydantic import BaseModel, Field, validator
+from typing import List, Optional
+import re
+
+class CreateReturnRequest(BaseModel):
+    """
+    Validates return request creation
+    """
+    order_id: str = Field(..., min_length=1, max_length=50)
+    customer_email: str = Field(..., regex=r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+    return_method: str = Field(..., regex=r'^(prepaid_label|customer_ships|drop_off)$')
+    
+    line_items: List[ReturnLineItem] = Field(..., min_items=1, max_items=50)
+    customer_note: Optional[str] = Field(None, max_length=1000)
+    
+    @validator('customer_note')
+    def sanitize_note(cls, v):
+        """Sanitizes customer input to prevent XSS"""
+        if v:
+            # Remove HTML tags and dangerous characters
+            v = re.sub(r'<[^>]*>', '', v)
+            v = re.sub(r'[<>&"\']', '', v)
+        return v
+    
+    @validator('line_items')
+    def validate_line_items(cls, v):
+        """Validates line items structure"""
+        if not v:
+            raise ValueError("At least one line item is required")
+        
+        total_quantity = sum(item.quantity for item in v)
+        if total_quantity > 100:
+            raise ValueError("Total return quantity cannot exceed 100")
+        
+        return v
+
+class ReturnLineItem(BaseModel):
+    line_item_id: str = Field(..., min_length=1)
+    quantity: int = Field(..., gt=0, le=100)
+    reason: str = Field(..., regex=r'^(defective|damaged_in_shipping|wrong_item|too_small|too_large|changed_mind)$')
+    condition: str = Field(..., regex=r'^(new|used|damaged)$')
+    notes: Optional[str] = Field(None, max_length=500)
+    
+    @validator('notes')
+    def sanitize_notes(cls, v):
+        """Sanitizes line item notes"""
+        if v:
+            v = re.sub(r'<[^>]*>', '', v)
+            v = re.sub(r'[<>&"\']', '', v)
+        return v
+```
+
+### **Security Headers & Protection**
+
+#### **Security Headers Configuration**
+```python
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    """
+    Adds security headers to all responses
+    """
+    response = await call_next(request)
+    
+    # Security headers
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    response.headers["Content-Security-Policy"] = "default-src 'self'"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    
+    # Remove server information
+    response.headers.pop("server", None)
+    
+    return response
+```
+
+### **Audit Logging & Compliance**
+
+#### **Audit Trail Implementation**
+```python
+class AuditLogger:
+    """
+    Comprehensive audit logging for compliance
+    """
+    async def log_action(
+        self,
+        tenant_id: str,
+        action: str,
+        resource_type: str,
+        resource_id: str,
+        user_id: str = "system",
+        details: dict = None,
+        ip_address: str = None,
+        user_agent: str = None
+    ):
+        """
+        Logs all significant actions for audit trail
+        """
+        audit_entry = {
+            "tenant_id": tenant_id,
+            "action": action,
+            "resource_type": resource_type,
+            "resource_id": resource_id,
+            "performed_by": user_id,
+            "timestamp": datetime.utcnow(),
+            "ip_address": ip_address,
+            "user_agent": user_agent,
+            "details": details or {},
+            "session_id": self.get_session_id()
+        }
+        
+        await db.audit_log.insert_one(audit_entry)
+        
+        # Also log to external SIEM if configured
+        if settings.SIEM_ENABLED:
+            await self.send_to_siem(audit_entry)
+
+# Usage in controllers
+@router.put("/returns/{return_id}/status")
+async def update_return_status(
+    return_id: str,
+    status_update: StatusUpdate,
+    tenant_id: str = Depends(get_tenant_id),
+    request: Request = None
+):
+    """Updates return status with full audit trail"""
+    
+    # Perform update
+    result = await return_service.update_status(
+        tenant_id, return_id, status_update
+    )
+    
+    # Log the action
+    await audit_logger.log_action(
+        tenant_id=tenant_id,
+        action="return_status_updated",
+        resource_type="return",
+        resource_id=return_id,
+        details={
+            "old_status": result.old_status,
+            "new_status": status_update.status,
+            "reason": status_update.reason
+        },
+        ip_address=request.client.host,
+        user_agent=request.headers.get("user-agent")
+    )
+    
+    return result
+```
+
+### **Environment Security Configuration**
+
+#### **Production Security Checklist**
+```bash
+# Required Environment Variables for Production
+ENCRYPTION_KEY=32-byte-base64-encoded-fernet-key  # CRITICAL: Generate unique key
+CORS_ORIGINS=https://yourdomain.com,https://app.yourdomain.com  # NO wildcards in production
+JWT_SECRET_KEY=long-random-string-for-jwt-signing
+SHOPIFY_API_SECRET=your-shopify-app-secret  # From Shopify Partner Dashboard
+
+# Database Security
+MONGO_URL=mongodb://username:password@prod-mongo:27017/returns_prod?authSource=admin
+MONGO_AUTH_SOURCE=admin
+MONGO_SSL=true
+
+# Optional: External Security Services
+REDIS_URL=redis://username:password@redis-server:6379/0  # For rate limiting
+SIEM_WEBHOOK_URL=https://your-siem-system.com/webhook  # Security monitoring
+VAULT_URL=https://vault.company.com  # Secret management
+
+# Disable Debug in Production
+DEBUG=false
+TESTING=false
+```
+
+#### **Secrets Management Best Practices**
+1. **Never commit secrets to version control**
+2. **Use environment variables or secret management systems**
+3. **Rotate encryption keys regularly (quarterly)**
+4. **Monitor access to sensitive configuration**
+5. **Use different keys per environment (dev/staging/prod)**
 
 ### Frontend Components
 
