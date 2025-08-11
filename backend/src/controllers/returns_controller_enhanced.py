@@ -139,7 +139,7 @@ async def get_return_detail(
     """
     try:
         # Find return
-        return_req = await db.return_requests.find_one({
+        return_req = await db.returns.find_one({
             "id": return_id,
             "tenant_id": tenant_id
         })
