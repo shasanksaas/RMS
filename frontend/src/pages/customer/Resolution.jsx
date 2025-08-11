@@ -127,11 +127,11 @@ const Resolution = () => {
             {selectedItems.map((selectedItem, index) => (
               <div key={index} className="flex justify-between items-center py-2 border-b last:border-b-0">
                 <div>
-                  <span className="font-medium">{selectedItem.item.productName}</span>
+                  <span className="font-medium">{selectedItem.name}</span>
                   <span className="text-gray-500 ml-2">×{selectedItem.quantity}</span>
                 </div>
                 <span className="font-medium">
-                  ${(selectedItem.quantity * selectedItem.item.price).toFixed(2)}
+                  ${(selectedItem.quantity * selectedItem.price).toFixed(2)}
                 </span>
               </div>
             ))}
