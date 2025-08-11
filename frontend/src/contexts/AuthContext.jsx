@@ -17,56 +17,47 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Initialize authentication state
+  // Initialize authentication state - RUNS ONLY ONCE
   useEffect(() => {
+    let isMounted = true; // Track if component is mounted to prevent state updates after unmount
+    
     const initAuth = async () => {
       try {
         // Check if user is authenticated
-        if (authService.isAuthenticated()) {
-          const userInfo = authService.getCurrentUserFromStorage();
-          const tenantInfo = authService.getCurrentTenantFromStorage();
-          
-          if (userInfo && tenantInfo) {
-            // Validate token with backend
-            const isValidToken = await authService.validateToken();
-            
-            if (isValidToken) {
-              setUser(userInfo);
-              setTenant(tenantInfo);
-              setIsAuthenticated(true);
-            } else {
-              // Token is invalid, clear auth data
-              authService.clearAuthData();
-              setUser(null);
-              setTenant(null);
-              setIsAuthenticated(false);
-            }
-          } else {
-            // No user info, not authenticated
-            setUser(null);
-            setTenant(null);
-            setIsAuthenticated(false);
-          }
-        } else {
-          // Not authenticated
+        const token = authService.getToken();
+        const userInfo = authService.getCurrentUserFromStorage();
+        const tenantInfo = authService.getCurrentTenantFromStorage();
+        
+        if (token && userInfo && tenantInfo && isMounted) {
+          setUser(userInfo);
+          setTenant(tenantInfo);
+          setIsAuthenticated(true);
+        } else if (isMounted) {
           setUser(null);
           setTenant(null);
           setIsAuthenticated(false);
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
-        // Clear invalid auth data
-        authService.clearAuthData();
-        setUser(null);
-        setTenant(null);
-        setIsAuthenticated(false);
+        if (isMounted) {
+          authService.clearAuthData();
+          setUser(null);
+          setTenant(null);
+          setIsAuthenticated(false);
+        }
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     initAuth();
-  }, []); // Empty dependency array to run only once
+    
+    return () => {
+      isMounted = false; // Cleanup flag
+    };
+  }, []); // Empty dependency array - runs only once
 
   const login = async (loginData) => {
     try {
