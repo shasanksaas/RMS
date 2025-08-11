@@ -82,13 +82,28 @@ async def get_returns(
         orders_map = {}
         
         if unique_order_ids:
-            # Batch fetch orders from database
+            # Alternative batch fetch using $or (more reliable than $in)
+            or_conditions = [{"id": oid} for oid in unique_order_ids]
             orders_cursor = db.orders.find({
-                "id": {"$in": unique_order_ids}, 
+                "$or": or_conditions, 
                 "tenant_id": tenant_id
             })
             orders = await orders_cursor.to_list(length=None)
             orders_map = {order["id"]: order for order in orders}
+            
+            # If $or fails, fall back to individual queries (cached)
+            if not orders_map:
+                for order_id in unique_order_ids:
+                    try:
+                        order = await db.orders.find_one({
+                            "id": order_id,
+                            "tenant_id": tenant_id
+                        })
+                        if order:
+                            orders_map[order_id] = order
+                    except Exception as e:
+                        print(f"Failed to fetch order {order_id}: {e}")
+                        continue
         
         # OPTIMIZATION: Batch fetch missing orders from Shopify (if needed)
         missing_order_ids = [oid for oid in unique_order_ids if oid not in orders_map]
