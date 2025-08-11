@@ -171,7 +171,7 @@ class EnhancedReturnsTestSuite:
             
             # Test 3: Search functionality
             success, search_response, status = await self.make_request(
-                "GET", "/returns?search=fashion", headers=headers)
+                "GET", "/returns/?search=fashion", headers=headers)
             
             if success:
                 self.log_test(f"Enhanced Returns API: Search for {tenant_id}", True, 
