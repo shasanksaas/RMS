@@ -269,6 +269,21 @@ async def get_returns(
             elif isinstance(reason_data, str):
                 reason_text = reason_data
             
+            # Extract line items for display
+            line_items = return_req.get("line_items", [])
+            formatted_line_items = []
+            
+            # Format line items for frontend display
+            for item in line_items:
+                if isinstance(item, dict):
+                    formatted_item = {
+                        "title": item.get("title", ""),
+                        "variant_title": item.get("variant_title", ""),
+                        "quantity": item.get("quantity", 1),
+                        "sku": item.get("sku", "")
+                    }
+                    formatted_line_items.append(formatted_item)
+            
             formatted_returns.append({
                 "id": return_req["id"],
                 "order_number": order_number,
@@ -280,6 +295,7 @@ async def get_returns(
                 "item_count": item_count,
                 "estimated_refund": estimated_refund,
                 "reason": reason_text,  # Include reason in response
+                "line_items": formatted_line_items,  # Include items for display
                 "created_at": created_at_str,
                 "updated_at": updated_at_str
             })
