@@ -745,10 +745,15 @@ logger = logging.getLogger(__name__)
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize dependency container on startup"""
+    """Initialize dependency container and tenant service on startup"""
     from src.infrastructure.services.dependency_container import initialize_container
     initialize_container(db)
     logger.info("✅ Dependency container initialized with Elite-Grade architecture")
+    
+    # Initialize enhanced tenant service
+    enhanced_tenant_service.db = db
+    await enhanced_tenant_service.initialize()
+    logger.info("✅ Enhanced tenant service initialized with strict isolation")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
