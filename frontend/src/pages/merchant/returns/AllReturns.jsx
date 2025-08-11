@@ -120,8 +120,11 @@ const AllReturns = () => {
       setError('');
       
       const apiUrl = getApiUrl();
+      const fullUrl = `${apiUrl}/api/returns`;
       
-      const response = await fetch(`${apiUrl}/api/returns`, {
+      console.log('Making request to:', fullUrl);
+      
+      const response = await fetch(fullUrl, {
         headers: {
           'Content-Type': 'application/json',
           'X-Tenant-Id': tenantId
