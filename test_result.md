@@ -768,8 +768,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Duplicate Returns Issue Investigation"
-    - "Duplicate Returns Display Issue Fix"
+    - "User Management System - Google OAuth Frontend Implementation"
+    - "Complete Authentication Flow Testing"
   stuck_tasks: 
     - "GraphQL Service for Returns Operations"
     - "Sync Service with Initial Backfill"
