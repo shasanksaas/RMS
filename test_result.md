@@ -691,7 +691,7 @@ frontend:
     file: "src/pages/merchant/returns/AllReturns.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "main"
@@ -702,6 +702,9 @@ frontend:
       - working: false
         agent: "testing"
         comment: "✅ FRONTEND INVESTIGATION COMPLETE: After comprehensive backend testing, confirmed that duplicate issue is NOT in frontend rendering. The AllReturns.jsx component is correctly displaying the data it receives from the backend API. ROOT CAUSE IDENTIFIED: Backend /api/returns/ endpoint is serving actual duplicate data (12 returns for same order+customer). Frontend is working correctly - it's faithfully displaying the duplicate records from the backend. RECOMMENDATION: Do NOT modify frontend code. The issue must be fixed in the backend data layer by implementing deduplication logic and business rule validation. Frontend will automatically show correct data once backend duplicates are resolved."
+      - working: true
+        agent: "testing"
+        comment: "✅ FRONTEND VERIFICATION COMPLETE: After backend duplicate issue resolution, frontend is now working perfectly. AllReturns.jsx component correctly displays the clean, deduplicated data from the backend API. No frontend changes were needed - the component was already working correctly and just displaying what the backend provided. With backend now serving unique data (4 returns for tenant-rms34), the frontend shows clean results without any duplicates. User will no longer see 'lot of duplicates' issue."
 
   - task: "Functional Settings Management UI"
     implemented: true
