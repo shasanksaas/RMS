@@ -85,7 +85,7 @@ const ReturnDetail = () => {
     try {
       const apiUrl = getApiUrl();
       
-      const response = await fetch(`${apiUrl}/api/returns/${id}/timeline`, {
+      const response = await fetch(buildApiUrl(`/api/returns/${id}/timeline`), {
         headers: {
           'Content-Type': 'application/json',
           'X-Tenant-Id': tenantId
