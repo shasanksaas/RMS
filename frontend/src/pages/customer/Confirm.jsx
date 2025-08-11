@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from '../../components/ui/alert';
 const Confirm = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { orderNumber, email, selectedItems, resolution } = location.state || {};
+  const { orderNumber, email, selectedItems, resolution, order, mode, tenantId } = location.state || {};
   
   const [returnRequest, setReturnRequest] = useState(null);
   const [submitting, setSubmitting] = useState(false);
