@@ -33,6 +33,7 @@ class WebhookProcessor:
             
             # Returns
             "returns/create": self.handle_return_created,
+            "returns/update": self.handle_return_update,
             "returns/requested": self.handle_return_requested,
             "returns/approved": self.handle_return_approved,
             "returns/declined": self.handle_return_declined,
