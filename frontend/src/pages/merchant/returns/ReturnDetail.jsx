@@ -193,8 +193,6 @@ const ReturnDetail = () => {
   const handleDeny = async () => {
     setActionLoading(true);
     try {
-      const apiUrl = getApiUrl();
-      
       const response = await fetch(buildApiUrl(`/api/returns/${id}/status`), {
         method: 'PUT',
         headers: {
