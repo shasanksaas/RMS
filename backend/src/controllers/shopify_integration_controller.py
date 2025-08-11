@@ -55,9 +55,9 @@ async def get_shopify_integration_status(tenant_id: str = Depends(get_tenant_id)
             "created_at": {"$gte": thirty_days_ago.isoformat()}
         })
         
-        # Get return counts
-        total_returns = await db.return_requests.count_documents({"tenant_id": tenant_id})
-        recent_returns = await db.return_requests.count_documents({
+        # Get return counts from correct 'returns' collection
+        total_returns = await db.returns.count_documents({"tenant_id": tenant_id})
+        recent_returns = await db.returns.count_documents({
             "tenant_id": tenant_id,
             "created_at": {"$gte": thirty_days_ago}
         })
