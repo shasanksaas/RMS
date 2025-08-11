@@ -16,6 +16,9 @@ from src.services.tenant_service_enhanced import TenantServiceEnhanced
 from src.models.user import UserCreate
 import uuid
 
+# Initialize services
+auth_service = AuthService()
+
 async def create_test_admin_user():
     """Create a test admin user"""
     print("Creating test admin user...")
