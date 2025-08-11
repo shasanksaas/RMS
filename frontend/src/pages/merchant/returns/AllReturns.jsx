@@ -127,8 +127,6 @@ const AllReturns = () => {
         fullUrl = fullUrl.replace('http://', 'https://');
       }
       
-      console.log('Making request to:', fullUrl);
-      
       const response = await fetch(fullUrl, {
         headers: {
           'Content-Type': 'application/json',
