@@ -285,7 +285,7 @@ class TenantServiceEnhanced:
                 last_name=signup_data.last_name,
                 permissions=[
                     "view_returns", "manage_returns", "view_analytics", 
-                    "manage_settings", "view_orders", "manage_customers"
+                    "admin_settings", "shopify_integration"
                 ]
             )
             
