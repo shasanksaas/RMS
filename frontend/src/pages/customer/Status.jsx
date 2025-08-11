@@ -60,7 +60,7 @@ const Status = () => {
           email: data.customer_email
         },
         created_at: data.created_at,
-        timeline: generateTimelineFromAuditLog(data.audit_log || [], data.status)
+        timeline: generateTimelineFromStatus(data.status, data.audit_log || [])
       };
       
       setReturnRequest(transformedData);
