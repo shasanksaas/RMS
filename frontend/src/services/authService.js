@@ -78,16 +78,27 @@ class AuthService {
    * Login with email and password
    */
   async login(loginData) {
+    console.log('🌐 AuthService.login called with:', loginData);
     try {
-      const response = await fetch(`${this.baseURL}/login`, {
+      const url = `${this.baseURL}/login`;
+      const headers = this.getHeaders(loginData.tenant_id);
+      
+      console.log('📡 Making request to:', url);
+      console.log('📡 Headers:', headers);
+      console.log('📡 Body:', JSON.stringify(loginData));
+
+      const response = await fetch(url, {
         method: 'POST',
-        headers: this.getHeaders(loginData.tenant_id),
+        headers: headers,
         body: JSON.stringify(loginData)
       });
 
-      return await this.handleResponse(response);
+      console.log('📡 Response status:', response.status);
+      const result = await this.handleResponse(response);
+      console.log('📡 Parsed result:', result);
+      return result;
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('❌ AuthService.login error:', error);
       throw error;
     }
   }
