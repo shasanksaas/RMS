@@ -603,11 +603,9 @@ const TenantManager = () => {
       {/* Create Tenant Modal */}
       {showCreateModal && (
         <CreateTenantModal
+          isOpen={showCreateModal}
           onClose={() => setShowCreateModal(false)}
-          onSuccess={() => {
-            setShowCreateModal(false);
-            loadTenants();
-          }}
+          onCreate={handleCreateTenant}
         />
       )}
     </div>
