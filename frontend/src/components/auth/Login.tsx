@@ -24,8 +24,8 @@ const Login: React.FC = () => {
   const { toast } = useToast();
   const { login: contextLogin } = useAuth();
 
-  // Feature flag for OAuth tab visibility
-  const isOAuthTabEnabled = process.env.REACT_APP_LOGIN_OAUTH_TAB_ENABLED === 'true';
+  // Feature flag for OAuth tab visibility (temporarily force enabled for testing)
+  const isOAuthTabEnabled = true; // process.env.REACT_APP_LOGIN_OAUTH_TAB_ENABLED === 'true';
 
   // Active tab state ('shopify' or 'email')
   const [activeTab, setActiveTab] = useState<'shopify' | 'email'>('shopify');
