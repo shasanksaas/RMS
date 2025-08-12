@@ -208,9 +208,12 @@ class ShopifyOAuthService:
         """Handle Shopify OAuth callback and complete installation"""
         
         # Verify state
+        print(f"🔍 Handling OAuth callback for shop: {callback_request.shop}")
+        print(f"🔍 State parameter: {callback_request.state[:50]}...")
+        
         state_data = self.verify_oauth_state(callback_request.state)
         if not state_data:
-            raise ValueError("Invalid or expired OAuth state")
+            raise ValueError("Invalid state parameter - CSRF protection failed")
         
         # Verify shop matches state
         shop = self.normalize_shop_domain(callback_request.shop)
