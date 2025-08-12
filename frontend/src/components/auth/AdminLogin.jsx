@@ -46,49 +46,38 @@ const AdminLogin = () => {
     setIsLoading(true);
 
     try {
-      const backendUrl = process.env.REACT_APP_BACKEND_URL;
-      
-      const response = await fetch(`${backendUrl}/api/users/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Tenant-Id': formData.tenantId
-        },
-        body: JSON.stringify({
-          tenant_id: formData.tenantId,
-          email: formData.email,
-          password: formData.password,
-          remember_me: formData.rememberMe
-        })
+      // Use AuthContext login method to properly update state
+      const loginResponse = await login({
+        tenant_id: formData.tenantId,
+        email: formData.email,
+        password: formData.password,
+        remember_me: formData.rememberMe
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        
-        // Verify admin role
-        if (data.user.role !== 'admin') {
-          setError('Access denied: Admin privileges required');
-          return;
-        }
-
-        // Store auth data
-        localStorage.setItem('auth_token', data.access_token);
-        localStorage.setItem('currentTenant', formData.tenantId);
-        localStorage.setItem('user_info', JSON.stringify(data.user));
-
-        console.log('✅ Admin login successful:', data.user);
-
-        // Redirect to admin dashboard
-        navigate('/admin/tenants', { replace: true });
-
-      } else {
-        const errorData = await response.json();
-        setError(errorData.detail || 'Login failed. Please check your credentials.');
+      // Verify admin role (AuthContext already stores the user data)
+      if (loginResponse.user.role !== 'admin') {
+        setError('Access denied: Admin privileges required');
+        return;
       }
+
+      console.log('✅ Admin login successful:', loginResponse.user);
+
+      // Navigate to admin dashboard (AuthContext state is now updated)
+      navigate('/admin/tenants', { replace: true });
 
     } catch (error) {
       console.error('❌ Admin login error:', error);
-      setError('Network error. Please check your connection and try again.');
+      
+      // Handle different error types
+      if (error.response?.status === 401) {
+        setError('Invalid credentials. Please check your email and password.');
+      } else if (error.response?.status === 403) {
+        setError('Access denied: Admin privileges required');
+      } else if (error.message) {
+        setError(error.message);
+      } else {
+        setError('Login failed. Please check your credentials and try again.');
+      }
     } finally {
       setIsLoading(false);
     }
