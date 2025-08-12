@@ -35,6 +35,9 @@ from src.controllers.public_signup_controller import router as public_signup_rou
 from src.controllers.shopify_oauth_controller import router as shopify_oauth_router
 from src.controllers.shopify_webhook_controller import router as shopify_webhook_router
 
+# Admin Tenant Management Controller
+from src.controllers.tenant_admin_controller import router as tenant_admin_router
+
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 import uuid
