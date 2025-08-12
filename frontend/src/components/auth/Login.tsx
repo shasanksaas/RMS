@@ -58,6 +58,8 @@ const Login: React.FC = () => {
     e.preventDefault();
     setError('');
     
+    console.log('🔥 LOGIN ATTEMPT:', formData);
+    
     // Client-side validation
     if (!formData.tenantId.trim()) {
       setError('Tenant ID is required');
@@ -84,12 +86,21 @@ const Login: React.FC = () => {
     setIsLoading(true);
 
     try {
+      console.log('🚀 CALLING contextLogin with:', {
+        tenant_id: formData.tenantId,
+        email: formData.email,
+        password: '***',
+        remember_me: formData.rememberMe
+      });
+
       const response = await contextLogin({
         tenant_id: formData.tenantId,
         email: formData.email,
         password: formData.password,
         remember_me: formData.rememberMe
       });
+
+      console.log('✅ LOGIN SUCCESS:', response);
 
       // Show success message
       toast({
@@ -100,10 +111,11 @@ const Login: React.FC = () => {
 
       // Navigate based on user role
       const redirectPath = getRedirectPath(response.user.role);
+      console.log('🎯 REDIRECTING TO:', redirectPath);
       navigate(redirectPath, { replace: true });
 
     } catch (error: any) {
-      console.error('Login error:', error);
+      console.error('❌ LOGIN ERROR:', error);
       
       if (error.status === 401) {
         setError('Invalid email or password. Please try again.');
