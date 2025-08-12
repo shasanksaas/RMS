@@ -197,7 +197,8 @@ class SecurityAuthTestSuite:
         # Test 1: Admin login with correct credentials
         login_data = {
             "email": ADMIN_CREDENTIALS["email"],
-            "password": ADMIN_CREDENTIALS["password"]
+            "password": ADMIN_CREDENTIALS["password"],
+            "tenant_id": ADMIN_CREDENTIALS["tenant_id"]
         }
         
         login_headers = {
