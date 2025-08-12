@@ -14,7 +14,7 @@ from typing import Dict, List, Any, Optional
 import uuid
 
 # Configuration
-BACKEND_URL = "https://returnhub-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://returnportal.preview.emergentagent.com/api"
 
 # Admin credentials from review request
 ADMIN_EMAIL = "admin@returns-manager.com"

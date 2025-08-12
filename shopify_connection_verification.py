@@ -10,7 +10,7 @@ import json
 from motor.motor_asyncio import AsyncIOMotorClient
 
 # Configuration
-BACKEND_URL = "https://returnhub-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://returnportal.preview.emergentagent.com/api"
 ADMIN_EMAIL = "admin@returns-manager.com"
 ADMIN_PASSWORD = "AdminPassword123!"
 TARGET_TENANT = "tenant-rms34"

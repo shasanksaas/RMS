@@ -13,7 +13,7 @@ from datetime import datetime
 from typing import Dict, List, Any, Optional
 
 # Configuration
-BACKEND_URL = "https://returnhub-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://returnportal.preview.emergentagent.com/api"
 TEST_TENANT_ID = "tenant-rms34"
 TEST_HEADERS = {
     "Content-Type": "application/json",

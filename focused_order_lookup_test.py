@@ -7,7 +7,7 @@ import asyncio
 import aiohttp
 import json
 
-BACKEND_URL = "https://returnhub-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://returnportal.preview.emergentagent.com/api"
 
 async def test_order_lookup_endpoints():
     """Test the specific endpoints requested in the review"""
