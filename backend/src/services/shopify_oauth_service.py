@@ -116,13 +116,25 @@ class ShopifyOAuthService:
         try:
             print(f"🔍 Verifying OAuth state: {state[:50]}...")
             
+            # Add padding if needed for base64 decoding
+            missing_padding = len(state) % 4
+            if missing_padding:
+                state += '=' * (4 - missing_padding)
+            
             # Decode state
-            decoded = base64.urlsafe_b64decode(state.encode()).decode()
-            print(f"🔍 Decoded state: {decoded[:100]}...")
+            try:
+                decoded = base64.urlsafe_b64decode(state.encode()).decode()
+                print(f"🔍 Decoded state: {decoded[:100]}...")
+            except Exception as decode_error:
+                print(f"❌ Base64 decode error: {decode_error}")
+                # Maybe the state is not base64 encoded as expected
+                # Let's try a more lenient approach for debugging
+                return None
             
             # Split state and signature
             if '.' not in decoded:
                 print("❌ State missing signature separator")
+                print(f"❌ Decoded content: {decoded}")
                 return None
                 
             state_json, signature = decoded.rsplit('.', 1)
