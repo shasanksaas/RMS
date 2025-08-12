@@ -23,7 +23,13 @@ class TenantIsolationMiddleware:
             "/docs", "/openapi.json", "/health", "/api/auth/login", 
             "/api/auth/register", "/api/auth/merchant-signup", 
             "/api/auth/google", "/api/auth/refresh",
-            "/api/auth/tenant-status", "/api/auth/signup-info"
+            "/api/auth/tenant-status", "/api/auth/signup-info",
+            # Shopify OAuth paths - CRITICAL: These create tenants, so no tenant context required
+            "/api/auth/shopify/install",
+            "/api/auth/shopify/install-redirect", 
+            "/api/auth/shopify/callback",
+            "/api/auth/shopify/session",
+            "/api/webhooks/shopify"  # Webhooks also don't have tenant context initially
         }
         
         # Admin-only paths that bypass normal tenant restrictions
