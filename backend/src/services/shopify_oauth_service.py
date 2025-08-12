@@ -114,9 +114,19 @@ class ShopifyOAuthService:
     def verify_oauth_state(self, state: str) -> Optional[ShopifyOAuthState]:
         """Verify and decode OAuth state parameter"""
         try:
+            print(f"🔍 Verifying OAuth state: {state[:50]}...")
+            
             # Decode state
             decoded = base64.urlsafe_b64decode(state.encode()).decode()
+            print(f"🔍 Decoded state: {decoded[:100]}...")
+            
+            # Split state and signature
+            if '.' not in decoded:
+                print("❌ State missing signature separator")
+                return None
+                
             state_json, signature = decoded.rsplit('.', 1)
+            print(f"🔍 State JSON length: {len(state_json)}, Signature: {signature[:20]}...")
             
             # Verify signature
             expected_signature = hmac.new(
@@ -125,20 +135,35 @@ class ShopifyOAuthService:
                 hashlib.sha256
             ).hexdigest()
             
+            print(f"🔍 Expected signature: {expected_signature[:20]}...")
+            print(f"🔍 Received signature: {signature[:20]}...")
+            
             if not hmac.compare_digest(signature, expected_signature):
+                print("❌ HMAC signature mismatch")
                 return None
+            
+            print("✅ HMAC signature verified")
             
             # Parse state data
             state_data = ShopifyOAuthState.model_validate_json(state_json)
+            print(f"✅ State data parsed: shop={state_data.shop}")
             
             # Check timestamp (state valid for 10 minutes)
-            if datetime.utcnow().timestamp() - state_data.timestamp > 600:
+            current_time = datetime.utcnow().timestamp()
+            age_seconds = current_time - state_data.timestamp
+            print(f"🔍 State age: {age_seconds:.1f} seconds")
+            
+            if age_seconds > 600:
+                print(f"❌ State expired: {age_seconds:.1f}s > 600s")
                 return None
-                
+            
+            print("✅ State timestamp valid")
             return state_data
             
         except Exception as e:
             print(f"❌ State verification failed: {e}")
+            import traceback
+            traceback.print_exc()
             return None
 
     def verify_webhook_hmac(self, body: str, hmac_header: str) -> bool:
