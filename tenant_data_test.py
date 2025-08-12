@@ -81,14 +81,19 @@ class TenantDataTestSuite:
         """Authenticate as admin user"""
         print("\n🔐 Authenticating as Admin...")
         
-        # Test admin login
+        # Test admin login with tenant header
         login_data = {
             "email": ADMIN_EMAIL,
-            "password": ADMIN_PASSWORD,
-            "tenant_id": ADMIN_TENANT
+            "password": ADMIN_PASSWORD
         }
         
-        success, response, status = await self.make_request("POST", "/users/login", login_data)
+        # Include tenant ID in headers for authentication
+        auth_headers = {
+            "Content-Type": "application/json",
+            "X-Tenant-Id": ADMIN_TENANT
+        }
+        
+        success, response, status = await self.make_request("POST", "/users/login", login_data, headers=auth_headers)
         
         if success and response.get("access_token"):
             self.admin_token = response["access_token"]
