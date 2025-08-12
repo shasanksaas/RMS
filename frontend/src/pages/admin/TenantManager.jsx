@@ -346,21 +346,21 @@ const TenantManager = () => {
         <CardHeader>
           <CardTitle>Tenants ({filteredTenants.length})</CardTitle>
           <CardDescription>
-            Manage all tenants and track their signup status
+            Real tenant data from database - manage all merchant accounts
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="text-center py-12">
-              <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading tenants...</p>
-            </div>
-          ) : filteredTenants.length === 0 ? (
+          {filteredTenants.length === 0 ? (
             <div className="text-center py-12">
               <Store className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No tenants found</h3>
-              <p className="text-gray-600 mb-4">
-                {searchQuery ? 'Try adjusting your search criteria' : 'Get started by creating your first tenant'}
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                {searchQuery ? 'No matching tenants found' : 'No tenants found'}
+              </h3>
+              <p className="text-gray-500 mb-4">
+                {searchQuery 
+                  ? 'Try adjusting your search criteria' 
+                  : 'Get started by creating your first tenant'
+                }
               </p>
               {!searchQuery && (
                 <Button onClick={() => setShowCreateModal(true)}>
@@ -374,83 +374,83 @@ const TenantManager = () => {
               <table className="w-full">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left p-4 font-semibold text-gray-900">Tenant Info</th>
-                    <th className="text-left p-4 font-semibold text-gray-900">Status</th>
-                    <th className="text-left p-4 font-semibold text-gray-900">Connection</th>
-                    <th className="text-left p-4 font-semibold text-gray-900">Created</th>
-                    <th className="text-left p-4 font-semibold text-gray-900">Claimed</th>
-                    <th className="text-right p-4 font-semibold text-gray-900">Actions</th>
+                    <th className="text-left p-4 font-medium">Tenant ID</th>
+                    <th className="text-left p-4 font-medium">Name</th>
+                    <th className="text-left p-4 font-medium">Shop Domain</th>
+                    <th className="text-left p-4 font-medium">Connected</th>
+                    <th className="text-left p-4 font-medium">Stats</th>
+                    <th className="text-left p-4 font-medium">Created</th>
+                    <th className="text-left p-4 font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredTenants.map((tenant) => (
                     <tr key={tenant.tenant_id} className="border-b hover:bg-gray-50">
                       <td className="p-4">
-                        <div>
-                          <h3 className="font-semibold text-gray-900">{tenant.name || 'Unnamed Store'}</h3>
-                          <p className="text-sm text-gray-600 font-mono cursor-pointer hover:text-blue-600" 
-                             onClick={() => copyTenantId(tenant.tenant_id)}>
-                            {tenant.tenant_id}
-                          </p>
-                          {tenant.notes && (
-                            <p className="text-xs text-gray-500 mt-1">{tenant.notes}</p>
+                        <code className="bg-gray-100 px-2 py-1 rounded text-sm">
+                          {tenant.tenant_id}
+                        </code>
+                      </td>
+                      <td className="p-4 font-medium">{tenant.name}</td>
+                      <td className="p-4">
+                        {tenant.shop_domain ? (
+                          <span className="text-gray-600">{tenant.shop_domain}</span>
+                        ) : (
+                          <span className="text-gray-400 italic">Not set</span>
+                        )}
+                      </td>
+                      <td className="p-4">
+                        {tenant.connected_provider === 'shopify' ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Shopify
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            Not Connected
+                          </span>
+                        )}
+                      </td>
+                      <td className="p-4">
+                        <div className="text-sm text-gray-600">
+                          {tenant.stats && (
+                            <div>
+                              <div>Orders: {tenant.stats.orders_count || 0}</div>
+                              <div>Returns: {tenant.stats.returns_count || 0}</div>
+                              <div>Users: {tenant.stats.users_count || 0}</div>
+                            </div>
                           )}
                         </div>
                       </td>
-                      <td className="p-4">
-                        <TenantStatusBadge status={tenant.status} />
-                      </td>
-                      <td className="p-4">
-                        <ConnectionStatusIndicator 
-                          connected={false} 
-                          status="disconnected"
-                          showLabel={false}
-                        />
-                      </td>
                       <td className="p-4 text-sm text-gray-600">
-                        {formatDate(tenant.created_at)}
+                        {new Date(tenant.created_at).toLocaleDateString()}
                       </td>
-                      <td className="p-4 text-sm text-gray-600">
-                        {formatDate(tenant.claimed_at)}
-                      </td>
-                      <td className="p-4 text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => navigate(`/admin/tenants/${tenant.tenant_id}`)}
-                            >
-                              <Eye className="h-4 w-4 mr-2" />
-                              View Details
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => copyTenantId(tenant.tenant_id)}
-                            >
-                              <ExternalLink className="h-4 w-4 mr-2" />
-                              Copy Tenant ID
-                            </DropdownMenuItem>
-                            {tenant.status === 'archived' ? (
+                      <td className="p-4">
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() => handleImpersonateTenant(tenant.tenant_id, tenant.name)}
+                            className="bg-blue-600 hover:bg-blue-700"
+                          >
+                            <LogIn className="h-4 w-4 mr-1" />
+                            Open Dashboard
+                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
                               <DropdownMenuItem
-                                onClick={() => handleReactivateTenant(tenant.tenant_id)}
+                                onClick={() => handleDeleteTenant(tenant.tenant_id, tenant.name)}
+                                className="text-red-600"
                               >
-                                <RotateCcw className="h-4 w-4 mr-2" />
-                                Reactivate
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete Tenant
                               </DropdownMenuItem>
-                            ) : (
-                              <DropdownMenuItem
-                                onClick={() => handleArchiveTenant(tenant.tenant_id)}
-                                className="text-red-600 focus:text-red-600"
-                              >
-                                <Archive className="h-4 w-4 mr-2" />
-                                Archive
-                              </DropdownMenuItem>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -458,43 +458,17 @@ const TenantManager = () => {
               </table>
             </div>
           )}
-
-          {/* Pagination */}
-          {pagination.totalPages > 1 && (
-            <div className="flex items-center justify-between mt-6 pt-4 border-t">
-              <p className="text-sm text-gray-600">
-                Showing {Math.min((pagination.page - 1) * pagination.pageSize + 1, pagination.total)} to{' '}
-                {Math.min(pagination.page * pagination.pageSize, pagination.total)} of {pagination.total} tenants
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={pagination.page <= 1}
-                  onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={pagination.page >= pagination.totalPages}
-                  onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          )}
         </CardContent>
       </Card>
 
       {/* Create Tenant Modal */}
-      <CreateTenantModal
-        isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onCreate={handleCreateTenant}
-      />
+      {showCreateModal && (
+        <CreateTenantModal
+          isOpen={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          onSubmit={handleCreateTenant}
+        />
+      )}
     </div>
   );
 };
