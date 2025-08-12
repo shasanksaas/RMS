@@ -1136,8 +1136,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "CRITICAL: Admin Logout Redirect Fix"
+    - "CRITICAL DIRECT TEST: Continue with Shopify Button Click Behavior"
   stuck_tasks: 
+    - "CRITICAL DIRECT TEST: Continue with Shopify Button Click Behavior"
     - "CRITICAL: Admin Logout Redirect Fix"
     - "Admin Login Frontend Integration"
     - "Real Tenant Management System Frontend"
