@@ -34,7 +34,10 @@ const UserProfile = () => {
         description: "You have been logged out of your account.",
         variant: "default"
       });
-      navigate('/auth/login', { replace: true });
+      
+      // Role-based logout redirect
+      const redirectPath = user?.role === 'admin' ? '/admin/login' : '/auth/login';
+      navigate(redirectPath, { replace: true });
     } catch (error) {
       console.error('Logout error:', error);
       toast({
