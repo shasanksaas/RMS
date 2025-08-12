@@ -161,7 +161,7 @@ const TenantManager = () => {
     }
   };
 
-  const handleImpersonateTenant = async (tenantId, tenantName) => {
+  const handleImpersonate = async (tenantId, tenantName) => {
     try {
       console.log(`🔐 Admin impersonating tenant: ${tenantId}`);
       
