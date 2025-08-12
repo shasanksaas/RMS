@@ -263,7 +263,7 @@ const Login: React.FC = () => {
             <Building2 className="h-8 w-8 text-white" />
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-            Returns Manager
+            🚀 NEW DUAL-PATH LOGIN TEST 🚀
           </h1>
           <p className="text-sm sm:text-base text-gray-600">
             Sign in to your returns management platform
