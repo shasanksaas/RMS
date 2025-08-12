@@ -32,7 +32,7 @@ from src.controllers.tenant_controller import router as tenant_management_router
 from src.controllers.public_signup_controller import router as public_signup_router
 
 # Shopify OAuth Controllers  
-from src.controllers.shopify_oauth_controller import router as shopify_oauth_router
+from src.controllers.shopify_oauth_controller import router as shopify_oauth_router, integration_router as shopify_integration_router
 from src.controllers.shopify_webhook_controller import router as shopify_webhook_router
 
 # Admin Tenant Management Controller
