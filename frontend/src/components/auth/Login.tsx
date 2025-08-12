@@ -254,124 +254,127 @@ const Login: React.FC = () => {
 
             {/* Email/Password Form */}
             <form onSubmit={handleLogin} className="space-y-4">
-              {/* Tenant ID Field */}
-              <div className="space-y-2">
-                <Label htmlFor="tenantId" className="text-sm font-medium">
-                  Tenant ID
-                </Label>
-                <div className="relative">
-                  <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="tenantId"
-                    name="tenantId"
-                    type="text"
-                    placeholder="tenant-example"
-                    value={formData.tenantId}
-                    onChange={handleInputChange}
-                    className="pl-10 h-11 text-sm"
-                    disabled={isLoading || isGoogleLoading}
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Email Field */}
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium">
-                  Email Address
-                </Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className="pl-10 h-11 text-sm"
-                    disabled={isLoading || isGoogleLoading}
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Password Field */}
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium">
-                  Password
-                </Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="password"
-                    name="password"
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="Enter your password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    className="pl-10 pr-10 h-11 text-sm"
-                    disabled={isLoading || isGoogleLoading}
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* Remember Me & Forgot Password */}
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="rememberMe"
-                    name="rememberMe"
-                    checked={formData.rememberMe}
-                    onCheckedChange={(checked) => 
-                      setFormData(prev => ({ ...prev, rememberMe: checked as boolean }))
-                    }
-                    disabled={isLoading || isGoogleLoading}
-                  />
-                  <Label htmlFor="rememberMe" className="text-xs sm:text-sm text-gray-600 cursor-pointer">
-                    Remember me
+              <fieldset disabled={isLoading} className="space-y-4">
+                {/* Tenant ID Field */}
+                <div className="space-y-2">
+                  <Label htmlFor="tenantId" className="text-sm font-medium">
+                    Tenant ID
                   </Label>
+                  <div className="relative">
+                    <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="tenantId"
+                      name="tenantId"
+                      type="text"
+                      placeholder="tenant-example"
+                      value={formData.tenantId}
+                      onChange={handleInputChange}
+                      className="pl-10 h-11 text-sm"
+                      disabled={isLoading || isGoogleLoading}
+                      required
+                    />
+                  </div>
                 </div>
-                
-                <Button 
-                  type="button" 
-                  variant="link" 
-                  className="p-0 h-auto text-xs sm:text-sm text-blue-600 hover:text-blue-700"
-                  onClick={() => navigate('/auth/forgot-password')}
+
+                {/* Email Field */}
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-sm font-medium">
+                    Email Address
+                  </Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      placeholder="you@example.com"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      className="pl-10 h-11 text-sm"
+                      disabled={isLoading || isGoogleLoading}
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Password Field */}
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-sm font-medium">
+                    Password
+                  </Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="password"
+                      name="password"
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="Enter your password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      className="pl-10 pr-10 h-11 text-sm"
+                      disabled={isLoading || isGoogleLoading}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                      disabled={isLoading || isGoogleLoading}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Remember Me & Forgot Password */}
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="rememberMe"
+                      name="rememberMe"
+                      checked={formData.rememberMe}
+                      onCheckedChange={(checked) => 
+                        setFormData(prev => ({ ...prev, rememberMe: checked as boolean }))
+                      }
+                      disabled={isLoading || isGoogleLoading}
+                    />
+                    <Label htmlFor="rememberMe" className="text-xs sm:text-sm text-gray-600 cursor-pointer">
+                      Remember me
+                    </Label>
+                  </div>
+                  
+                  <Button 
+                    type="button" 
+                    variant="link" 
+                    className="p-0 h-auto text-xs sm:text-sm text-blue-600 hover:text-blue-700"
+                    onClick={() => navigate('/auth/forgot-password')}
+                    disabled={isLoading || isGoogleLoading}
+                  >
+                    Forgot password?
+                  </Button>
+                </div>
+
+                {/* Submit Button */}
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="w-full h-11 text-sm sm:text-base font-medium"
                   disabled={isLoading || isGoogleLoading}
                 >
-                  Forgot password?
+                  {isLoading ? (
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full mr-2" />
+                      Signing In...
+                    </div>
+                  ) : (
+                    'Sign In'
+                  )}
                 </Button>
-              </div>
-
-              {/* Submit Button */}
-              <Button
-                type="submit"
-                size="lg"
-                className="w-full h-11 text-sm sm:text-base font-medium"
-                disabled={isLoading || isGoogleLoading}
-              >
-                {isLoading ? (
-                  <div className="flex items-center justify-center">
-                    <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full mr-2" />
-                    Signing In...
-                  </div>
-                ) : (
-                  'Sign In'
-                )}
-              </Button>
+              </fieldset>
             </form>
 
             {/* Sign Up Link */}
