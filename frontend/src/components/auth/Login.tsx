@@ -144,32 +144,18 @@ const Login: React.FC = () => {
         password: '***'
       });
 
-      const response = await authService.login(loginData);
-
-      console.log('✅ EMAIL LOGIN SUCCESS:', response);
-
-      // Store auth data
-      localStorage.setItem('auth_token', response.access_token);
-      localStorage.setItem('currentTenant', loginData.tenant_id);
-      if (response.refresh_token) {
-        localStorage.setItem('refresh_token', response.refresh_token);
-      }
-      localStorage.setItem('user_info', JSON.stringify(response.user));
+      // Use AuthContext login method instead of direct authService call
+      await contextLogin(loginData);
 
       // Show success message
       toast({
         title: "Login Successful",
-        description: `Welcome back, ${response.user.first_name || response.user.email}!`,
+        description: `Welcome back!`,
         variant: "default"
       });
 
-      // Navigate based on user role
-      const redirectPath = getRedirectPath(response.user.role);
-      console.log('🎯 REDIRECTING TO:', redirectPath);
+      // Navigate based on user role will be handled by AuthContext
       
-      // Force navigation
-      window.location.href = redirectPath;
-
     } catch (error: any) {
       console.error('❌ EMAIL LOGIN ERROR:', error);
       
