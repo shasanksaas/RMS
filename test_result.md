@@ -1076,13 +1076,15 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Merchant User Creation and Login for tenant-rms34"
+    - "CRITICAL: Admin Logout Redirect Fix"
   stuck_tasks: 
+    - "CRITICAL: Admin Logout Redirect Fix"
     - "Admin Login Frontend Integration"
+    - "Real Tenant Management System Frontend"
     - "GraphQL Service for Returns Operations"
     - "Sync Service with Initial Backfill"
   test_all: false
-  test_priority: "high_first"
+  test_priority: "stuck_first"
 
   - task: "Real-time Order Sync via Webhooks"
     implemented: true
