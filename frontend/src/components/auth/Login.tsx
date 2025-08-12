@@ -95,14 +95,23 @@ const Login: React.FC = () => {
     };
 
     try {
-      console.log('🚀 CALLING contextLogin with:', {
+      console.log('🚀 DIRECT LOGIN ATTEMPT with:', {
         ...loginData,
         password: '***'
       });
 
-      const response = await contextLogin(loginData);
+      // Direct API call instead of using AuthContext
+      const response = await authService.login(loginData);
 
-      console.log('✅ LOGIN SUCCESS:', response);
+      console.log('✅ DIRECT LOGIN SUCCESS:', response);
+
+      // Manually store auth data
+      localStorage.setItem('auth_token', response.access_token);
+      localStorage.setItem('currentTenant', loginData.tenant_id);
+      if (response.refresh_token) {
+        localStorage.setItem('refresh_token', response.refresh_token);
+      }
+      localStorage.setItem('user_info', JSON.stringify(response.user));
 
       // Show success message
       toast({
@@ -115,8 +124,8 @@ const Login: React.FC = () => {
       const redirectPath = getRedirectPath(response.user.role);
       console.log('🎯 REDIRECTING TO:', redirectPath);
       
-      // Immediate redirect without delay
-      navigate(redirectPath, { replace: true });
+      // Force navigation
+      window.location.href = redirectPath;
 
     } catch (error: any) {
       console.error('❌ LOGIN ERROR:', error);
