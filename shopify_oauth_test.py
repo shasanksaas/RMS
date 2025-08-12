@@ -79,6 +79,13 @@ class ShopifyOAuthTestSuite:
                     except:
                         response_data = await response.text()
                     return response.status < 400, response_data, response.status, dict(response.headers)
+            elif method.upper() == "DELETE":
+                async with self.session.delete(url, headers=request_headers, allow_redirects=allow_redirects) as response:
+                    try:
+                        response_data = await response.json()
+                    except:
+                        response_data = await response.text()
+                    return response.status < 400, response_data, response.status, dict(response.headers)
                     
         except Exception as e:
             return False, {"error": str(e)}, 500, {}
