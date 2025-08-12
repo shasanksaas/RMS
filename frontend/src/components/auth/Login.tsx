@@ -79,14 +79,10 @@ const Login: React.FC = () => {
     setError('');
 
     try {
-      // Get backend URL from environment
-      const backendUrl = import.meta.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+      // Get backend URL from environment with fallback
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://returnportal.preview.emergentagent.com';
       
       console.log('🔍 Backend URL from env:', backendUrl);
-      
-      if (!backendUrl) {
-        throw new Error('Backend URL not configured');
-      }
       
       // Direct redirect to Shopify OAuth
       const shopifyInstallUrl = `${backendUrl}/api/auth/shopify/install-redirect?shop=${encodeURIComponent(shopDomain.trim())}`;
