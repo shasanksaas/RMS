@@ -177,7 +177,7 @@ class ShopifyOAuthTestSuite:
         
         if status == 302:  # Should redirect to Shopify
             redirect_url = headers.get('location', '')
-            if 'accounts.shopify.com' in redirect_url or 'myshopify.com' in redirect_url:
+            if 'myshopify.com' in redirect_url and 'oauth/authorize' in redirect_url:
                 self.log_test("OAuth Install: Redirect to Shopify", True, 
                              f"Correctly redirects to Shopify OAuth: {redirect_url[:100]}...")
                 
