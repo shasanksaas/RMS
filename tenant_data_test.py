@@ -81,13 +81,15 @@ class TenantDataTestSuite:
         """Authenticate as admin user"""
         print("\n🔐 Authenticating as Admin...")
         
-        # Test admin login with tenant header
+        # Test admin login with tenant_id in body
         login_data = {
+            "tenant_id": ADMIN_TENANT,
             "email": ADMIN_EMAIL,
-            "password": ADMIN_PASSWORD
+            "password": ADMIN_PASSWORD,
+            "remember_me": False
         }
         
-        # Include tenant ID in headers for authentication
+        # Include tenant ID in headers as well
         auth_headers = {
             "Content-Type": "application/json",
             "X-Tenant-Id": ADMIN_TENANT
