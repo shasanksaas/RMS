@@ -12,7 +12,10 @@ import {
   Store,
   Users,
   Calendar,
-  ExternalLink
+  ExternalLink,
+  LogIn,
+  Trash2,
+  AlertTriangle
 } from 'lucide-react';
 
 import { Button } from '../../components/ui/button';
@@ -27,9 +30,6 @@ import {
 import { Alert, AlertDescription } from '../../components/ui/alert';
 import { useToast } from '../../components/ui/use-toast';
 
-import TenantStatusBadge from '../../components/tenant/TenantStatusBadge';
-import ConnectionStatusIndicator from '../../components/tenant/ConnectionStatusIndicator';
-import CreateTenantModal from '../../components/tenant/CreateTenantModal';
 import { tenantService } from '../../services/tenantService';
 import { useAuth } from '../../contexts/AuthContext';
 
