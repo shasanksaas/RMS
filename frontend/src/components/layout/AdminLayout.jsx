@@ -22,11 +22,23 @@ const AdminLayout = () => {
       {/* Header */}
       <div className="bg-red-600 text-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center space-x-3">
-            <Shield className="h-8 w-8" />
-            <div>
-              <h1 className="text-xl font-bold">Super Admin</h1>
-              <p className="text-sm text-red-100">System Administration</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Shield className="h-8 w-8" />
+              <div>
+                <h1 className="text-xl font-bold">Super Admin</h1>
+                <p className="text-sm text-red-100">System Administration</p>
+              </div>
+            </div>
+            
+            {/* Admin Profile & Logout */}
+            <div className="flex items-center space-x-4">
+              <div className="text-sm text-red-100">
+                Administrator Portal
+              </div>
+              <div className="border-l border-red-500 pl-4">
+                <UserProfile />
+              </div>
             </div>
           </div>
         </div>
