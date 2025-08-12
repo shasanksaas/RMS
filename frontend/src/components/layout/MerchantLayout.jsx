@@ -171,6 +171,14 @@ const MerchantLayout = ({ isOnline }) => {
         {/* Main Content */}
         <div className="flex-1 md:ml-0">
           <main className="p-3 md:p-6">
+            {/* Impersonation Banner */}
+            {user && user.isImpersonating && (
+              <ImpersonationBanner 
+                tenantId={user.tenant_id}
+                tenantName={`Tenant ${user.tenant_id}`}
+                onExit={() => window.location.href = '/admin/tenants'}
+              />
+            )}
             <Outlet />
           </main>
         </div>
