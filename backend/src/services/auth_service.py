@@ -246,6 +246,16 @@ class AuthService:
             return UserDB(**user_doc)
         return None
     
+    async def get_user_by_id_global(self, user_id: str) -> Optional[UserDB]:
+        """Get user by ID across all tenants (for admin authentication)"""
+        user_doc = await db.users.find_one({
+            "user_id": user_id
+        })
+        
+        if user_doc:
+            return UserDB(**user_doc)
+        return None
+    
     async def get_user_by_email(self, tenant_id: str, email: str) -> Optional[UserDB]:
         """Get user by email and tenant"""
         user_doc = await db.users.find_one({
