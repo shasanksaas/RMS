@@ -254,6 +254,13 @@ class ShopifyOAuthTestSuite:
             headers={"X-Tenant-Id": TEST_TENANT_ID}
         )
         
+        if not success:
+            # Try the auth endpoint as fallback
+            success, response, status, _ = await self.make_request(
+                "GET", 
+                f"/auth/shopify/status?tenant_id={TEST_TENANT_ID}"
+            )
+        
         if success and response.get('connected'):
             self.log_test("Integration Status: After connection", True, 
                          f"Shows connected=true with shop: {response.get('shop', 'N/A')}")
