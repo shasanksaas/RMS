@@ -750,6 +750,21 @@ backend:
         comment: "🎯 SHOPIFY OAUTH SYSTEM COMPREHENSIVE TESTING COMPLETE - 89.1% SUCCESS RATE! ✅ OUTSTANDING RESULTS: Successfully tested complete Single-Click Shopify OAuth system with 41/46 tests passed across all major functionality areas. COMPREHENSIVE VERIFICATION: (1) OAuth Installation Flow - 100% success rate: Shop domain normalization (rms34 → rms34.myshopify.com), OAuth URL generation with correct API key, all required scopes present (read_orders, read_fulfillments, read_products, read_customers, read_returns, write_returns), correct redirect URI construction, state parameter generation working ✅ (2) Webhook System - 75% success rate: Webhook system active with all 5 endpoints registered (orders-create, orders-updated, fulfillments-create, fulfillments-update, app-uninstalled), HMAC verification required and working for invalid/missing HMAC rejection, payload test endpoint functional ✅ (3) Connection Status API - 100% success rate: Proper response structure, valid status enum values, tenant isolation working correctly ✅ (4) Configuration - 87.5% success rate: All required configuration values present (SHOPIFY_API_KEY, SHOPIFY_API_SECRET, SHOPIFY_API_VERSION, BACKEND_URL), auto-provisioning enabled, required scopes configured ✅ (5) Database & Integration - 100% success rate: Response structures correct, status enums valid, encrypted token storage designed, tenant isolation designed, expected collections identified ✅ (6) Admin Features - 100% success rate: Admin endpoints exist and require authentication correctly ✅ (7) Session Management - 100% success rate: All session endpoints functional ✅ ⚠️ MINOR ISSUES: (1) State parameter HMAC signing verification needs refinement (2) Webhook HMAC verification has edge case with valid HMAC rejection (3) OAuth callback parameter validation returns 401 instead of proper error handling PRODUCTION READINESS: System is mostly production-ready with excellent OAuth flow, comprehensive webhook system, complete configuration, and solid architecture. Minor security refinements needed before full deployment."
 
 frontend:
+  - task: "CRITICAL: Admin Logout Redirect Fix"
+    implemented: true
+    working: false
+    file: "src/components/layout/UserProfile.jsx, src/contexts/AuthContext.jsx"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "user"
+        comment: "CRITICAL FINAL TEST: Verify admin logout redirect fix works with corrected authentication system. Test admin login → logout → redirect flow. Expected: logout should redirect to /auth/login (dual-path login form). MUST NOT redirect to /admin/login?return_url=%2Fadmin%2Ftenants"
+      - working: false
+        agent: "testing"
+        comment: "🚨 CRITICAL FAILURE: Admin logout redirect fix is NOT working! Comprehensive end-to-end testing confirms the issue. DETAILED RESULTS: (1) Admin Login - ✅ SUCCESS: admin@returns-manager.com / AdminPassword123! login works perfectly, redirects to /admin/tenants ✅ (2) Admin Dashboard - ✅ SUCCESS: Dashboard loads, user profile dropdown accessible, logout button functional ✅ (3) Logout Execution - ✅ SUCCESS: Logout button clicked, authentication cleared properly ✅ (4) CRITICAL FAILURE - Redirect URL: Expected: https://returnportal.preview.emergentagent.com/auth/login, Actual: https://returnportal.preview.emergentagent.com/admin/login?return_url=%2Fadmin%2Ftenants ❌ ROOT CAUSE: UserProfile.jsx handleLogout function navigates to /auth/login but system still redirects to admin login with forbidden return URL parameters. The logout redirect logic is completely broken. IMPACT: Admins who logout are incorrectly sent to admin login page instead of dual-path login form. URGENT FIX REQUIRED: Fix logout redirect logic to ensure /auth/login redirect without return URL parameters."
+
   - task: "Admin Login Frontend Integration"
     implemented: true
     working: false
