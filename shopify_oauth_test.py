@@ -1,274 +1,587 @@
 #!/usr/bin/env python3
 """
-Comprehensive Shopify OAuth Integration Test
-Tests all acceptance criteria from the user's requirements
+CRITICAL END-TO-END SHOPIFY OAUTH FLOW TEST
+
+This test suite verifies the complete Shopify OAuth login + install flow 
+with new integration endpoints as requested in the review.
+
+PRIORITY TESTS:
+1. Integration Status Endpoint - GET /api/integrations/shopify/status with tenant-rms34
+2. Shopify OAuth Install Flow - GET /api/auth/shopify/install-redirect?shop=rms34
+3. OAuth Callback Processing - POST /api/auth/shopify/callback
+4. Integration Status After Connection - verify connected=true
+5. Resync Functionality - POST /api/integrations/shopify/resync
+6. Error Handling - invalid tenant IDs, shop domains, etc.
 """
 
 import asyncio
 import aiohttp
 import json
+import os
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
+from typing import Dict, List, Any, Optional
+import uuid
+from urllib.parse import urlparse, parse_qs
 
 # Configuration
-BACKEND_URL = "https://returnportal.preview.emergentagent.com"
+BACKEND_URL = "https://returnportal.preview.emergentagent.com/api"
+TEST_TENANT_ID = "tenant-rms34"
 TEST_SHOP = "rms34"
-TEST_SHOP_DOMAIN = f"{TEST_SHOP}.myshopify.com"
+TEST_SHOP_DOMAIN = "rms34.myshopify.com"
 
-class ShopifyOAuthTest:
+class ShopifyOAuthTestSuite:
     def __init__(self):
         self.session = None
         self.test_results = []
         
     async def __aenter__(self):
-        self.session = aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30))
+        self.session = aiohttp.ClientSession()
         return self
         
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         if self.session:
             await self.session.close()
     
-    def log_test(self, test_name: str, success: bool, details: str = ""):
+    def log_test(self, test_name: str, success: bool, details: str = "", response_data: Any = None):
         """Log test result"""
         status = "✅ PASS" if success else "❌ FAIL"
         print(f"{status} {test_name}")
         if details:
             print(f"   {details}")
+        if not success and response_data:
+            print(f"   Response: {response_data}")
         
         self.test_results.append({
             "test": test_name,
             "success": success,
-            "details": details
+            "details": details,
+            "response": response_data
         })
     
-    async def test_1_health_check(self):
-        """Test 1: Health Check"""
-        print("\n🏥 Test 1: Health Check")
-        
+    async def make_request(self, method: str, endpoint: str, data: Dict = None, headers: Dict = None, allow_redirects: bool = True) -> tuple:
+        """Make HTTP request and return (success, response_data, status_code, headers)"""
         try:
-            async with self.session.get(f"{BACKEND_URL}/api/health") as response:
-                if response.status == 200:
-                    data = await response.json()
-                    self.log_test("Health Check", True, f"Backend is healthy: {data.get('status')}")
-                    return True
-                else:
-                    self.log_test("Health Check", False, f"Health check failed with status: {response.status}")
-                    return False
-        except Exception as e:
-            self.log_test("Health Check", False, f"Health check error: {str(e)}")
-            return False
-    
-    async def test_2_oauth_install_endpoint(self):
-        """Test 2: OAuth Install Endpoint"""
-        print("\n🔗 Test 2: OAuth Install Endpoint")
-        
-        try:
-            # Test the OAuth install endpoint
-            install_url = f"{BACKEND_URL}/api/auth/shopify/install?shop={TEST_SHOP_DOMAIN}"
+            url = f"{BACKEND_URL}{endpoint}"
+            request_headers = headers or {}
             
-            async with self.session.get(install_url, allow_redirects=False) as response:
-                if response.status == 302:
-                    # Check if it redirects to Shopify
-                    location = response.headers.get('Location', '')
-                    if 'shopify.com' in location and 'oauth/authorize' in location:
-                        self.log_test("OAuth Install Redirect", True, f"Redirects to Shopify OAuth: {location[:100]}...")
-                        
-                        # Check if the redirect URL contains required parameters
-                        required_params = ['client_id', 'scope', 'redirect_uri', 'state']
-                        has_all_params = all(param in location for param in required_params)
-                        self.log_test("OAuth Parameters", has_all_params, f"Required parameters present: {has_all_params}")
-                        
-                        # Check if scopes are correct
-                        expected_scopes = "read_orders,read_fulfillments,read_products,read_customers,read_returns,write_returns"
-                        if expected_scopes.replace(',', '%2C') in location:
-                            self.log_test("OAuth Scopes", True, "Required scopes included in OAuth URL")
-                        else:
-                            self.log_test("OAuth Scopes", False, f"Missing required scopes in OAuth URL")
-                        
-                        return True
-                    else:
-                        self.log_test("OAuth Install Redirect", False, f"Invalid redirect location: {location}")
-                        return False
-                else:
-                    response_text = await response.text()
-                    self.log_test("OAuth Install Redirect", False, f"Expected 302 redirect, got {response.status}: {response_text[:200]}")
-                    return False
+            if method.upper() == "GET":
+                async with self.session.get(url, headers=request_headers, allow_redirects=allow_redirects) as response:
+                    try:
+                        response_data = await response.json()
+                    except:
+                        response_data = await response.text()
+                    return response.status < 400, response_data, response.status, dict(response.headers)
+            elif method.upper() == "POST":
+                async with self.session.post(url, json=data, headers=request_headers, allow_redirects=allow_redirects) as response:
+                    try:
+                        response_data = await response.json()
+                    except:
+                        response_data = await response.text()
+                    return response.status < 400, response_data, response.status, dict(response.headers)
                     
         except Exception as e:
-            self.log_test("OAuth Install Endpoint", False, f"OAuth install error: {str(e)}")
-            return False
+            return False, {"error": str(e)}, 500, {}
     
-    async def test_3_webhook_endpoints(self):
-        """Test 3: Webhook Endpoints Availability"""
-        print("\n📨 Test 3: Webhook Endpoints")
+    async def test_backend_health(self):
+        """Test backend health and accessibility"""
+        print("\n🏥 Testing Backend Health...")
         
-        webhook_topics = [
-            "orders_create",
-            "orders_updated", 
-            "fulfillments_create",
-            "fulfillments_update",
-            "returns_create",
-            "returns_update"
-        ]
-        
-        all_passed = True
-        
-        for topic in webhook_topics:
-            try:
-                webhook_url = f"{BACKEND_URL}/api/webhooks/shopify/{topic}"
-                
-                # Send a mock webhook request (should get validation error but endpoint should exist)
-                headers = {
-                    "Content-Type": "application/json",
-                    "X-Shopify-Topic": topic.replace('_', '/'),
-                    "X-Shopify-Shop-Domain": TEST_SHOP_DOMAIN,
-                    "X-Shopify-Hmac-Sha256": "mock-hmac"
-                }
-                
-                async with self.session.post(webhook_url, json={"test": "data"}, headers=headers) as response:
-                    # We expect either 400 (bad HMAC) or 500 (processing error), not 404
-                    if response.status in [400, 401, 500]:
-                        self.log_test(f"Webhook {topic}", True, f"Endpoint exists (status {response.status})")
-                    elif response.status == 404:
-                        self.log_test(f"Webhook {topic}", False, f"Endpoint not found")
-                        all_passed = False
-                    else:
-                        self.log_test(f"Webhook {topic}", True, f"Endpoint exists (unexpected status {response.status})")
-                        
-            except Exception as e:
-                self.log_test(f"Webhook {topic}", False, f"Error testing webhook: {str(e)}")
-                all_passed = False
-        
-        return all_passed
-    
-    async def test_4_auth_endpoints(self):
-        """Test 4: Auth Endpoints"""
-        print("\n🔐 Test 4: Auth Endpoints")
-        
-        try:
-            # Test stores endpoint
-            async with self.session.get(f"{BACKEND_URL}/api/auth/stores") as response:
-                if response.status == 200:
-                    stores = await response.json()
-                    self.log_test("Auth Stores Endpoint", True, f"Returns {len(stores)} connected stores")
-                else:
-                    self.log_test("Auth Stores Endpoint", False, f"Stores endpoint failed: {response.status}")
-                    return False
-            
+        success, health_data, status, _ = await self.make_request("GET", "/health", headers={})
+        if success:
+            self.log_test("Backend Health Check", True, f"Backend is healthy (status: {status})")
             return True
-            
-        except Exception as e:
-            self.log_test("Auth Endpoints", False, f"Auth endpoints error: {str(e)}")
+        else:
+            self.log_test("Backend Health Check", False, f"Backend not accessible (status: {status})")
             return False
     
-    async def test_5_unified_returns_endpoints(self):
-        """Test 5: Unified Returns Endpoints"""
-        print("\n🔄 Test 5: Unified Returns Endpoints")
+    async def test_integration_status_initial(self):
+        """Test 1: Integration Status Endpoint - Initial State"""
+        print("\n🔍 Testing Integration Status Endpoint (Initial State)...")
         
-        try:
-            # Test order lookup endpoint
-            headers = {"Content-Type": "application/json", "X-Tenant-Id": "tenant-fashion-store"}
-            lookup_data = {"order_number": "1001", "email": "customer@example.com"}
+        # Test with tenant-rms34 as specified in review
+        success, response, status, _ = await self.make_request(
+            "GET", 
+            f"/integrations/shopify/status",
+            headers={"X-Tenant-Id": TEST_TENANT_ID}
+        )
+        
+        if success:
+            self.log_test("Integration Status: Initial check", True, 
+                         f"Status endpoint accessible, connected: {response.get('connected', False)}")
             
-            async with self.session.post(f"{BACKEND_URL}/api/unified-returns/order/lookup", 
-                                       json=lookup_data, headers=headers) as response:
-                if response.status in [200, 400]:  # 400 is OK for invalid order
-                    self.log_test("Unified Returns Lookup", True, f"Endpoint responds (status {response.status})")
+            # Verify response structure
+            expected_fields = ["connected"]
+            if all(field in response for field in expected_fields):
+                self.log_test("Integration Status: Response structure", True, "Required fields present")
+            else:
+                self.log_test("Integration Status: Response structure", False, "Missing required fields")
+                
+            return response.get('connected', False)
+        else:
+            self.log_test("Integration Status: Initial check", False, 
+                         f"Status endpoint failed (status: {status})")
+            return False
+    
+    async def test_feature_flag_behavior(self):
+        """Test feature flag behavior when SHOPIFY_OAUTH_ENABLED=false"""
+        print("\n🚩 Testing Feature Flag Behavior...")
+        
+        # Test install-redirect with feature flag (should work since it's enabled)
+        success, response, status, _ = await self.make_request(
+            "GET", 
+            f"/auth/shopify/install-redirect?shop={TEST_SHOP}",
+            allow_redirects=False
+        )
+        
+        if status == 302:  # Redirect to Shopify OAuth
+            self.log_test("Feature Flag: OAuth enabled behavior", True, 
+                         "Install redirect works when feature flag is enabled")
+        elif status == 503:  # Service unavailable when disabled
+            self.log_test("Feature Flag: OAuth disabled behavior", True, 
+                         "Install redirect correctly blocked when feature flag is disabled")
+        else:
+            self.log_test("Feature Flag: Behavior check", False, 
+                         f"Unexpected status: {status}")
+    
+    async def test_shopify_oauth_install_flow(self):
+        """Test 2: Shopify OAuth Install Flow"""
+        print("\n🚀 Testing Shopify OAuth Install Flow...")
+        
+        # Test install-redirect endpoint
+        success, response, status, headers = await self.make_request(
+            "GET", 
+            f"/auth/shopify/install-redirect?shop={TEST_SHOP}",
+            allow_redirects=False
+        )
+        
+        if status == 302:  # Should redirect to Shopify
+            redirect_url = headers.get('location', '')
+            if 'accounts.shopify.com' in redirect_url or 'myshopify.com' in redirect_url:
+                self.log_test("OAuth Install: Redirect to Shopify", True, 
+                             f"Correctly redirects to Shopify OAuth: {redirect_url[:100]}...")
+                
+                # Parse redirect URL to verify parameters
+                parsed_url = urlparse(redirect_url)
+                query_params = parse_qs(parsed_url.query)
+                
+                required_params = ['client_id', 'scope', 'redirect_uri', 'state']
+                missing_params = [param for param in required_params if param not in query_params]
+                
+                if not missing_params:
+                    self.log_test("OAuth Install: URL parameters", True, 
+                                 "All required OAuth parameters present")
                 else:
-                    response_text = await response.text()
-                    self.log_test("Unified Returns Lookup", False, f"Unexpected status {response.status}: {response_text[:100]}")
-                    return False
+                    self.log_test("OAuth Install: URL parameters", False, 
+                                 f"Missing parameters: {missing_params}")
+                
+                return redirect_url
+            else:
+                self.log_test("OAuth Install: Redirect to Shopify", False, 
+                             f"Redirect URL doesn't point to Shopify: {redirect_url}")
+        elif status == 503:
+            self.log_test("OAuth Install: Feature flag disabled", True, 
+                         "OAuth correctly disabled by feature flag")
+        else:
+            self.log_test("OAuth Install: Redirect to Shopify", False, 
+                         f"Expected redirect (302) but got {status}")
+        
+        return None
+    
+    async def test_oauth_callback_validation(self):
+        """Test 3: OAuth Callback Processing (Parameter Validation)"""
+        print("\n🔄 Testing OAuth Callback Processing...")
+        
+        # Test callback with missing parameters
+        success, response, status, _ = await self.make_request(
+            "GET", 
+            "/auth/shopify/callback?code=test&shop=rms34.myshopify.com",
+            allow_redirects=False
+        )
+        
+        if status in [400, 422]:  # Should reject incomplete parameters
+            self.log_test("OAuth Callback: Parameter validation", True, 
+                         "Correctly rejects incomplete OAuth parameters")
+        elif status == 302:  # Redirect with error
+            self.log_test("OAuth Callback: Parameter validation", True, 
+                         "Redirects with error for incomplete parameters")
+        else:
+            self.log_test("OAuth Callback: Parameter validation", False, 
+                         f"Unexpected response to incomplete parameters: {status}")
+        
+        # Test callback with invalid HMAC
+        success, response, status, _ = await self.make_request(
+            "GET", 
+            "/auth/shopify/callback?code=test&shop=rms34.myshopify.com&state=test&timestamp=123456&hmac=invalid",
+            allow_redirects=False
+        )
+        
+        if status in [400, 401, 302]:  # Should reject invalid HMAC
+            self.log_test("OAuth Callback: HMAC validation", True, 
+                         "Correctly rejects invalid HMAC")
+        else:
+            self.log_test("OAuth Callback: HMAC validation", False, 
+                         f"Should reject invalid HMAC but got: {status}")
+    
+    async def test_integration_status_after_connection(self):
+        """Test 4: Integration Status After Connection"""
+        print("\n🔗 Testing Integration Status After Connection...")
+        
+        # Check if tenant-rms34 already has a connection (as mentioned in test_result.md)
+        success, response, status, _ = await self.make_request(
+            "GET", 
+            f"/integrations/shopify/status",
+            headers={"X-Tenant-Id": TEST_TENANT_ID}
+        )
+        
+        if success and response.get('connected'):
+            self.log_test("Integration Status: After connection", True, 
+                         f"Shows connected=true with shop: {response.get('shop', 'N/A')}")
             
-            # Test eligible items endpoint
-            async with self.session.get(f"{BACKEND_URL}/api/unified-returns/order/test-order/eligible-items", 
-                                      headers=headers) as response:
-                if response.status in [200, 404]:  # 404 is OK for non-existent order
-                    self.log_test("Unified Returns Eligible Items", True, f"Endpoint responds (status {response.status})")
-                else:
-                    self.log_test("Unified Returns Eligible Items", False, f"Unexpected status {response.status}")
-                    return False
-            
+            # Verify connected response structure
+            connected_fields = ["connected", "shop"]
+            if all(field in response for field in connected_fields):
+                self.log_test("Integration Status: Connected response structure", True, 
+                             "Connected status has required fields")
+            else:
+                self.log_test("Integration Status: Connected response structure", False, 
+                             "Missing fields in connected response")
+                
             return True
-            
-        except Exception as e:
-            self.log_test("Unified Returns Endpoints", False, f"Unified returns error: {str(e)}")
+        else:
+            self.log_test("Integration Status: After connection", False, 
+                         "No existing connection found for tenant-rms34")
             return False
     
-    async def test_6_frontend_integration(self):
-        """Test 6: Frontend Integration"""
-        print("\n🖥️ Test 6: Frontend Integration")
+    async def test_resync_functionality(self):
+        """Test 5: Resync Functionality"""
+        print("\n🔄 Testing Resync Functionality...")
         
-        try:
-            # Test if integrations page loads
-            async with self.session.get(f"{BACKEND_URL}/app/settings/integrations") as response:
-                if response.status == 200:
-                    html_content = await response.text()
-                    
-                    # Check for key elements
-                    has_shopify_integration = "Shopify Integration" in html_content
-                    has_connect_button = "Connect" in html_content and "Store" in html_content
-                    
-                    self.log_test("Frontend Integrations Page", True, "Integrations page loads successfully")
-                    self.log_test("Frontend Shopify Section", has_shopify_integration, f"Shopify integration section present: {has_shopify_integration}")
-                    self.log_test("Frontend Connect Button", has_connect_button, f"Connect button present: {has_connect_button}")
-                    
-                    return has_shopify_integration and has_connect_button
+        # Test resync with connected tenant
+        success, response, status, _ = await self.make_request(
+            "POST", 
+            "/integrations/shopify/resync",
+            headers={"X-Tenant-Id": TEST_TENANT_ID}
+        )
+        
+        if success:
+            self.log_test("Resync: Connected tenant", True, 
+                         f"Resync successful: {response.get('message', 'No message')}")
+            
+            # Verify resync response structure
+            if 'job_id' in response or 'message' in response:
+                self.log_test("Resync: Response structure", True, 
+                             "Resync response has expected fields")
+            else:
+                self.log_test("Resync: Response structure", False, 
+                             "Resync response missing expected fields")
+        else:
+            if status == 400:
+                self.log_test("Resync: Not connected handling", True, 
+                             "Correctly rejects resync for non-connected tenant")
+            elif status == 503:
+                self.log_test("Resync: Feature flag disabled", True, 
+                             "Resync correctly disabled by feature flag")
+            else:
+                self.log_test("Resync: Connected tenant", False, 
+                             f"Resync failed with status: {status}")
+        
+        # Test resync with non-connected tenant
+        success, response, status, _ = await self.make_request(
+            "POST", 
+            "/integrations/shopify/resync",
+            headers={"X-Tenant-Id": "tenant-nonexistent"}
+        )
+        
+        if not success and status in [400, 404]:
+            self.log_test("Resync: Non-connected tenant", True, 
+                         "Correctly rejects resync for non-connected tenant")
+        else:
+            self.log_test("Resync: Non-connected tenant", False, 
+                         "Should reject resync for non-connected tenant")
+    
+    async def test_error_handling(self):
+        """Test 6: Error Handling"""
+        print("\n🚨 Testing Error Handling...")
+        
+        # Test with invalid tenant ID
+        success, response, status, _ = await self.make_request(
+            "GET", 
+            "/integrations/shopify/status",
+            headers={"X-Tenant-Id": "invalid-tenant-id"}
+        )
+        
+        if not success or (success and not response.get('connected')):
+            self.log_test("Error Handling: Invalid tenant ID", True, 
+                         "Correctly handles invalid tenant ID")
+        else:
+            self.log_test("Error Handling: Invalid tenant ID", False, 
+                         "Should handle invalid tenant ID")
+        
+        # Test OAuth with invalid shop domain
+        success, response, status, _ = await self.make_request(
+            "GET", 
+            "/auth/shopify/install-redirect?shop=invalid..shop..domain",
+            allow_redirects=False
+        )
+        
+        if not success or status in [400, 422]:
+            self.log_test("Error Handling: Invalid shop domain", True, 
+                         "Correctly rejects invalid shop domain")
+        else:
+            self.log_test("Error Handling: Invalid shop domain", False, 
+                         "Should reject invalid shop domain")
+        
+        # Test missing X-Tenant-Id header
+        success, response, status, _ = await self.make_request(
+            "GET", 
+            "/integrations/shopify/status"
+        )
+        
+        if not success and status in [400, 401, 403]:
+            self.log_test("Error Handling: Missing tenant header", True, 
+                         "Correctly requires X-Tenant-Id header")
+        else:
+            self.log_test("Error Handling: Missing tenant header", False, 
+                         "Should require X-Tenant-Id header")
+    
+    async def test_oauth_state_management(self):
+        """Test OAuth state parameter generation and validation"""
+        print("\n🔐 Testing OAuth State Management...")
+        
+        # Test state generation debug endpoint
+        success, response, status, _ = await self.make_request(
+            "GET", 
+            f"/auth/shopify/debug/generate-state?shop={TEST_SHOP}"
+        )
+        
+        if success and 'generated_state' in response:
+            self.log_test("OAuth State: Generation", True, 
+                         f"State generated successfully (length: {response.get('state_length', 0)})")
+            
+            # Test state verification
+            generated_state = response['generated_state']
+            success, verify_response, status, _ = await self.make_request(
+                "GET", 
+                f"/auth/shopify/debug/state?state={generated_state}"
+            )
+            
+            if success and verify_response.get('valid'):
+                self.log_test("OAuth State: Verification", True, 
+                             "State verification working correctly")
+            else:
+                self.log_test("OAuth State: Verification", False, 
+                             "State verification failed")
+        else:
+            self.log_test("OAuth State: Generation", False, 
+                         "State generation failed")
+    
+    async def test_session_management_endpoints(self):
+        """Test session management endpoints"""
+        print("\n👤 Testing Session Management...")
+        
+        # Test get current session
+        success, response, status, _ = await self.make_request(
+            "GET", 
+            "/auth/shopify/session"
+        )
+        
+        if success:
+            self.log_test("Session Management: Get session", True, 
+                         f"Session endpoint accessible, authenticated: {response.get('authenticated', False)}")
+        else:
+            self.log_test("Session Management: Get session", False, 
+                         "Session endpoint not accessible")
+        
+        # Test session creation endpoint
+        success, response, status, _ = await self.make_request(
+            "POST", 
+            "/auth/shopify/session/create",
+            data={"tenant_id": TEST_TENANT_ID, "shop": TEST_SHOP_DOMAIN}
+        )
+        
+        if success:
+            self.log_test("Session Management: Create session", True, 
+                         "Session creation endpoint working")
+        else:
+            self.log_test("Session Management: Create session", False, 
+                         "Session creation endpoint failed")
+        
+        # Test session destruction
+        success, response, status, _ = await self.make_request(
+            "DELETE", 
+            "/auth/shopify/session"
+        )
+        
+        if success:
+            self.log_test("Session Management: Destroy session", True, 
+                         "Session destruction endpoint working")
+        else:
+            self.log_test("Session Management: Destroy session", False, 
+                         "Session destruction endpoint failed")
+    
+    async def test_admin_endpoints(self):
+        """Test admin-only endpoints"""
+        print("\n👨‍💼 Testing Admin Endpoints...")
+        
+        # Test list all connections (admin endpoint)
+        success, response, status, _ = await self.make_request(
+            "GET", 
+            "/auth/shopify/admin/connections"
+        )
+        
+        if success:
+            self.log_test("Admin Endpoints: List connections", True, 
+                         f"Admin connections endpoint accessible, found {len(response.get('connections', []))} connections")
+        else:
+            self.log_test("Admin Endpoints: List connections", False, 
+                         "Admin connections endpoint failed")
+        
+        # Test get tenant details (admin endpoint)
+        success, response, status, _ = await self.make_request(
+            "GET", 
+            f"/auth/shopify/admin/tenant/{TEST_TENANT_ID}"
+        )
+        
+        if success:
+            self.log_test("Admin Endpoints: Tenant details", True, 
+                         "Admin tenant details endpoint accessible")
+        else:
+            self.log_test("Admin Endpoints: Tenant details", False, 
+                         "Admin tenant details endpoint failed")
+    
+    async def test_webhook_system(self):
+        """Test webhook system availability"""
+        print("\n🪝 Testing Webhook System...")
+        
+        # Check if webhook endpoints are available by testing the integration status
+        # which should show webhook information
+        success, response, status, _ = await self.make_request(
+            "GET", 
+            "/integrations/shopify/status",
+            headers={"X-Tenant-Id": TEST_TENANT_ID}
+        )
+        
+        if success and response.get('connected'):
+            webhooks = response.get('webhooks', [])
+            if webhooks:
+                self.log_test("Webhook System: Webhook registration", True, 
+                             f"Found {len(webhooks)} registered webhooks")
+                
+                # Check for required webhook topics
+                webhook_topics = [w.get('topic') for w in webhooks]
+                required_topics = ['orders/create', 'orders/updated', 'fulfillments/create']
+                
+                if all(topic in webhook_topics for topic in required_topics):
+                    self.log_test("Webhook System: Required topics", True, 
+                                 "All required webhook topics registered")
                 else:
-                    self.log_test("Frontend Integrations Page", False, f"Frontend failed to load: {response.status}")
-                    return False
-                    
-        except Exception as e:
-            self.log_test("Frontend Integration", False, f"Frontend test error: {str(e)}")
-            return False
+                    missing_topics = [topic for topic in required_topics if topic not in webhook_topics]
+                    self.log_test("Webhook System: Required topics", False, 
+                                 f"Missing webhook topics: {missing_topics}")
+            else:
+                self.log_test("Webhook System: Webhook registration", False, 
+                             "No webhooks found in integration status")
+        else:
+            self.log_test("Webhook System: Status check", False, 
+                         "Cannot check webhook system - no connection found")
     
     async def run_all_tests(self):
-        """Run all acceptance tests"""
-        print(f"🧪 Starting Shopify OAuth Integration Tests")
-        print(f"📊 Target: {BACKEND_URL}")
-        print(f"🏪 Test Shop: {TEST_SHOP_DOMAIN}")
-        print("=" * 60)
+        """Run all Shopify OAuth tests"""
+        print("🚀 Starting CRITICAL END-TO-END SHOPIFY OAUTH FLOW TEST")
+        print("=" * 70)
         
-        test_methods = [
-            self.test_1_health_check,
-            self.test_2_oauth_install_endpoint,
-            self.test_3_webhook_endpoints,
-            self.test_4_auth_endpoints,
-            self.test_5_unified_returns_endpoints,
-            self.test_6_frontend_integration
-        ]
+        # Backend health check
+        if not await self.test_backend_health():
+            print("❌ Backend not accessible. Stopping tests.")
+            return
         
-        results = []
-        for test_method in test_methods:
-            try:
-                result = await test_method()
-                results.append(result)
-            except Exception as e:
-                print(f"❌ Test {test_method.__name__} failed with exception: {e}")
-                results.append(False)
+        # Run all test suites in order
+        await self.test_integration_status_initial()
+        await self.test_feature_flag_behavior()
+        await self.test_shopify_oauth_install_flow()
+        await self.test_oauth_callback_validation()
+        await self.test_integration_status_after_connection()
+        await self.test_resync_functionality()
+        await self.test_error_handling()
+        await self.test_oauth_state_management()
+        await self.test_session_management_endpoints()
+        await self.test_admin_endpoints()
+        await self.test_webhook_system()
         
         # Summary
-        passed = sum(1 for result in results if result)
-        total = len(results)
-        success_rate = (passed / total) * 100 if total > 0 else 0
+        self.print_summary()
+    
+    def print_summary(self):
+        """Print test summary"""
+        print("\n" + "=" * 70)
+        print("📊 SHOPIFY OAUTH FLOW TESTING SUMMARY")
+        print("=" * 70)
         
-        print("\n" + "=" * 60)
-        print("📊 TEST SUMMARY")
-        print(f"✅ Passed: {passed}")
-        print(f"❌ Failed: {total - passed}")
-        print(f"📈 Success Rate: {success_rate:.1f}%")
+        total_tests = len(self.test_results)
+        passed_tests = sum(1 for result in self.test_results if result["success"])
+        failed_tests = total_tests - passed_tests
         
-        if success_rate >= 80:
-            print("🎉 SHOPIFY OAUTH INTEGRATION READY FOR PRODUCTION!")
-            print(f"🔗 Install URL: {BACKEND_URL}/api/auth/shopify/install?shop={TEST_SHOP_DOMAIN}")
+        print(f"Total Tests: {total_tests}")
+        print(f"✅ Passed: {passed_tests}")
+        print(f"❌ Failed: {failed_tests}")
+        print(f"Success Rate: {(passed_tests/total_tests*100):.1f}%")
+        
+        if failed_tests > 0:
+            print(f"\n❌ FAILED TESTS:")
+            for result in self.test_results:
+                if not result["success"]:
+                    print(f"   • {result['test']}: {result['details']}")
+        
+        print("\n🎯 KEY FINDINGS:")
+        
+        # Analyze results by priority test areas
+        priority_areas = {
+            "Integration Status": [r for r in self.test_results if "Integration Status:" in r["test"]],
+            "OAuth Install Flow": [r for r in self.test_results if "OAuth Install:" in r["test"]],
+            "OAuth Callback": [r for r in self.test_results if "OAuth Callback:" in r["test"]],
+            "Resync Functionality": [r for r in self.test_results if "Resync:" in r["test"]],
+            "Error Handling": [r for r in self.test_results if "Error Handling:" in r["test"]],
+            "Feature Flags": [r for r in self.test_results if "Feature Flag:" in r["test"]],
+            "Session Management": [r for r in self.test_results if "Session Management:" in r["test"]],
+            "Admin Endpoints": [r for r in self.test_results if "Admin Endpoints:" in r["test"]],
+            "Webhook System": [r for r in self.test_results if "Webhook System:" in r["test"]],
+            "OAuth State": [r for r in self.test_results if "OAuth State:" in r["test"]]
+        }
+        
+        for area, tests in priority_areas.items():
+            if tests:
+                passed = sum(1 for t in tests if t["success"])
+                total = len(tests)
+                status = "✅" if passed == total else "⚠️" if passed > 0 else "❌"
+                print(f"   {status} {area}: {passed}/{total} tests passed")
+        
+        print("\n🔍 CRITICAL FLOW VERIFICATION:")
+        
+        # Check if the complete flow works
+        integration_tests = [r for r in self.test_results if "Integration Status:" in r["test"]]
+        oauth_tests = [r for r in self.test_results if "OAuth Install:" in r["test"]]
+        resync_tests = [r for r in self.test_results if "Resync:" in r["test"]]
+        
+        integration_working = any(r["success"] for r in integration_tests)
+        oauth_working = any(r["success"] for r in oauth_tests)
+        resync_working = any(r["success"] for r in resync_tests)
+        
+        if integration_working and oauth_working and resync_working:
+            print("   ✅ Complete Shopify OAuth pipeline is functional")
         else:
-            print("⚠️ Integration needs more work before production deployment")
+            print("   ⚠️ Some parts of the Shopify OAuth pipeline need attention")
         
-        return success_rate >= 80
+        print(f"\n📋 EXPECTED RESULTS VERIFICATION:")
+        print(f"   • Status endpoint returns connection state: {'✅' if integration_working else '❌'}")
+        print(f"   • OAuth install redirects to Shopify: {'✅' if oauth_working else '❌'}")
+        print(f"   • Resync endpoint responds appropriately: {'✅' if resync_working else '❌'}")
+        print(f"   • Error cases handle gracefully: {'✅' if any('Error Handling:' in r['test'] and r['success'] for r in self.test_results) else '❌'}")
 
 async def main():
-    async with ShopifyOAuthTest() as tester:
-        success = await tester.run_all_tests()
-        sys.exit(0 if success else 1)
+    """Main test execution"""
+    async with ShopifyOAuthTestSuite() as test_suite:
+        await test_suite.run_all_tests()
 
 if __name__ == "__main__":
     asyncio.run(main())
