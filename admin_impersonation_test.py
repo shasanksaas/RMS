@@ -65,10 +65,15 @@ class AdminImpersonationTestSuite:
                 "tenant_id": TARGET_TENANT
             }
             
+            headers = {
+                "Content-Type": "application/json",
+                "X-Tenant-Id": TARGET_TENANT
+            }
+            
             async with self.session.post(
                 f"{BACKEND_URL}/users/login",
                 json=login_data,
-                headers={"Content-Type": "application/json"}
+                headers=headers
             ) as response:
                 response_data = await response.json()
                 
