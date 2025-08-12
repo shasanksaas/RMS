@@ -363,88 +363,67 @@ class AdminImpersonationTestSuite:
             return False
     
     async def test_create_shopify_connection(self):
-        """Create/Update Shopify connection for tenant-rms34"""
-        print("\n🔧 Testing Shopify Connection Creation/Update...")
+        """Test Shopify OAuth flow initiation for tenant-rms34"""
+        print("\n🔧 Testing Shopify OAuth Flow Initiation...")
         
         if not self.admin_token:
-            self.log_test("Shopify Connection Creation", False, "No admin token available")
+            self.log_test("Shopify OAuth Flow", False, "No admin token available")
             return False
         
         try:
             headers = {
                 "Authorization": f"Bearer {self.admin_token}",
-                "Content-Type": "application/json",
-                "X-Tenant-Id": TARGET_TENANT
+                "Content-Type": "application/json"
             }
             
-            # Try to create/update Shopify integration record
-            integration_data = {
-                "shop_domain": SHOPIFY_SHOP_DOMAIN,
-                "access_token": "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",  # From backend/.env
-                "status": "connected",
-                "scopes": ["read_orders", "read_fulfillments", "read_products", "read_customers", "read_returns", "write_returns"],
-                "webhook_endpoints": [
-                    "orders/create",
-                    "orders/updated", 
-                    "fulfillments/create",
-                    "fulfillments/update",
-                    "app/uninstalled"
-                ]
-            }
-            
-            # First try to update existing connection
-            async with self.session.put(
-                f"{BACKEND_URL}/auth/shopify/connection",
-                json=integration_data,
+            # Test OAuth install URL generation for rms34 shop
+            async with self.session.get(
+                f"{BACKEND_URL}/auth/shopify/install",
+                params={"shop": "rms34"},
                 headers=headers
             ) as response:
                 response_data = await response.json()
                 
                 if response.status == 200:
+                    install_url = response_data.get("install_url", "")
+                    shop = response_data.get("shop", "")
+                    state = response_data.get("state", "")
+                    
                     self.log_test(
-                        "Shopify Connection Update",
+                        "Shopify OAuth Install URL",
                         True,
-                        f"Connection updated for {SHOPIFY_SHOP_DOMAIN}"
+                        f"OAuth URL generated for shop: {shop}, state length: {len(state)}"
                     )
-                    return True
-                elif response.status == 404:
-                    # Connection doesn't exist, try to create it
-                    async with self.session.post(
-                        f"{BACKEND_URL}/auth/shopify/connection",
-                        json=integration_data,
-                        headers=headers
-                    ) as create_response:
-                        create_data = await create_response.json()
-                        
-                        if create_response.status == 201 or create_response.status == 200:
-                            self.log_test(
-                                "Shopify Connection Creation",
-                                True,
-                                f"New connection created for {SHOPIFY_SHOP_DOMAIN}"
-                            )
-                            return True
-                        else:
-                            self.log_test(
-                                "Shopify Connection Creation",
-                                False,
-                                f"Creation failed with status {create_response.status}",
-                                create_data
-                            )
-                            return False
+                    
+                    # Verify the install URL contains expected components
+                    if "rms34.myshopify.com" in install_url and "oauth/authorize" in install_url:
+                        self.log_test(
+                            "Shopify OAuth URL Validation",
+                            True,
+                            f"OAuth URL contains correct shop domain and OAuth path"
+                        )
+                        return True
+                    else:
+                        self.log_test(
+                            "Shopify OAuth URL Validation",
+                            False,
+                            f"OAuth URL missing expected components: {install_url[:100]}..."
+                        )
+                        return False
                 else:
                     self.log_test(
-                        "Shopify Connection Update",
+                        "Shopify OAuth Install URL",
                         False,
-                        f"Update failed with status {response.status}",
+                        f"OAuth URL generation failed with status {response.status}",
                         response_data
                     )
                     return False
                     
         except Exception as e:
             self.log_test(
-                "Shopify Connection Creation",
+                "Shopify OAuth Flow",
                 False,
-                f"Exception during connection setup: {str(e)}"
+                f"Exception during OAuth flow test: {str(e)}"
             )
             return False
     
