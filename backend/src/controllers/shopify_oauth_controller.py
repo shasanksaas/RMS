@@ -172,6 +172,8 @@ async def debug_oauth_state(
             "error": str(e),
             "traceback": str(e)
         }
+
+@router.get("/status", response_model=ShopifyConnectionResponse)
 async def get_shopify_connection_status(
     tenant_id: str = Query(..., description="Tenant ID to check connection for")
 ):
