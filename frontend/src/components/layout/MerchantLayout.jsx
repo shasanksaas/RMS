@@ -12,6 +12,7 @@ import { useAuth } from '../../contexts/AuthContext';
 const MerchantLayout = ({ isOnline }) => {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { user } = useAuth();
 
   const navigation = [
     { name: 'Dashboard', href: '/app/dashboard', icon: BarChart3 },
