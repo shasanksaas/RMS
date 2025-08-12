@@ -38,7 +38,7 @@ const TenantManager = () => {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  // State management
+  // State management - NO MOCK DATA
   const [tenants, setTenants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -51,38 +51,41 @@ const TenantManager = () => {
     totalPages: 0
   });
 
-  // Check admin access
-  useEffect(() => {
+  // Load tenants function - REAL API CALLS ONLY
+  const loadTenants = useCallback(async () => {
     if (!user || user.role !== 'admin') {
-      navigate('/auth/login?error=access_denied');
       return;
     }
-  }, [user, navigate]);
 
-  // Load tenants function
-  const loadTenants = useCallback(async () => {
     try {
       setLoading(true);
+      
+      // Call REAL API - no mocks
       const response = await tenantService.listTenants(
         pagination.page, 
         pagination.pageSize,
         statusFilter === 'all' ? null : statusFilter
       );
 
+      // Set real data from API
       setTenants(response.tenants || []);
       setPagination(prev => ({
         ...prev,
         total: response.total || 0,
-        totalPages: response.total_pages || 0
+        totalPages: Math.ceil((response.total || 0) / prev.pageSize)
       }));
+
+      console.log(`✅ Loaded ${response.tenants?.length || 0} real tenants from database`);
+
     } catch (error) {
-      console.error('Failed to load tenants:', error);
+      console.error('❌ Failed to load real tenants:', error);
       toast({
         title: "Failed to load tenants",
         description: error.message || "Please try again",
         variant: "destructive"
       });
-      // Set empty state on error
+      
+      // Set empty state on error - NO FALLBACK TO MOCKS
       setTenants([]);
       setPagination(prev => ({
         ...prev,
@@ -92,7 +95,7 @@ const TenantManager = () => {
     } finally {
       setLoading(false);
     }
-  }, [pagination.page, pagination.pageSize, statusFilter, toast]);
+  }, [pagination.page, pagination.pageSize, statusFilter, toast, user]);
 
   // Load tenants on component mount and when dependencies change
   useEffect(() => {
@@ -100,6 +103,14 @@ const TenantManager = () => {
       loadTenants();
     }
   }, [loadTenants, user]);
+
+  // Check admin access
+  useEffect(() => {
+    if (!user || user.role !== 'admin') {
+      navigate('/auth/login?error=access_denied');
+      return;
+    }
+  }, [user, navigate]);
 
   const handleCreateTenant = async (tenantData) => {
     try {
