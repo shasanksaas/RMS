@@ -330,7 +330,7 @@ class AdminAuthTestSuite:
         # Skip health check and proceed directly to admin tests
         print("ℹ️  Skipping health check - proceeding directly to admin authentication tests")
         
-        # Test 2: Admin user exists and login works
+        # Test 1: Admin user exists and login works
         user_exists, login_response = await self.test_admin_user_exists_in_database()
         
         if not user_exists or not login_response:
