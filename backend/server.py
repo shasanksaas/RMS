@@ -719,6 +719,7 @@ api_router.include_router(tenant_admin_router)  # Real tenant CRUD with imperson
 
 # Shopify OAuth & Webhook Routes
 api_router.include_router(shopify_oauth_router)  # Shopify OAuth flow
+api_router.include_router(shopify_integration_router)  # Shopify integration status/resync endpoints
 api_router.include_router(shopify_webhook_router)  # Shopify webhooks
 
 api_router.include_router(integration_router)
