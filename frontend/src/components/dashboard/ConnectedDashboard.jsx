@@ -33,30 +33,67 @@ const ConnectedDashboard = () => {
   const loadConnectionStatus = async () => {
     try {
       const backendUrl = process.env.REACT_APP_BACKEND_URL;
-      const tenantId = tenantIdFromUrl || localStorage.getItem('tenant_id');
+      
+      // Get tenant ID from multiple sources for impersonation support
+      let tenantId = tenantIdFromUrl || localStorage.getItem('tenant_id') || localStorage.getItem('currentTenant');
+      
+      // Check if this is an impersonation session from URL params
+      const impersonatedParam = searchParams.get('impersonated');
+      const tenantParam = searchParams.get('tenant');
+      
+      if (impersonatedParam === 'true' && tenantParam) {
+        tenantId = tenantParam;
+        console.log('🔐 Impersonation session detected, using tenant:', tenantId);
+      }
       
       if (!tenantId) {
         setConnectionStatus({ connected: false, error: 'No tenant ID found' });
         return;
       }
 
-      const response = await fetch(`${backendUrl}/api/auth/shopify/status?tenant_id=${tenantId}`);
+      // Get authentication token (supports both localStorage and cookies)
+      const token = localStorage.getItem('auth_token');
+      const headers = {
+        'Content-Type': 'application/json'
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(
+        `${backendUrl}/api/auth/shopify/status?tenant_id=${tenantId}`, 
+        { 
+          method: 'GET',
+          headers,
+          credentials: 'include'  // Include cookies for impersonation sessions
+        }
+      );
       
       if (response.ok) {
         const status = await response.json();
         setConnectionStatus(status);
         
-        // Store tenant info in localStorage for future use
-        if (status.connected) {
-          localStorage.setItem('tenant_id', status.tenant_id);
-          localStorage.setItem('shop_domain', status.shop);
+        console.log('✅ Connection status loaded:', status);
+        
+        // Store tenant info in localStorage for future use (only if not impersonating)
+        if (status.connected && !impersonatedParam) {
+          localStorage.setItem('tenant_id', tenantId);
+          localStorage.setItem('shop_domain', status.shop_domain || '');
         }
       } else {
-        setConnectionStatus({ connected: false, error: 'Failed to load status' });
+        const errorData = await response.json().catch(() => ({}));
+        setConnectionStatus({ 
+          connected: false, 
+          error: errorData.detail || `HTTP ${response.status}` 
+        });
       }
     } catch (error) {
-      console.error('Failed to load connection status:', error);
-      setConnectionStatus({ connected: false, error: error.message });
+      console.error('❌ Error loading connection status:', error);
+      setConnectionStatus({ 
+        connected: false, 
+        error: error.message || 'Failed to load connection status' 
+      });
     } finally {
       setIsLoading(false);
     }
