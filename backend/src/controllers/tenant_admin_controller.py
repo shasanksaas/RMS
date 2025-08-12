@@ -14,7 +14,7 @@ import logging
 from typing import Optional
 
 from src.middleware.admin_guard import require_admin
-from src.models.user import User
+from src.models.user import UserDB as User
 from src.models.tenant_admin import (
     TenantCreateRequest, 
     TenantResponse, 
