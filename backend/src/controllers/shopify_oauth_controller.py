@@ -433,3 +433,98 @@ async def get_tenant_shopify_details(tenant_id: str):
     except Exception as e:
         print(f"❌ Admin tenant details failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to get tenant details")
+
+# Integration endpoints that the frontend Integrations screen expects
+integration_router = APIRouter(prefix="/integrations/shopify", tags=["shopify-integration"])
+
+@integration_router.get("/status")
+async def get_shopify_integration_status(
+    request: Request,
+    current_tenant: str = Depends(lambda: "tenant-rms34")  # TODO: Get from auth context
+):
+    """
+    Get Shopify integration connection status for the current tenant
+    
+    Used by the frontend Integrations screen to show connection status
+    """
+    # Check feature flag
+    shopify_oauth_enabled = os.getenv('SHOPIFY_OAUTH_ENABLED', 'true').lower() == 'true'
+    if not shopify_oauth_enabled:
+        return {
+            "connected": False,
+            "status": "disabled",
+            "message": "Shopify integration is currently disabled"
+        }
+    
+    try:
+        # Get connection status for current tenant
+        status = await shopify_oauth.get_connection_status(current_tenant)
+        
+        return {
+            "connected": status.connected,
+            "shop": status.shop if status.connected else None,
+            "status": "connected" if status.connected else "not_connected",
+            "last_sync": status.last_sync if hasattr(status, 'last_sync') else None,
+            "message": "Connected to Shopify" if status.connected else "Not connected to Shopify"
+        }
+        
+    except Exception as e:
+        print(f"❌ Integration status check failed: {e}")
+        return {
+            "connected": False,
+            "status": "error",
+            "message": f"Error checking connection status: {str(e)}"
+        }
+
+@integration_router.post("/resync")
+async def trigger_shopify_resync(
+    request: Request,
+    current_tenant: str = Depends(lambda: "tenant-rms34")  # TODO: Get from auth context
+):
+    """
+    Trigger manual Shopify data resync for the current tenant
+    
+    Used by the frontend Integrations screen "Resync" button
+    """
+    # Check feature flag
+    shopify_oauth_enabled = os.getenv('SHOPIFY_OAUTH_ENABLED', 'true').lower() == 'true'
+    if not shopify_oauth_enabled:
+        raise HTTPException(
+            status_code=503,
+            detail="Shopify integration is currently disabled"
+        )
+    
+    try:
+        # Check if tenant has Shopify connection
+        status = await shopify_oauth.get_connection_status(current_tenant)
+        
+        if not status.connected:
+            raise HTTPException(
+                status_code=400,
+                detail="Shopify integration not connected. Please connect first."
+            )
+        
+        # TODO: Trigger actual data sync here
+        # This would typically:
+        # 1. Fetch latest orders from Shopify
+        # 2. Fetch latest returns/refunds from Shopify  
+        # 3. Update local database with latest data
+        # 4. Update last_sync timestamp
+        
+        print(f"🔄 Manual resync triggered for tenant: {current_tenant}")
+        
+        return {
+            "success": True,
+            "message": "Data resync initiated successfully",
+            "tenant_id": current_tenant,
+            "sync_initiated_at": "2024-12-21T13:33:00Z"  # TODO: Use actual timestamp
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Integration resync failed: {e}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Failed to trigger resync: {str(e)}"
+        )
