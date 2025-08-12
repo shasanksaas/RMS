@@ -128,7 +128,7 @@ const TenantManager = () => {
       });
 
       setShowCreateModal(false);
-      loadTenants(); // Reload list
+      loadTenants(); // Reload real data
     } catch (error) {
       toast({
         title: "Failed to create tenant",
@@ -138,67 +138,69 @@ const TenantManager = () => {
     }
   };
 
-  const handleArchiveTenant = async (tenantId) => {
-    if (!window.confirm(`Are you sure you want to archive tenant ${tenantId}? This will prevent new signups.`)) {
+  const handleDeleteTenant = async (tenantId, tenantName) => {
+    if (!window.confirm(`Are you sure you want to delete tenant "${tenantName}" (${tenantId})? This action cannot be undone.`)) {
       return;
     }
 
     try {
-      await tenantService.archiveTenant(tenantId);
+      await tenantService.deleteTenant(tenantId);
       toast({
-        title: "Tenant Archived",
-        description: `Tenant ${tenantId} has been archived successfully.`,
+        title: "Tenant Deleted",
+        description: `Tenant "${tenantName}" has been deleted successfully.`,
         variant: "default"
       });
-      loadTenants();
+      loadTenants(); // Reload real data
     } catch (error) {
       toast({
-        title: "Failed to archive tenant",
+        title: "Failed to delete tenant",
         description: error.message || "Please try again",
         variant: "destructive"
       });
     }
   };
 
-  const handleReactivateTenant = async (tenantId) => {
+  const handleImpersonateTenant = async (tenantId, tenantName) => {
     try {
-      await tenantService.reactivateTenant(tenantId);
+      console.log(`🔐 Admin impersonating tenant: ${tenantId}`);
+      
+      // This will redirect the browser to the tenant dashboard
+      await tenantService.impersonateTenant(tenantId);
+      
+      // If we reach here, something went wrong with the redirect
       toast({
-        title: "Tenant Reactivated",
-        description: `Tenant ${tenantId} is now active again.`,
+        title: "Impersonation Started",
+        description: `Opening dashboard for ${tenantName}...`,
         variant: "default"
       });
-      loadTenants();
+      
     } catch (error) {
+      console.error('❌ Impersonation failed:', error);
       toast({
-        title: "Failed to reactivate tenant",
+        title: "Failed to open tenant dashboard",
         description: error.message || "Please try again",
         variant: "destructive"
       });
     }
   };
 
-  const filteredTenants = (tenants || []).filter(tenant =>
-    tenant.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    tenant.tenant_id?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filter tenants based on search query
+  const filteredTenants = tenants.filter(tenant => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      tenant.tenant_id.toLowerCase().includes(query) ||
+      tenant.name.toLowerCase().includes(query) ||
+      (tenant.shop_domain && tenant.shop_domain.toLowerCase().includes(query))
+    );
+  });
 
-  const formatDate = (dateString) => {
-    if (!dateString) return 'Never';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
-  const copyTenantId = (tenantId) => {
-    navigator.clipboard.writeText(tenantId);
-    toast({
-      title: "Copied!",
-      description: `Tenant ID ${tenantId} copied to clipboard`,
-      variant: "default"
-    });
+  // Calculate stats from real data
+  const stats = {
+    total: tenants.length,
+    active: tenants.filter(t => t.connected_provider === 'shopify').length,
+    new: tenants.filter(t => !t.connected_provider).length,
+    archived: 0 // Would need to include archived tenants in API
   };
 
   if (!user || user.role !== 'admin') {
