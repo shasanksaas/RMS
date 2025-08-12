@@ -519,7 +519,8 @@ async def trigger_shopify_resync(
             "success": True,
             "message": "Data resync initiated successfully",
             "tenant_id": current_tenant,
-            "sync_initiated_at": "2024-12-21T13:33:00Z"  # TODO: Use actual timestamp
+            "job_id": f"sync_{current_tenant}_{int(time.time())}",  # Add job_id that frontend expects
+            "sync_initiated_at": datetime.utcnow().isoformat()
         }
         
     except HTTPException:
