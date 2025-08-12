@@ -338,21 +338,21 @@ class AdminAuthTestSuite:
             await self.print_summary()
             return
         
-        # Test 3: Login endpoint functionality
+        # Test 2: Login endpoint functionality
         login_ok, login_data = await self.test_admin_login_endpoint()
         if login_ok and login_data:
             login_response = login_data  # Use the fresh login data
         
-        # Test 4: Role verification
+        # Test 3: Role verification
         await self.test_admin_role_verification(login_response)
         
-        # Test 5: Tenant ID verification
+        # Test 4: Tenant ID verification
         await self.test_tenant_id_verification(login_response)
         
-        # Test 6: JWT token and user info
+        # Test 5: JWT token and user info
         await self.test_jwt_token_and_user_info(login_response)
         
-        # Test 7: Token validation
+        # Test 6: Token validation
         await self.test_token_validation()
         
         # Print summary
