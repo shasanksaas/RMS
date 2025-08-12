@@ -12,8 +12,7 @@ import GoogleCallback from './components/auth/GoogleCallback';
 import ForgotPassword from './components/auth/ForgotPassword';
 import { ToastProvider } from './components/ui/use-toast';
 
-// Public Components
-import MerchantSignup from './pages/public/MerchantSignup';
+import SimpleLogin from './components/SimpleLogin';
 
 // Layout Components
 import MerchantLayout from './components/layout/MerchantLayout';
