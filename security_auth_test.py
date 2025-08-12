@@ -195,11 +195,14 @@ class SecurityAuthTestSuite:
         # Test 1: Admin login with correct credentials
         login_data = {
             "email": ADMIN_CREDENTIALS["email"],
-            "password": ADMIN_CREDENTIALS["password"],
-            "tenant_id": ADMIN_CREDENTIALS["tenant_id"]
+            "password": ADMIN_CREDENTIALS["password"]
         }
         
-        success, response, status = await self.make_request("POST", "/users/login", login_data)
+        login_headers = {
+            "X-Tenant-Id": ADMIN_CREDENTIALS["tenant_id"]
+        }
+        
+        success, response, status = await self.make_request("POST", "/users/login", login_data, login_headers)
         
         if success and response.get("access_token"):
             self.admin_token = response["access_token"]
