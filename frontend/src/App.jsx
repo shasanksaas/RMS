@@ -88,25 +88,21 @@ const App = () => {
         <AuthProvider>
           <BrowserRouter>
             <Routes>
-              {/* Auth Routes (Public - No Authentication Required) */}
-              <Route path="/auth/login" element={
-                <ProtectedRoute requireAuth={false} redirectTo="/app/dashboard">
-                  <Login />
-                </ProtectedRoute>
-              } />
-              <Route path="/auth/register" element={
-                <ProtectedRoute requireAuth={false} redirectTo="/app/dashboard">
-                  <Register />
-                </ProtectedRoute>
-              } />
-              <Route path="/auth/forgot-password" element={
-                <ProtectedRoute requireAuth={false} redirectTo="/app/dashboard">
-                  <ForgotPassword />
-                </ProtectedRoute>
-              } />
+              {/* Main Login Route - Shopify OAuth */}
+              <Route path="/auth/login" element={<ShopifyLogin />} />
+              <Route path="/login" element={<ShopifyLogin />} />
+              
+              {/* Connected Dashboard */}
+              <Route path="/app/dashboard" element={<ConnectedDashboard />} />
+              
+              {/* Legacy Auth Routes (Disabled) */}
+              {/* 
+              <Route path="/auth/register" element={<Register />} />
+              <Route path="/auth/forgot-password" element={<ForgotPassword />} />
               <Route path="/auth/google/callback" element={<GoogleCallback />} />
+              */}
 
-              {/* Public Merchant Signup Routes */}
+              {/* Public Merchant Signup Routes (Legacy - may be removed) */}
               <Route path="/signup" element={<MerchantSignup />} />
               <Route path="/signup/:tenantId" element={<MerchantSignup />} />
               
