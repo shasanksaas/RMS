@@ -22,7 +22,7 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
-  const { login: contextLogin } = useAuth();
+  const { login: contextLogin, user } = useAuth();
 
   // Feature flag for OAuth tab visibility (temporarily force enabled for testing)
   const isOAuthTabEnabled = true; // process.env.REACT_APP_LOGIN_OAUTH_TAB_ENABLED === 'true';
