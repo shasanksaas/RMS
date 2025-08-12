@@ -245,11 +245,10 @@ class SecurityAuthTestSuite:
         # Test 2: Admin login with wrong password
         wrong_password_data = {
             "email": ADMIN_CREDENTIALS["email"],
-            "password": "wrongpassword",
-            "tenant_id": ADMIN_CREDENTIALS["tenant_id"]
+            "password": "wrongpassword"
         }
         
-        success, response, status = await self.make_request("POST", "/users/login", wrong_password_data)
+        success, response, status = await self.make_request("POST", "/users/login", wrong_password_data, login_headers)
         
         if not success and status in [401, 403]:
             self.log_test("Admin Login: Wrong password rejection", True, 
