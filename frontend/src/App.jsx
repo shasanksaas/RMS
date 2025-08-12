@@ -94,9 +94,12 @@ const App = () => {
         <AuthProvider>
           <BrowserRouter>
             <Routes>
-              {/* Merchant Login Route - Shopify OAuth */}
-              <Route path="/auth/login" element={<ShopifyLogin />} />
-              <Route path="/login" element={<ShopifyLogin />} />
+              {/* Simple Email/Password Login for Returns Portal */}
+              <Route path="/auth/login" element={<Login />} />
+              <Route path="/login" element={<Login />} />
+              
+              {/* Shopify OAuth (moved to different route) */}
+              <Route path="/auth/shopify" element={<ShopifyLogin />} />
               
               {/* Admin Login Route - Email/Password */}
               <Route path="/admin/login" element={<AdminLogin />} />
