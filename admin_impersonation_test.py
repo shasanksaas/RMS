@@ -243,33 +243,43 @@ class AdminImpersonationTestSuite:
                 "Content-Type": "application/json"
             }
             
-            # Start impersonation session
+            # Start impersonation session - this endpoint redirects, so don't follow redirects
             async with self.session.post(
                 f"{BACKEND_URL}/admin/tenants/{TARGET_TENANT}/impersonate",
-                headers=headers
+                headers=headers,
+                allow_redirects=False
             ) as response:
-                response_data = await response.json()
                 
-                if response.status == 200:
-                    self.impersonation_token = response_data.get("impersonation_token")
-                    session_info = response_data.get("session", {})
+                if response.status == 302:
+                    # Successful redirect means impersonation started
+                    redirect_url = response.headers.get("Location", "")
                     
-                    if self.impersonation_token:
+                    # Extract session token from cookies if available
+                    cookies = response.cookies
+                    session_token = cookies.get("session_token")
+                    
+                    if session_token:
+                        self.impersonation_token = session_token.value
                         self.log_test(
                             "Admin Impersonation Start",
                             True,
-                            f"Impersonation started, token length: {len(self.impersonation_token)}"
+                            f"Impersonation started, redirect to: {redirect_url}, token length: {len(self.impersonation_token)}"
                         )
                         return True
                     else:
                         self.log_test(
                             "Admin Impersonation Start",
                             False,
-                            "No impersonation token received",
-                            response_data
+                            f"Redirect successful but no session token in cookies, redirect: {redirect_url}"
                         )
                         return False
                 else:
+                    # Try to get response data
+                    try:
+                        response_data = await response.json()
+                    except:
+                        response_data = await response.text()
+                    
                     self.log_test(
                         "Admin Impersonation Start",
                         False,
