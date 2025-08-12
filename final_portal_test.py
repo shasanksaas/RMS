@@ -9,7 +9,7 @@ import aiohttp
 import json
 
 # Configuration
-BACKEND_URL = "https://f07a6717-33e5-45c0-b306-b76d55047333.preview.emergentagent.com/api"
+BACKEND_URL = "https://returnhub-1.preview.emergentagent.com/api"
 TEST_TENANT_ID = "tenant-rms34"
 
 async def comprehensive_portal_test():

@@ -15,9 +15,9 @@ The white screen after login is caused by an infinite re-render loop in the Auth
 
 1. **Login with credentials above**
 2. **If you get white screen after login, manually navigate to:**
-   - **Admin:** https://f07a6717-33e5-45c0-b306-b76d55047333.preview.emergentagent.com/admin/dashboard
-   - **Merchant:** https://f07a6717-33e5-45c0-b306-b76d55047333.preview.emergentagent.com/app/dashboard
-   - **Customer:** https://f07a6717-33e5-45c0-b306-b76d55047333.preview.emergentagent.com/returns/start
+   - **Admin:** https://returnhub-1.preview.emergentagent.com/admin/dashboard
+   - **Merchant:** https://returnhub-1.preview.emergentagent.com/app/dashboard
+   - **Customer:** https://returnhub-1.preview.emergentagent.com/returns/start
 
 3. **After manual navigation, the authentication should work properly**
 

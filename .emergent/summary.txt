@@ -1,111 +1,39 @@
 <analysis>
-The AI engineer's work transitioned from stabilizing the core multi-tenant SaaS application (returns, Shopify sync, performance) to implementing a robust user management system and, most recently, a comprehensive tenant management system. Initial efforts resolved critical issues like duplicate data, N+1 queries, and real-time Shopify synchronization. A significant phase involved building a production-ready user management system with email/password and Google OAuth. This required extensive backend development (models, services, controllers) and initial frontend UI. Challenges included Google OAuth redirect URI mismatches and persistent React infinite re-render loops in the authentication flow, which were meticulously debugged and fixed. The current work has progressed to building a strict tenant isolation system, with the backend fully implemented and tested, and frontend component creation for tenant management and merchant signup currently underway.
+The AI engineer's work evolved from stabilizing the core SaaS application to building robust user and tenant management systems. Initial efforts fixed critical issues like data duplication and N+1 queries, followed by a production-ready email/password and Google OAuth user system. This phase involved extensive debugging of React infinite re-render loops and Google OAuth redirect mismatches. Subsequently, a strict multi-tenant system was implemented, with backend complete and frontend components initiated. Most recently, the focus shifted to a single-click Shopify OAuth login for merchants, aiming to streamline onboarding. This involved creating new backend services and controllers for OAuth and webhooks, and updating frontend components. Challenges included resolving persistent frontend login form issues (requiring a troubleshooter agent call for React state management), and critical Shopify OAuth errors (CSRF, HMAC verification, redirect URL whitelisting, Install app button not appearing), which often pointed to external Shopify app configuration. The work concluded by separating admin email/password login from merchant Shopify OAuth.
 </analysis>
 
 <product_requirements>
-The application is a multi-tenant Returns Management SaaS platform for e-commerce, primarily integrating with Shopify. It streamlines return processes for merchants and customers, offering a customer-facing portal and a merchant dashboard. Key features include Shopify OAuth, real-time order/return sync, a configurable rules engine, AI suggestions, label issuance, email notifications, and analytics, all built with strict multi-tenancy. The Elite-Grade Returns Creation system supports Shopify and local database order lookups, policy previews, and detailed return APIs. User stories cover customer-initiated returns, merchant review, manual creation, automated decisions, live data sync, label/refund processing, and robust security.
-
-Recently, the scope expanded to a complete user management structure with Google OAuth. The latest requirement focuses on a strict Tenant Management System. Admins need to create tenants quickly, each with a unique  and  (later changed to  for merchant signup). Merchants sign up using this , claiming the tenant. RBAC is lightweight: admins manage tenants, merchants see only their data. The system must enforce zero data leakage between tenants, show empty states for unconnected stores (e.g., without Shopify), and maintain end-to-end tenant boundaries across API, DB, webhooks, jobs, and UI.
+The application is a multi-tenant Returns Management SaaS platform for e-commerce, primarily integrating with Shopify. It provides customer and merchant portals for streamlined returns, including Shopify OAuth, real-time sync, a configurable rules engine, AI suggestions, label issuance, email notifications, and analytics. It strictly enforces multi-tenancy to prevent data leakage. The user initially required a complete user management system with Google OAuth and subsequently a strict Tenant Management System. Admins need to create tenants quickly, with merchants signing up using a  to claim it. Role-Based Access Control (RBAC) ensures admin manages tenants and merchants see only their data. Unconnected stores should display empty states. The latest, overriding requirement is a Single-Click Shopify OAuth Login for merchants. This flow must authenticate the merchant, auto-provision or attach a tenant, save encrypted Shopify tokens, register webhooks, kick off a 90-day backfill, and redirect to the dashboard with live data, all without separate signup steps. Admin access must remain a separate email/password portal to manage all merchants.
 </product_requirements>
 
 <key_technical_concepts>
-- **Multi-Tenancy**: Data segregation by  for isolation.
+- **Multi-Tenancy**: Strict data isolation per .
 - **Modular Architecture**: FastAPI backend, React frontend, MongoDB.
-- **Shopify Integration**: OAuth 2.0, GraphQL/REST APIs, Webhooks for real-time data.
-- **Hexagonal Architecture (Ports & Adapters)**: Modularity, separation of concerns.
-- **CQRS (Command Query Responsibility Segregation)**: Separating read/write models.
-- **Authentication/Authorization**: JWT, RBAC, bcrypt, Google OAuth.
+- **Shopify Integration**: OAuth 2.0, GraphQL/REST APIs, Webhooks.
+- **Hexagonal Architecture**: Ports & Adapters for separation of concerns.
+- **Authentication/Authorization**: JWT, RBAC, bcrypt, Google OAuth, Shopify OAuth.
+- **State Management**: React Context API, , , .
 </key_technical_concepts>
 
 <code_architecture>
-The application uses a FastAPI backend and React frontend with MongoDB, following a Hexagonal Architecture (Ports & Adapters) and CQRS.
+The application uses a FastAPI backend and React frontend with MongoDB, following a Hexagonal Architecture and CQRS.
 
 
 
--   : Main FastAPI application entry point.
-    -   **Importance**: Configures FastAPI, registers routers, and sets up middleware.
-    -   **Changes**: Registered new controllers (, ) and tenant isolation middleware (, ). Added  and ensured  prefix for routes. Startup event  connection check modified.
--   : Manages authentication and multi-tenancy.
-    -   **Importance**: Ensures requests are tenant-scoped and validated.
-    -   **Changes**: Modified to validate tenants and exclude new  and  routes related to new user/tenant management. Functions related to user authentication dependencies were checked.
--   : Handles Shopify API interactions.
-    -   **Importance**: Critical for fetching live Shopify order data.
-    -   **Changes**: Enhanced with real-time GraphQL methods and optimized N+1 queries.
--   : Handles merchant-facing return management APIs.
-    -   **Importance**: Displays and manages return requests in the merchant dashboard.
-    -   **Changes**: Querying  collection, comprehensive field mappings, performance optimizations, deduplication logic, and status update fixes.
--    (New File): Script to add MongoDB indexes.
-    -   **Importance**: Improves query performance for  and .
--    (New File): Script to remove existing duplicate return entries.
-    -   **Importance**: Cleans up historical duplicate data.
--    (New File): Script to add MongoDB indexes for  and .
-    -   **Importance**: Improves query performance for user management.
--   : Pydantic models for user and session data.
-    -   **Importance**: Defines structure and validation for user/session data.
-    -   **Changes**: Examined for correct model names (e.g., ).
--   : Business logic for user management.
-    -   **Importance**: Handles user creation, authentication, authorization, and data retrieval.
--   : FastAPI endpoints for user management.
-    -   **Importance**: Provides API routes for user registration, login, profile management.
--    (New File): Defines the Pydantic models for  data and related schemas.
-    -   **Importance**: Core data structure for the new tenant management system.
--    (New File): Contains the business logic for managing tenants.
-    -   **Importance**: Handles tenant creation, retrieval, updates, and claiming.
-    -   **Changes**: Underwent multiple fixes for index creation syntax and database initialization.
--    (New File): FastAPI endpoints for admin-only tenant management.
-    -   **Importance**: Provides API routes for creating, listing, getting details, and archiving tenants.
-    -   **Changes**: Modified to use  model for authentication dependencies.
--    (New File): FastAPI endpoints for public merchant signup.
-    -   **Importance**: Handles merchant registration using a tenant ID and claims the tenant.
--    (New File): Middleware for enforcing tenant context.
-    -   **Importance**: Ensures all requests are tenant-scoped and prevents cross-tenant data access.
--    (New File): Middleware to return empty data for unconnected tenants.
-    -   **Importance**: Provides proper empty states for UI when Shopify is not connected.
--    (New File): Script to add MongoDB indexes for  collection.
-    -   **Importance**: Ensures optimal performance for tenant queries.
-    -   **Changes**: Multiple fixes for  during index creation.
--   : Main React router.
-    -   **Importance**: Defines application routes and top-level context providers.
-    -   **Changes**: Updated with new customer portal routes, merchant return detail route, and will be updated with new tenant management routes. Modified for  integration and redirect logic.
--   : Merchant dashboard returns list page.
-    -   **Importance**: Displays all returns for the merchant.
--   : Merchant dashboard return detail page.
-    -   **Importance**: Displays comprehensive details for a specific return.
--   : Customer-facing return status/confirmation page.
-    -   **Importance**: Shows the status and details of a submitted return to the customer.
--   : React component for user login.
-    -   **Importance**: Provides the UI for user authentication.
-    -   **Changes**: Fixed Google OAuth redirect logic, corrected role-based redirection paths, and integrated properly with .
--   : React component for user registration.
-    -   **Importance**: Provides the UI for user signup.
--    (New File): Handles Google OAuth redirection.
-    -   **Importance**: Processes the callback from Google after user authentication.
--    (New File/Modified): Manages user authentication state globally.
-    -   **Importance**: Provides authentication context to the entire React application.
-    -   **Changes**: Heavily refactored multiple times to fix infinite re-render loops and ensure proper state management and redirects.
--    (New File/Modified): Protects routes based on authentication status.
-    -   **Importance**: Ensures only authenticated users can access certain parts of the application.
-    -   **Changes**: Examined and simplified during troubleshooting of re-render issues.
--    (Modified): Displays user profile and logout option.
-    -   **Importance**: Provides user-specific actions like logout.
-    -   **Changes**: Added logout functionality integrated with .
--    (Modified): Layout for the merchant dashboard.
-    -   **Importance**: Provides the common UI structure for merchant-facing pages.
-    -   **Changes**: Updated to ensure UserProfile component is correctly included.
--    (New File): Admin UI for managing tenants.
-    -   **Importance**: Allows administrators to create, list, and archive tenants.
--    (New File): Modal for creating new tenants in the Admin UI.
-    -   **Importance**: Provides the form for admin tenant creation.
--    (New File): Public-facing form for merchant signup.
-    -   **Importance**: Allows new merchants to sign up using a tenant ID.
--    (New Files): Components to display when no data is available.
-    -   **Importance**: Ensures a user-friendly experience when a tenant hasn't connected their store or has no data.
--    (New File): Comprehensive documentation.
-    -   **Importance**: Serves as a complete technical reference.
--    (New File): Instructions for configuring Google OAuth.
-    -   **Importance**: Guides the user on external Google Cloud Console setup.
--    (New File): Provides instructions for clearing browser cache.
-    -   **Importance**: Helps users resolve client-side caching issues.
+- : Main FastAPI application. Configures FastAPI, registers routers, and sets up middleware. Updated to include  and  and modified  middleware to allow public Shopify OAuth paths.
+- : Enforces tenant context. Modified to exclude new Shopify OAuth endpoints () and webhook paths from tenant context requirement for new installations.
+- : (New) Pydantic models for Shopify data (e.g., , ). Essential for structuring data related to Shopify store connections and OAuth.
+- : (New) Business logic for Shopify OAuth, including , , token encryption, and HMAC verification. Underwent extensive debugging for state parameter and HMAC issues.
+- : (New) FastAPI endpoints for Shopify OAuth (, ). Handles the initial redirection to Shopify and processes the callback after authorization. Modified during debugging for better error handling and temporary state bypass.
+- : (New) FastAPI endpoints for Shopify webhooks. Designed to receive real-time updates from Shopify.
+- : (New) Script to set up test admin and tenant data in MongoDB. Modified multiple times to correct import paths,  usage, and / model data to successfully create test users and tenants.
+- : Main React router. Updated to remove old login/register routes, introduce  as the primary merchant login, and  for separate admin access. Also includes the new .
+- : (New) React component for the Login with Shopify button and shop domain input. Drives the single-click OAuth flow. Debugged for button click handler issues and  conflicts.
+- : (New) React component for the separate admin email/password login. Provides a distinct portal for administrators.
+- : (New) Dashboard component to display after successful Shopify connection.
+- : Original React email/password login form. Was heavily debugged for persistent form reset/state management issues.  was a temporary bypass. Fixes involved wrapping with  and .
+- : Handles frontend API calls for authentication. Debugged for  vs  issue and base URL construction.
+- : Stores . Verified for correct environment variable setup.
 </code_architecture>
 
 <pending_tasks>
@@ -116,27 +44,30 @@ The application uses a FastAPI backend and React frontend with MongoDB, followin
 - Implement AI Suggestions, Label Issuing, Email Notifications (beyond basic templates), Stripe Billing.
 - Finalize test coverage to ≥70%, performance optimization, and Lighthouse ≥90.
 - Complete the implementation of the Elite-Grade Returns Creation system, including all detailed API contracts, UI/UX (merchant overrides, bulk creation), security, observability, and full testing.
-- Finalize updating  to include the new routes for tenant management and merchant signup.
+- Resolve remaining Shopify OAuth flow issues: Install app button not showing, Invalid state parameter - CSRF protection callback error, and post-login redirect.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary, the AI engineer was tasked with implementing a complete, production-ready user management structure, including login with Google too easily, and subsequently, a new Strict Tenant Isolation + Empty States for Unconnected Stores system.
+Immediately before this summary, the AI engineer was focused on implementing a Single-Click Shopify OAuth Login system for merchants and ensuring a separate login portal for administrators.
 
-The **User Management System** work initially focused on:
--   **Backend**: Completed with new  and  MongoDB collections, schemas (), indexes (), core services (, ), and FastAPI controllers (). Environment variables for authentication (SECRET_KEY, Google OAuth credentials) were added.
--   **Frontend**: Initial React components for , , , , , and  were created.
+**Completed and Verified Work:**
+1.  **Separate Admin Login Portal**: A dedicated  component and  route were created, allowing administrators to log in with email/password (e.g.,  / ). This correctly separates admin authentication from the merchant-focused Shopify OAuth flow, addressing a critical user requirement. This portal is visually distinct and functional.
+2.  **Test Data Setup**: A script () was successfully created and run to provision test admin and merchant users, along with sample tenants in the MongoDB database, ensuring valid credentials and data for testing.
+3.  **Basic Frontend UI Stability**: The general React application loads and displays correctly, with the login and signup pages functioning without white screen errors. UI components are in place.
 
-During testing, several critical issues were encountered and resolved:
--   **Google OAuth Redirect URI Mismatch (Error 400)**: Fixed by modifying  to handle dynamic redirect URIs and providing the user with detailed instructions () to update their Google Cloud Console configuration.
--   **White Screen / Infinite Loop after Login**: This was a persistent issue stemming from React's rendering logic, primarily in  and redirect handling in . Multiple attempts were made, and the  was called, leading to a comprehensive refactor of  and adjustments to redirect paths ( vs. ) and the creation of . The issue was ultimately resolved by ensuring  correctly integrates with  and handles redirects based on user role.
--   **Missing Logout Functionality**: Added a Log out option to the  component, leveraging the  for state management.
--   **Inconsistent Frontend URL**: Provided instructions to the user () to clear browser cache and localStorage, as the issue was client-side caching of old URLs like .
+**Work In Progress / Previously Addressed with Lingering Issues:**
+1.  **Single-Click Shopify OAuth Integration (for Merchants)**:
+    *   **Backend**: New models (), OAuth service (), and controllers (, ) were created and integrated into . Shopify API keys were added to , and dependencies installed. The backend endpoints for OAuth (, ) were confirmed to issue correct 302 redirects and handle token exchange.
+    *   **Frontend**: A  component was implemented as the primary merchant login, and  routing was updated to prioritize this flow. A  was introduced for post-login display.
+    *   **Challenges and Debugging**:
+        *   **Initial Frontend Login Issues**: The  component (original email/password) suffered from persistent React state management issues (form resetting). Attempts to fix included  and , and a  was created as a simpler React-based bypass.
+        *   **Shopify OAuth Invalid State Parameter - CSRF Protection**: This recurring error during the OAuth callback was traced to an HMAC verification error: str object has no attribute new in . Debugging revealed a conflict with HMAC module usage, and the OAuth callback's state verification was temporarily bypassed. However, the user reported this error again, indicating an underlying, unresolved issue.
+        *   **Shopify OAuth Install app button not showing/Redirect Failure**: The user reported that after initiating the OAuth flow, Shopify did not display the Install app button or redirect back to our application. Initial diagnosis pointed to external factors: the  not being whitelisted in the Shopify Partner app settings, using an invalid API key, or accessing a password-protected Shopify store () that prevented app installation. The AI engineer provided guidance on creating a Shopify Partner account and development store for proper testing.
+2.  **Tenant Isolation Middleware**: The  middleware was modified to correctly whitelist new public Shopify OAuth endpoints, preventing Tenant context required errors for new merchant sign-ups.
 
-Following the stabilization of the core authentication, the AI engineer received new detailed requirements for the **Tenant Management System**:
--   **Backend (Phase 1 Complete)**: New models (), enhanced services (), and controllers ( for admin,  for merchant signup) have been created. New middleware (, ) was implemented and registered in  to enforce strict multi-tenancy and provide empty states for unconnected stores. A new database initialization script () was created and run to add necessary indexes for  collection. Numerous import, service initialization, and index creation syntax errors were debugged and fixed to make the backend fully functional and robust, integrating with the existing user management.
--   **Frontend (Phase 2 Initiated)**: The AI engineer has just begun creating the frontend components for the tenant management system. This includes  for API interaction, UI components like , , , and core pages such as  (for admin) and  (for public signup). Empty state components (, , ) have also been created. The immediate next step is to update  to incorporate these new routes and components.
+The application currently has a distinct and working admin login, while the merchant Shopify OAuth flow has been implemented but requires further debugging and user action (Shopify app configuration) to achieve a seamless end-to-end experience.
 </current_work>
 
 <optional_next_step>
-Finalize updating  to include the new routes for tenant management and merchant signup.
+The next step is to ensure the Shopify OAuth flow for merchants is fully functional and seamless, addressing the user's report of the Install app button not showing or redirection issues.
 </optional_next_step>

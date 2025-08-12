@@ -5,7 +5,7 @@ The logout functionality is now fully working in the user profile dropdown (top 
 
 ### 🚨 **URL ISSUE SOLUTION**
 
-The issue where you're seeing `https://f07a6717-33e5-45c0-b306-b76d55047333.preview.emergentagent.com/app/dashboard` instead of the correct URL is likely due to browser caching or old localStorage data.
+The issue where you're seeing `https://returnhub-1.preview.emergentagent.com/app/dashboard` instead of the correct URL is likely due to browser caching or old localStorage data.
 
 ### 📱 **IMMEDIATE FIX FOR URL ISSUE:**
 
@@ -16,7 +16,7 @@ The issue where you're seeing `https://f07a6717-33e5-45c0-b306-b76d55047333.prev
 4. **Click:** "Clear data"
 
 **Step 2: Hard Refresh**
-1. **Navigate to:** `https://f07a6717-33e5-45c0-b306-b76d55047333.preview.emergentagent.com/auth/login`
+1. **Navigate to:** `https://returnhub-1.preview.emergentagent.com/auth/login`
 2. **Press:** `Ctrl+F5` (Windows) or `Cmd+Shift+R` (Mac) for hard refresh
 3. **Or try incognito/private browsing mode**
 
@@ -42,9 +42,9 @@ The issue where you're seeing `https://f07a6717-33e5-45c0-b306-b76d55047333.prev
 4. **Should redirect to login page with success toast**
 
 ### 🎯 **CORRECT URLS TO USE:**
-- **Login:** `https://f07a6717-33e5-45c0-b306-b76d55047333.preview.emergentagent.com/auth/login`
-- **Merchant Dashboard:** `https://f07a6717-33e5-45c0-b306-b76d55047333.preview.emergentagent.com/app/dashboard`
-- **Admin Dashboard:** `https://f07a6717-33e5-45c0-b306-b76d55047333.preview.emergentagent.com/admin/dashboard`
+- **Login:** `https://returnhub-1.preview.emergentagent.com/auth/login`
+- **Merchant Dashboard:** `https://returnhub-1.preview.emergentagent.com/app/dashboard`
+- **Admin Dashboard:** `https://returnhub-1.preview.emergentagent.com/admin/dashboard`
 
 ### 🔧 **WHY THIS HAPPENS:**
 - Browser cache storing old URLs

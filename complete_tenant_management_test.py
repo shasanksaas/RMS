@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 class CompleteTenantManagementTester:
     def __init__(self):
         # Use production URL from frontend/.env
-        self.base_url = "https://f07a6717-33e5-45c0-b306-b76d55047333.preview.emergentagent.com/api"
+        self.base_url = "https://returnhub-1.preview.emergentagent.com/api"
         self.admin_token = None
         self.merchant_token = None
         self.test_tenant_id = None

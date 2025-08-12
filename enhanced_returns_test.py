@@ -19,7 +19,7 @@ from typing import Dict, List, Any, Optional
 import uuid
 
 # Configuration
-BACKEND_URL = "https://f07a6717-33e5-45c0-b306-b76d55047333.preview.emergentagent.com/api"
+BACKEND_URL = "https://returnhub-1.preview.emergentagent.com/api"
 TEST_TENANT_FASHION = "tenant-fashion-store"
 TEST_TENANT_TECH = "tenant-tech-gadgets"
 TEST_TENANT_RMS34 = "tenant-rms34"

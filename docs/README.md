@@ -25,8 +25,8 @@ yarn start
 ### On Emergent Platform
 ```bash
 # Already configured - just access your preview URL
-# Frontend: https://f07a6717-33e5-45c0-b306-b76d55047333.preview.emergentagent.com
-# Backend: https://f07a6717-33e5-45c0-b306-b76d55047333.preview.emergentagent.com/api
+# Frontend: https://returnhub-1.preview.emergentagent.com
+# Backend: https://returnhub-1.preview.emergentagent.com/api
 ```
 
 ## 📖 Table of Contents
