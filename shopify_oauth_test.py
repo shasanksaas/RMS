@@ -119,7 +119,7 @@ class ShopifyOAuthTestSuite:
             headers={"X-Tenant-Id": TEST_TENANT_ID}
         )
         
-        if not success:
+        if not success or response.get('status') == 'error':
             # Try the auth endpoint as fallback
             success, response, status, _ = await self.make_request(
                 "GET", 
