@@ -1,6 +1,7 @@
 /**
- * Tenant Management Service - Admin APIs and Public Signup
- * Handles tenant creation, management, and merchant signup with tenant_id
+ * Tenant Management Service - Real API Integration
+ * Handles real tenant CRUD operations and admin impersonation
+ * NO MOCK DATA - All operations hit live backend APIs
  */
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL;
@@ -46,14 +47,40 @@ class TenantService {
     return response.json();
   }
 
-  // ===== ADMIN TENANT MANAGEMENT APIs =====
+  // ===== REAL ADMIN TENANT MANAGEMENT APIs =====
+
+  /**
+   * List all tenants from database (Admin only, NO MOCKS)
+   */
+  async listTenants(page = 1, pageSize = 50, status = null) {
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        page_size: pageSize.toString()
+      });
+      
+      if (status) {
+        params.append('status', status);
+      }
+
+      const response = await fetch(`${this.baseURL}/admin/tenants?${params}`, {
+        method: 'GET',
+        headers: this.getHeaders()
+      });
+
+      return await this.handleResponse(response);
+    } catch (error) {
+      console.error('List tenants error:', error);
+      throw error;
+    }
+  }
 
   /**
    * Create new tenant (Admin only)
    */
   async createTenant(tenantData) {
     try {
-      const response = await fetch(`${this.baseURL}/tenants`, {
+      const response = await fetch(`${this.baseURL}/admin/tenants`, {
         method: 'POST',
         headers: this.getHeaders(),
         body: JSON.stringify(tenantData)
@@ -67,27 +94,66 @@ class TenantService {
   }
 
   /**
-   * List all tenants with pagination (Admin only)
+   * Delete/archive tenant (Admin only)
    */
-  async listTenants(page = 1, pageSize = 50, status = null) {
+  async deleteTenant(tenantId) {
     try {
-      const params = new URLSearchParams({
-        page: page.toString(),
-        page_size: pageSize.toString()
-      });
-      
-      if (status) {
-        params.append('status', status);
-      }
-
-      const response = await fetch(`${this.baseURL}/tenants?${params}`, {
-        method: 'GET',
+      const response = await fetch(`${this.baseURL}/admin/tenants/${tenantId}`, {
+        method: 'DELETE',
         headers: this.getHeaders()
       });
 
       return await this.handleResponse(response);
     } catch (error) {
-      console.error('List tenants error:', error);
+      console.error('Delete tenant error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Admin impersonation - Direct login to tenant dashboard
+   */
+  async impersonateTenant(tenantId) {
+    try {
+      const response = await fetch(`${this.baseURL}/admin/tenants/${tenantId}/impersonate`, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        credentials: 'include'  // Include cookies for session
+      });
+
+      // This endpoint returns a redirect, so we handle it differently
+      if (response.redirected) {
+        // Browser will follow redirect automatically
+        window.location.href = response.url;
+        return { success: true, redirected: true };
+      }
+
+      return await this.handleResponse(response);
+    } catch (error) {
+      console.error('Impersonate tenant error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * End admin impersonation session
+   */
+  async endImpersonation() {
+    try {
+      const response = await fetch(`${this.baseURL}/admin/tenants/end-impersonation`, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        credentials: 'include'
+      });
+
+      if (response.redirected) {
+        window.location.href = response.url;
+        return { success: true, redirected: true };
+      }
+
+      return await this.handleResponse(response);
+    } catch (error) {
+      console.error('End impersonation error:', error);
       throw error;
     }
   }
