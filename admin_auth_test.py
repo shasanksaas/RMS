@@ -285,7 +285,7 @@ class AdminAuthTestSuite:
             
             # Try to access a protected endpoint (like user profile)
             async with self.session.get(
-                f"{BACKEND_URL}/users/profile", 
+                f"{BACKEND_URL}/users/me", 
                 headers=headers
             ) as response:
                 
