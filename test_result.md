@@ -1019,15 +1019,13 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Admin Login Frontend Integration"
-    - "Real Tenant Management System Frontend"
+    - "Merchant User Creation and Login for tenant-rms34"
   stuck_tasks: 
     - "Admin Login Frontend Integration"
     - "GraphQL Service for Returns Operations"
     - "Sync Service with Initial Backfill"
-    - "Real-time Shopify Integration Configuration for tenant-rms34"
   test_all: false
-  test_priority: "stuck_first"
+  test_priority: "high_first"
 
   - task: "Real-time Order Sync via Webhooks"
     implemented: true
