@@ -26,7 +26,11 @@ const ProtectedRoute = ({
 
   // If authentication is required but user is not authenticated
   if (requireAuth && !isAuthenticated) {
-    const loginUrl = `/auth/login?return_url=${encodeURIComponent(location.pathname)}`;
+    // Determine appropriate login page based on route
+    const isAdminRoute = location.pathname.startsWith('/admin');
+    const loginUrl = isAdminRoute 
+      ? `/admin/login?return_url=${encodeURIComponent(location.pathname)}`
+      : `/auth/login?return_url=${encodeURIComponent(location.pathname)}`;
     return <Navigate to={loginUrl} replace />;
   }
 
