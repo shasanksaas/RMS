@@ -196,13 +196,13 @@ const Login: React.FC = () => {
 
     switch (role) {
       case 'merchant':
-        return '/app/returns'; // Direct to returns portal
+        return '/app/dashboard'; // Back to main dashboard with everything
       case 'admin':
         return '/admin/dashboard';
       case 'customer':
         return '/returns/start';
       default:
-        return '/app/returns'; // Default to returns portal
+        return '/app/dashboard'; // Default to main comprehensive dashboard
     }
   };
 
