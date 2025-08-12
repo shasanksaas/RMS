@@ -28,9 +28,9 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/admin/tenants", tags=["Admin - Tenant Management"])
 
 # Database connection
-MONGO_URL = os.environ.get("MONGO_URL", "mongodb://localhost:27017/returns_manager")
+MONGO_URL = os.environ.get("MONGO_URL", "mongodb://localhost:27017/returns_manager_enhanced")
 client = MongoClient(MONGO_URL)
-db = client.returns_manager
+db = client.returns_management
 
 # JWT settings for impersonation tokens
 JWT_SECRET_KEY = os.environ.get("SECRET_KEY", "user-management-secret-key-change-in-production-very-secure-key")
