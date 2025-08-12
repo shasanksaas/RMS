@@ -29,6 +29,7 @@ class TenantIsolationMiddleware:
             "/api/auth/shopify/install-redirect", 
             "/api/auth/shopify/callback",
             "/api/auth/shopify/session",
+            "/api/auth/shopify/debug",  # Debug endpoints
             # Shopify webhook paths - Webhooks come from Shopify without tenant context
             "/api/webhooks/shopify/orders-create",
             "/api/webhooks/shopify/orders-updated",
