@@ -76,6 +76,12 @@ const Login: React.FC = () => {
       e.stopPropagation();
     }
     
+    // Prevent multiple clicks
+    if (isShopifyLoading) {
+      console.log('🛑 Shopify login already in progress, ignoring click');
+      return;
+    }
+    
     console.log('🔥 SHOPIFY LOGIN BUTTON CLICKED'); // Debug log
     
     if (!shopDomain.trim()) {
@@ -97,8 +103,10 @@ const Login: React.FC = () => {
       
       console.log('🚀 Redirecting to Shopify OAuth:', shopifyInstallUrl);
       
-      // Immediate redirect without toast or async delays
-      window.location.href = shopifyInstallUrl;
+      // Add small delay to ensure state is set
+      setTimeout(() => {
+        window.location.href = shopifyInstallUrl;
+      }, 100);
 
     } catch (error: any) {
       console.error('❌ Shopify login error:', error);
