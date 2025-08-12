@@ -137,7 +137,41 @@ async def handle_shopify_callback(
             status_code=302
         )
 
-@router.get("/status", response_model=ShopifyConnectionResponse)
+@router.get("/debug/state")
+async def debug_oauth_state(
+    state: str = Query(..., description="State parameter to debug")
+):
+    """
+    Debug endpoint to test OAuth state verification
+    """
+    try:
+        shopify_oauth = ShopifyOAuthService()
+        
+        # Try to verify the state
+        result = shopify_oauth.verify_oauth_state(state)
+        
+        if result:
+            return {
+                "valid": True,
+                "state_data": {
+                    "shop": result.shop,
+                    "timestamp": result.timestamp,
+                    "nonce": result.nonce,
+                    "redirect_after": result.redirect_after
+                }
+            }
+        else:
+            return {
+                "valid": False,
+                "error": "State verification failed"
+            }
+            
+    except Exception as e:
+        return {
+            "valid": False,
+            "error": str(e),
+            "traceback": str(e)
+        }
 async def get_shopify_connection_status(
     tenant_id: str = Query(..., description="Tenant ID to check connection for")
 ):
