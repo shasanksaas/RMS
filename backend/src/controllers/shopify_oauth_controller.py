@@ -137,6 +137,41 @@ async def handle_shopify_callback(
             status_code=302
         )
 
+@router.get("/debug/generate-state")
+async def debug_generate_state(
+    shop: str = Query(default="rms34", description="Shop to generate state for")
+):
+    """
+    Debug endpoint to see what state we generate
+    """
+    try:
+        shopify_oauth = ShopifyOAuthService()
+        
+        # Generate state like we do in the install flow
+        state = shopify_oauth.create_oauth_state(
+            shopify_oauth.normalize_shop_domain(shop)
+        )
+        
+        # Also try to verify it immediately
+        verification_result = shopify_oauth.verify_oauth_state(state)
+        
+        return {
+            "generated_state": state,
+            "state_length": len(state),
+            "verification_works": verification_result is not None,
+            "state_data": {
+                "shop": verification_result.shop,
+                "timestamp": verification_result.timestamp,
+                "nonce": verification_result.nonce
+            } if verification_result else None
+        }
+        
+    except Exception as e:
+        return {
+            "error": str(e),
+            "traceback": str(e)
+        }
+
 @router.get("/debug/state")
 async def debug_oauth_state(
     state: str = Query(..., description="State parameter to debug")
