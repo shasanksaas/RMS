@@ -104,6 +104,7 @@ async def security_and_audit_middleware(request: Request, call_next):
     # Skip tenant validation for certain endpoints
     skip_tenant_validation = [
         "/api/tenants",  # Tenant creation/listing
+        "/api/admin/tenants",  # Admin tenant management
         "/api/auth/",    # Auth endpoints
         "/api/test/",    # Testing endpoints
         "/api/webhooks/", # Webhook endpoints
