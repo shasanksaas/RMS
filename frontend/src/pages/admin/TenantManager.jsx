@@ -59,11 +59,7 @@ const TenantManager = () => {
     }
   }, [user, navigate]);
 
-  // Load tenants
-  useEffect(() => {
-    loadTenants();
-  }, [loadTenants]);
-
+  // Load tenants function
   const loadTenants = useCallback(async () => {
     try {
       setLoading(true);
@@ -97,6 +93,13 @@ const TenantManager = () => {
       setLoading(false);
     }
   }, [pagination.page, pagination.pageSize, statusFilter, toast]);
+
+  // Load tenants on component mount and when dependencies change
+  useEffect(() => {
+    if (user && user.role === 'admin') {
+      loadTenants();
+    }
+  }, [loadTenants, user]);
 
   const handleCreateTenant = async (tenantData) => {
     try {
