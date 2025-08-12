@@ -176,13 +176,13 @@ class AdminImpersonationTestSuite:
         try:
             headers = {
                 "Authorization": f"Bearer {self.admin_token}",
-                "Content-Type": "application/json",
-                "X-Tenant-Id": TARGET_TENANT
+                "Content-Type": "application/json"
             }
             
-            # Test connection status endpoint
+            # Test connection status endpoint with tenant_id as query parameter
             async with self.session.get(
                 f"{BACKEND_URL}/auth/shopify/status",
+                params={"tenant_id": TARGET_TENANT},
                 headers=headers
             ) as response:
                 response_data = await response.json()
