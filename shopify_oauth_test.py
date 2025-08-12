@@ -87,12 +87,18 @@ class ShopifyOAuthTestSuite:
         """Test backend health and accessibility"""
         print("\n🏥 Testing Backend Health...")
         
-        success, health_data, status, _ = await self.make_request("GET", "/health", headers={})
-        if success:
-            self.log_test("Backend Health Check", True, f"Backend is healthy (status: {status})")
-            return True
-        else:
-            self.log_test("Backend Health Check", False, f"Backend not accessible (status: {status})")
+        # Try root health endpoint first
+        try:
+            url = "https://returnportal.preview.emergentagent.com/health"
+            async with self.session.get(url) as response:
+                if response.status == 200:
+                    self.log_test("Backend Health Check", True, f"Backend is healthy (status: {response.status})")
+                    return True
+                else:
+                    self.log_test("Backend Health Check", False, f"Backend not accessible (status: {response.status})")
+                    return False
+        except Exception as e:
+            self.log_test("Backend Health Check", False, f"Backend not accessible: {str(e)}")
             return False
     
     async def test_integration_status_initial(self):
