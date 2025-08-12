@@ -126,11 +126,14 @@ class SecurityAuthTestSuite:
         # Test 1: Merchant login with correct credentials
         login_data = {
             "email": MERCHANT_CREDENTIALS["email"],
-            "password": MERCHANT_CREDENTIALS["password"],
-            "tenant_id": MERCHANT_CREDENTIALS["tenant_id"]
+            "password": MERCHANT_CREDENTIALS["password"]
         }
         
-        success, response, status = await self.make_request("POST", "/users/login", login_data)
+        login_headers = {
+            "X-Tenant-Id": MERCHANT_CREDENTIALS["tenant_id"]
+        }
+        
+        success, response, status = await self.make_request("POST", "/users/login", login_data, login_headers)
         
         if success and response.get("access_token"):
             self.merchant_token = response["access_token"]
