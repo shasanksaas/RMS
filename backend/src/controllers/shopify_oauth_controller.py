@@ -222,12 +222,61 @@ async def get_shopify_connection_status(
     - Available scopes
     """
     try:
-        status = await shopify_oauth.get_connection_status(tenant_id)
-        return status
+        print(f"🔍 Checking Shopify status for tenant: {tenant_id}")
+        
+        # Get database connection
+        from ..config.database import get_database
+        db = await get_database()
+        
+        # Query integration directly with detailed logging
+        integration = await db["integrations_shopify"].find_one({"tenant_id": tenant_id})
+        print(f"📊 Integration found: {integration is not None}")
+        
+        if not integration:
+            print(f"📊 No integration found for tenant {tenant_id}")
+            return ShopifyConnectionResponse(
+                connected=False,
+                status="disconnected",
+                tenant_id=tenant_id,
+                shop=None,
+                last_sync_at=None,
+                scopes=[]
+            )
+        
+        # Extract data safely
+        shop_domain = integration.get("shop", integration.get("shop_domain"))
+        status = integration.get("status", "disconnected")
+        connected = status == "connected"
+        
+        print(f"📊 Integration status: {status}, shop: {shop_domain}, connected: {connected}")
+        
+        response = ShopifyConnectionResponse(
+            connected=connected,
+            status=status,
+            tenant_id=tenant_id,
+            shop=shop_domain,
+            shop_domain=shop_domain,
+            last_sync_at=integration.get("last_sync_at"),
+            scopes=integration.get("scopes", [])
+        )
+        
+        print(f"✅ Status response created successfully for {tenant_id}")
+        return response
         
     except Exception as e:
-        print(f"❌ Status check failed: {e}")
-        raise HTTPException(status_code=500, detail="Failed to check connection status")
+        print(f"❌ Status check failed for tenant {tenant_id}: {str(e)}")
+        print(f"❌ Error type: {type(e).__name__}")
+        
+        # Return a safe fallback response instead of crashing
+        return ShopifyConnectionResponse(
+            connected=False,
+            status="error",
+            tenant_id=tenant_id,
+            shop=None,
+            last_sync_at=None,
+            scopes=[],
+            error=str(e)
+        )
 
 @router.post("/disconnect")
 async def disconnect_shopify_store(
