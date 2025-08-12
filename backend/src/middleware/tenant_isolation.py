@@ -29,7 +29,13 @@ class TenantIsolationMiddleware:
             "/api/auth/shopify/install-redirect", 
             "/api/auth/shopify/callback",
             "/api/auth/shopify/session",
-            "/api/webhooks/shopify"  # Webhooks also don't have tenant context initially
+            # Shopify webhook paths - Webhooks come from Shopify without tenant context
+            "/api/webhooks/shopify/orders-create",
+            "/api/webhooks/shopify/orders-updated",
+            "/api/webhooks/shopify/fulfillments-create", 
+            "/api/webhooks/shopify/fulfillments-update",
+            "/api/webhooks/shopify/app-uninstalled",
+            "/api/webhooks/shopify/test"
         }
         
         # Admin-only paths that bypass normal tenant restrictions
