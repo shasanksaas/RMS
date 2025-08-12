@@ -236,7 +236,7 @@ export const AuthProvider = ({ children }) => {
       case 'merchant':
         return '/app/dashboard';
       case 'admin':
-        return '/admin/dashboard';
+        return '/admin/tenants';
       case 'customer':
         return '/returns/start';
       default:
