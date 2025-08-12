@@ -104,9 +104,6 @@ const App = () => {
               {/* Admin Login Route - Email/Password */}
               <Route path="/admin/login" element={<AdminLogin />} />
               
-              {/* Connected Dashboard */}
-              <Route path="/app/dashboard" element={<ConnectedDashboard />} />
-              
               {/* Legacy Auth Routes (Disabled) */}
               {/* 
               <Route path="/auth/register" element={<Register />} />
