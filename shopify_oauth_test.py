@@ -168,43 +168,46 @@ class ShopifyOAuthTestSuite:
         """Test 2: Shopify OAuth Install Flow"""
         print("\n🚀 Testing Shopify OAuth Install Flow...")
         
-        # Test install-redirect endpoint
-        success, response, status, headers = await self.make_request(
-            "GET", 
-            f"/auth/shopify/install-redirect?shop={TEST_SHOP}",
-            allow_redirects=False
-        )
-        
-        if status == 302:  # Should redirect to Shopify
-            redirect_url = headers.get('location', '')
-            if 'myshopify.com' in redirect_url and 'oauth/authorize' in redirect_url:
-                self.log_test("OAuth Install: Redirect to Shopify", True, 
-                             f"Correctly redirects to Shopify OAuth: {redirect_url[:100]}...")
+        # Test install-redirect endpoint with manual handling
+        try:
+            url = f"{BACKEND_URL}/auth/shopify/install-redirect?shop={TEST_SHOP}"
+            async with self.session.get(url, allow_redirects=False) as response:
+                status = response.status
+                headers = dict(response.headers)
                 
-                # Parse redirect URL to verify parameters
-                parsed_url = urlparse(redirect_url)
-                query_params = parse_qs(parsed_url.query)
-                
-                required_params = ['client_id', 'scope', 'redirect_uri', 'state']
-                missing_params = [param for param in required_params if param not in query_params]
-                
-                if not missing_params:
-                    self.log_test("OAuth Install: URL parameters", True, 
-                                 "All required OAuth parameters present")
+                if status == 302:  # Should redirect to Shopify
+                    redirect_url = headers.get('location', '')
+                    if 'myshopify.com' in redirect_url and 'oauth/authorize' in redirect_url:
+                        self.log_test("OAuth Install: Redirect to Shopify", True, 
+                                     f"Correctly redirects to Shopify OAuth: {redirect_url[:100]}...")
+                        
+                        # Parse redirect URL to verify parameters
+                        parsed_url = urlparse(redirect_url)
+                        query_params = parse_qs(parsed_url.query)
+                        
+                        required_params = ['client_id', 'scope', 'redirect_uri', 'state']
+                        missing_params = [param for param in required_params if param not in query_params]
+                        
+                        if not missing_params:
+                            self.log_test("OAuth Install: URL parameters", True, 
+                                         "All required OAuth parameters present")
+                        else:
+                            self.log_test("OAuth Install: URL parameters", False, 
+                                         f"Missing parameters: {missing_params}")
+                        
+                        return redirect_url
+                    else:
+                        self.log_test("OAuth Install: Redirect to Shopify", False, 
+                                     f"Redirect URL doesn't point to Shopify: {redirect_url}")
+                elif status == 503:
+                    self.log_test("OAuth Install: Feature flag disabled", True, 
+                                 "OAuth correctly disabled by feature flag")
                 else:
-                    self.log_test("OAuth Install: URL parameters", False, 
-                                 f"Missing parameters: {missing_params}")
-                
-                return redirect_url
-            else:
-                self.log_test("OAuth Install: Redirect to Shopify", False, 
-                             f"Redirect URL doesn't point to Shopify: {redirect_url}")
-        elif status == 503:
-            self.log_test("OAuth Install: Feature flag disabled", True, 
-                         "OAuth correctly disabled by feature flag")
-        else:
+                    self.log_test("OAuth Install: Redirect to Shopify", False, 
+                                 f"Expected redirect (302) but got {status}")
+        except Exception as e:
             self.log_test("OAuth Install: Redirect to Shopify", False, 
-                         f"Expected redirect (302) but got {status}")
+                         f"Error testing OAuth redirect: {str(e)}")
         
         return None
     
