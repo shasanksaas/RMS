@@ -350,6 +350,7 @@ const Login: React.FC = () => {
 
                 {/* Shopify Login Button */}
                 <Button
+                  type="button"
                   onClick={handleShopifyLogin}
                   disabled={isShopifyLoading || !shopDomain.trim()}
                   className="w-full bg-[#95bf47] hover:bg-[#7ba337] text-white font-medium h-11 text-sm sm:text-base"
