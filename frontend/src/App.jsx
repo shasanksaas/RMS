@@ -6,10 +6,19 @@ import ErrorBoundary from './components/ErrorBoundary';
 import AuthProvider from './contexts/AuthContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import AuthGuard from './components/auth/AuthGuard';
-import Login from './components/auth/Login.tsx';
-import Register from './components/auth/Register.tsx';
-import GoogleCallback from './components/auth/GoogleCallback';
-import ForgotPassword from './components/auth/ForgotPassword';
+
+// Shopify OAuth Components
+import ShopifyLogin from './components/auth/ShopifyLogin';
+
+// Dashboard Components  
+import ConnectedDashboard from './components/dashboard/ConnectedDashboard';
+
+// Legacy Auth (Commented out - replaced by Shopify OAuth)
+// import Login from './components/auth/Login.tsx';
+// import Register from './components/auth/Register.tsx';
+// import GoogleCallback from './components/auth/GoogleCallback';
+// import ForgotPassword from './components/auth/ForgotPassword';
+
 import { ToastProvider } from './components/ui/use-toast';
 
 import SimpleLogin from './components/SimpleLogin';
