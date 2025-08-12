@@ -2,6 +2,7 @@ import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { Shield, Users, Activity, FileText, Flag, BookOpen, Menu } from 'lucide-react';
 import { Button } from '../ui/button';
+import UserProfile from './UserProfile';
 
 const AdminLayout = () => {
   const location = useLocation();
