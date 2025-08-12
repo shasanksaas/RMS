@@ -126,7 +126,8 @@ class SecurityAuthTestSuite:
         # Test 1: Merchant login with correct credentials
         login_data = {
             "email": MERCHANT_CREDENTIALS["email"],
-            "password": MERCHANT_CREDENTIALS["password"]
+            "password": MERCHANT_CREDENTIALS["password"],
+            "tenant_id": MERCHANT_CREDENTIALS["tenant_id"]
         }
         
         login_headers = {
