@@ -273,239 +273,341 @@ const TenantManager = () => {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Tenant Manager</h1>
-            <p className="text-gray-600 mt-1">
-              Manage tenants and monitor merchant signups (Real Data - No Mocks)
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button 
-              variant="outline" 
-              onClick={() => window.open('/auth/login', '_blank')}
-              size="lg"
-            >
-              <ExternalLink className="h-4 w-4 mr-2" />
-              Merchant Login
-            </Button>
-            <Button onClick={() => setShowCreateModal(true)} size="lg">
-              <Plus className="h-4 w-4 mr-2" />
-              Create Tenant
-            </Button>
-          </div>
-        </div>
-
-        {/* Statistics Cards - Real Data */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center">
-                <Store className="h-8 w-8 text-blue-600 mr-3" />
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-6 lg:p-8">
+      <div className="max-w-7xl mx-auto space-y-8">
+        
+        {/* Beautiful Header Section */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 md:p-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
+                  <Users className="h-8 w-8 text-white" />
+                </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Tenants</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+                    Tenant Management
+                  </h1>
+                  <p className="text-gray-600 font-medium">
+                    Manage and monitor all tenant accounts across the platform
+                  </p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center">
-                <Users className="h-8 w-8 text-green-600 mr-3" />
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Connected</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.active}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center">
-                <Calendar className="h-8 w-8 text-yellow-600 mr-3" />
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Not Connected</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.new}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center">
-                <Archive className="h-8 w-8 text-gray-600 mr-3" />
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Archived</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.archived}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Search and Filters */}
-        <div className="flex items-center gap-4 mb-6">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Search tenants by name or ID..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline">
-                <Filter className="h-4 w-4 mr-2" />
-                {statusFilter === 'all' ? 'All Status' : statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button
+                onClick={() => navigate('/auth/login')}
+                variant="outline"
+                className="border-2 border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 transition-all duration-200 font-semibold"
+              >
+                <LogIn className="h-4 w-4 mr-2" />
+                Merchant Login
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => setStatusFilter('all')}>
-                All Status
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setStatusFilter('connected')}>
-                Connected
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setStatusFilter('new')}>
-                Not Connected
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              <Button
+                onClick={() => setShowCreateModal(true)}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Create New Tenant
+              </Button>
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* Tenants Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Tenants ({filteredTenants.length})</CardTitle>
-          <CardDescription>
-            Real tenant data from database - manage all merchant accounts
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {filteredTenants.length === 0 ? (
-            <div className="text-center py-12">
-              <Store className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {searchQuery ? 'No matching tenants found' : 'No tenants found'}
-              </h3>
-              <p className="text-gray-500 mb-4">
-                {searchQuery 
-                  ? 'Try adjusting your search criteria' 
-                  : 'Get started by creating your first tenant'
-                }
-              </p>
-              {!searchQuery && (
-                <Button onClick={() => setShowCreateModal(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create First Tenant
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 shadow-lg hover:shadow-xl transition-all duration-200">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-green-100 rounded-xl">
+                  <Store className="h-6 w-6 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-green-600 uppercase tracking-wide">Active Tenants</p>
+                  <p className="text-2xl font-bold text-green-900">{stats.active}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200 shadow-lg hover:shadow-xl transition-all duration-200">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-orange-100 rounded-xl">
+                  <Calendar className="h-6 w-6 text-orange-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-orange-600 uppercase tracking-wide">Not Connected</p>
+                  <p className="text-2xl font-bold text-orange-900">{stats.new}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 shadow-lg hover:shadow-xl transition-all duration-200">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-blue-100 rounded-xl">
+                  <Users className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-blue-600 uppercase tracking-wide">Total Tenants</p>
+                  <p className="text-2xl font-bold text-blue-900">{stats.total}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Modern Search & Filter Section */}
+        <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+          <CardContent className="p-6">
+            <div className="flex flex-col lg:flex-row gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Input
+                  placeholder="Search tenants by name, domain, or email..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 h-12 bg-white border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all duration-200"
+                />
+              </div>
+              
+              <div className="flex gap-3">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      className="h-12 px-6 border-2 border-gray-200 hover:border-gray-300 bg-white font-medium"
+                    >
+                      <Filter className="h-4 w-4 mr-2" />
+                      {statusFilter === 'all' ? 'All Status' : statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem onClick={() => setStatusFilter('all')}>
+                      All Status
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setStatusFilter('connected')}>
+                      Connected
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setStatusFilter('new')}>
+                      Not Connected
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                
+                <Button 
+                  onClick={loadTenants}
+                  variant="outline"
+                  className="h-12 px-6 border-2 border-gray-200 hover:border-gray-300 bg-white font-medium"
+                  disabled={loading}
+                >
+                  <RotateCcw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                  Refresh
                 </Button>
-              )}
+              </div>
             </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-4 font-medium">Tenant ID</th>
-                    <th className="text-left p-4 font-medium">Name</th>
-                    <th className="text-left p-4 font-medium">Shop Domain</th>
-                    <th className="text-left p-4 font-medium">Connected</th>
-                    <th className="text-left p-4 font-medium">Stats</th>
-                    <th className="text-left p-4 font-medium">Created</th>
-                    <th className="text-left p-4 font-medium">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredTenants.map((tenant) => (
-                    <tr key={tenant.tenant_id} className="border-b hover:bg-gray-50">
-                      <td className="p-4">
-                        <code className="bg-gray-100 px-2 py-1 rounded text-sm">
-                          {tenant.tenant_id}
-                        </code>
-                      </td>
-                      <td className="p-4 font-medium">{tenant.name}</td>
-                      <td className="p-4">
-                        {tenant.shop_domain ? (
-                          <span className="text-gray-600">{tenant.shop_domain}</span>
-                        ) : (
-                          <span className="text-gray-400 italic">Not set</span>
+          </CardContent>
+        </Card>
+
+        {/* Beautiful Tenants Grid */}
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <Card key={i} className="animate-pulse">
+                <CardContent className="p-6">
+                  <div className="space-y-4">
+                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                    <div className="h-3 bg-gray-200 rounded w-full"></div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : filteredTenants.length === 0 ? (
+          <Card className="shadow-lg border-0">
+            <CardContent className="text-center py-16">
+              <div className="space-y-4">
+                <div className="p-4 bg-gray-100 rounded-full w-16 h-16 mx-auto flex items-center justify-center">
+                  <Store className="h-8 w-8 text-gray-400" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">No tenants found</h3>
+                  <p className="text-gray-500 mb-6">
+                    {searchQuery ? 'Try adjusting your search terms' : 'Create your first tenant to get started'}
+                  </p>
+                  <Button
+                    onClick={() => setShowCreateModal(true)}
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create First Tenant
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredTenants.map((tenant) => (
+              <Card 
+                key={tenant.tenant_id} 
+                className="group hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border-0 shadow-lg bg-white/90 backdrop-blur-sm"
+              >
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg ${tenant.connected_provider === 'shopify' ? 'bg-green-100' : 'bg-gray-100'}`}>
+                        <Store className={`h-5 w-5 ${tenant.connected_provider === 'shopify' ? 'text-green-600' : 'text-gray-600'}`} />
+                      </div>
+                      <div>
+                        <CardTitle className="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+                          {tenant.name}
+                        </CardTitle>
+                        <CardDescription className="text-sm font-medium text-gray-500">
+                          {tenant.shop_domain || 'No domain set'}
+                        </CardDescription>
+                      </div>
+                    </div>
+                    
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-100"
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem onClick={() => handleImpersonate(tenant.tenant_id)}>
+                          <Eye className="h-4 w-4 mr-2" />
+                          View Dashboard
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => console.log('Edit tenant:', tenant.tenant_id)}>
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit Tenant
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => handleDeleteTenant(tenant.tenant_id)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete Tenant
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </CardHeader>
+
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-600">Status</span>
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${
+                      tenant.connected_provider === 'shopify' 
+                        ? 'bg-green-100 text-green-800 border-green-200' 
+                        : 'bg-gray-100 text-gray-800 border-gray-200'
+                    }`}>
+                      {tenant.connected_provider === 'shopify' ? 'Connected' : 'Not Connected'}
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-600">Created</span>
+                    <span className="text-sm text-gray-900 font-medium">
+                      {formatDate(tenant.created_at)}
+                    </span>
+                  </div>
+                  
+                  {tenant.connected_provider === 'shopify' && (
+                    <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg border border-green-200">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                      <span className="text-sm font-medium text-green-700">Shopify Connected</span>
+                    </div>
+                  )}
+                  
+                  <div className="pt-2 border-t border-gray-100">
+                    <Button
+                      onClick={() => handleImpersonate(tenant.tenant_id)}
+                      className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-200"
+                    >
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Open Dashboard
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* Beautiful Pagination */}
+        {pagination.totalPages > 1 && (
+          <Card className="shadow-lg border-0">
+            <CardContent className="p-6 flex justify-center">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
+                  disabled={pagination.page === 1}
+                  className="font-medium"
+                >
+                  Previous
+                </Button>
+                
+                <div className="flex items-center gap-2 px-4">
+                  {Array.from({ length: pagination.totalPages }, (_, i) => i + 1)
+                    .filter(page => 
+                      page === 1 || 
+                      page === pagination.totalPages || 
+                      Math.abs(page - pagination.page) <= 1
+                    )
+                    .map((page, index, array) => (
+                      <React.Fragment key={page}>
+                        {index > 0 && array[index - 1] !== page - 1 && (
+                          <span className="text-gray-400">...</span>
                         )}
-                      </td>
-                      <td className="p-4">
-                        {tenant.connected_provider === 'shopify' ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            Shopify
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                            Not Connected
-                          </span>
-                        )}
-                      </td>
-                      <td className="p-4">
-                        <div className="text-sm text-gray-600">
-                          {tenant.stats && (
-                            <div>
-                              <div>Orders: {tenant.stats.orders_count || 0}</div>
-                              <div>Returns: {tenant.stats.returns_count || 0}</div>
-                              <div>Users: {tenant.stats.users_count || 0}</div>
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="p-4 text-sm text-gray-600">
-                        {new Date(tenant.created_at).toLocaleDateString()}
-                      </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            onClick={() => handleImpersonate(tenant.tenant_id, tenant.name)}
-                            className="bg-blue-600 hover:bg-blue-700"
-                          >
-                            <LogIn className="h-4 w-4 mr-1" />
-                            Open Dashboard
-                          </Button>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() => handleDeleteTenant(tenant.tenant_id, tenant.name)}
-                                className="text-red-600"
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete Tenant
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                        <Button
+                          variant={pagination.page === page ? "default" : "ghost"}
+                          onClick={() => setPagination(prev => ({ ...prev, page }))}
+                          className={`w-10 h-10 font-medium ${
+                            pagination.page === page 
+                              ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md' 
+                              : 'hover:bg-gray-100'
+                          }`}
+                        >
+                          {page}
+                        </Button>
+                      </React.Fragment>
+                    ))}
+                </div>
+                
+                <Button
+                  variant="outline"
+                  onClick={() => setPagination(prev => ({ ...prev, page: Math.min(prev.totalPages, prev.page + 1) }))}
+                  disabled={pagination.page === pagination.totalPages}
+                  className="font-medium"
+                >
+                  Next
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
 
       {/* Create Tenant Modal */}
       {showCreateModal && (
         <CreateTenantModal
-          isOpen={showCreateModal}
           onClose={() => setShowCreateModal(false)}
-          onCreate={handleCreateTenant}
+          onSuccess={() => {
+            setShowCreateModal(false);
+            loadTenants();
+          }}
         />
       )}
     </div>
