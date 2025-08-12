@@ -301,8 +301,9 @@ async def impersonate_tenant(
             value=impersonation_token,
             max_age=IMPERSONATION_EXPIRY_MINUTES * 60,  # seconds
             httponly=True,
-            secure=True,  # HTTPS only
-            samesite="lax"
+            secure=False,  # Allow HTTP for development
+            samesite="lax",
+            path="/"  # Ensure cookie is available site-wide
         )
         
         # Log audit event
