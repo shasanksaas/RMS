@@ -248,10 +248,65 @@ class AuthService {
   }
 
   /**
-   * Get auth token from localStorage
+   * Get authentication token from localStorage or cookies (for impersonation)
    */
   getToken() {
-    return localStorage.getItem('auth_token');
+    // First check localStorage for regular auth token
+    const localToken = localStorage.getItem('auth_token');
+    if (localToken) {
+      return localToken;
+    }
+    
+    // Check for impersonation session token in cookies
+    const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+      const [key, value] = cookie.trim().split('=');
+      acc[key] = value;
+      return acc;
+    }, {});
+    
+    return cookies.session_token || null;
+  }
+
+  /**
+   * Check if current session is an impersonation session
+   */
+  isImpersonationSession() {
+    const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+      const [key, value] = cookie.trim().split('=');
+      acc[key] = value;
+      return acc;
+    }, {});
+    
+    return !!cookies.session_token;
+  }
+
+  /**
+   * Get impersonation info from session token
+   */
+  getImpersonationInfo() {
+    const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+      const [key, value] = cookie.trim().split('=');
+      acc[key] = value;
+      return acc;
+    }, {});
+    
+    if (cookies.session_token) {
+      try {
+        // Decode JWT token (note: this is not secure validation, just for display)
+        const payload = JSON.parse(atob(cookies.session_token.split('.')[1]));
+        return {
+          isImpersonating: payload.act === 'impersonate',
+          tenantId: payload.tenant_id,
+          originalAdminEmail: payload.orig_email,
+          originalUserId: payload.orig_user_id
+        };
+      } catch (error) {
+        console.error('Error decoding impersonation token:', error);
+        return { isImpersonating: false };
+      }
+    }
+    
+    return { isImpersonating: false };
   }
 
   /**
