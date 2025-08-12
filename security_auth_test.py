@@ -177,7 +177,8 @@ class SecurityAuthTestSuite:
         # Test 2: Merchant login with wrong password
         wrong_password_data = {
             "email": MERCHANT_CREDENTIALS["email"],
-            "password": "wrongpassword"
+            "password": "wrongpassword",
+            "tenant_id": MERCHANT_CREDENTIALS["tenant_id"]
         }
         
         success, response, status = await self.make_request("POST", "/users/login", wrong_password_data, login_headers)
