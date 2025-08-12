@@ -676,6 +676,33 @@ backend:
         comment: "🎯 SHOPIFY OAUTH SYSTEM COMPREHENSIVE TESTING COMPLETE - 89.1% SUCCESS RATE! ✅ OUTSTANDING RESULTS: Successfully tested complete Single-Click Shopify OAuth system with 41/46 tests passed across all major functionality areas. COMPREHENSIVE VERIFICATION: (1) OAuth Installation Flow - 100% success rate: Shop domain normalization (rms34 → rms34.myshopify.com), OAuth URL generation with correct API key, all required scopes present (read_orders, read_fulfillments, read_products, read_customers, read_returns, write_returns), correct redirect URI construction, state parameter generation working ✅ (2) Webhook System - 75% success rate: Webhook system active with all 5 endpoints registered (orders-create, orders-updated, fulfillments-create, fulfillments-update, app-uninstalled), HMAC verification required and working for invalid/missing HMAC rejection, payload test endpoint functional ✅ (3) Connection Status API - 100% success rate: Proper response structure, valid status enum values, tenant isolation working correctly ✅ (4) Configuration - 87.5% success rate: All required configuration values present (SHOPIFY_API_KEY, SHOPIFY_API_SECRET, SHOPIFY_API_VERSION, BACKEND_URL), auto-provisioning enabled, required scopes configured ✅ (5) Database & Integration - 100% success rate: Response structures correct, status enums valid, encrypted token storage designed, tenant isolation designed, expected collections identified ✅ (6) Admin Features - 100% success rate: Admin endpoints exist and require authentication correctly ✅ (7) Session Management - 100% success rate: All session endpoints functional ✅ ⚠️ MINOR ISSUES: (1) State parameter HMAC signing verification needs refinement (2) Webhook HMAC verification has edge case with valid HMAC rejection (3) OAuth callback parameter validation returns 401 instead of proper error handling PRODUCTION READINESS: System is mostly production-ready with excellent OAuth flow, comprehensive webhook system, complete configuration, and solid architecture. Minor security refinements needed before full deployment."
 
 frontend:
+  - task: "Admin Login Frontend Integration"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/App.jsx, /app/frontend/src/components/auth/AdminLogin.jsx"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "🚨 CRITICAL ISSUE CONFIRMED: Admin login at /admin/login redirects to /auth/login (Shopify OAuth) instead of showing admin login form. This exactly matches user complaint. Frontend routing issue prevents admins from accessing admin interface. Backend admin authentication works correctly, but frontend integration is broken. AdminLogin component exists but route is not properly configured or being overridden by authentication guards."
+        
+  - task: "Real Tenant Management System Frontend"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/pages/admin/TenantManager.jsx"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented comprehensive tenant management frontend with TenantManager component, CreateTenantModal, real API integration, and admin-only access controls"
+      - working: false
+        agent: "testing"
+        comment: "❌ CANNOT TEST: Admin login issue prevents access to tenant management interface. TenantManager component appears well-implemented with real API calls, no mock data, proper CRUD operations, and impersonation functionality. However, cannot verify functionality due to admin login routing problem blocking access to /admin/tenants."
+
   - task: "Shopify OAuth Frontend System"
     implemented: true
     working: true
