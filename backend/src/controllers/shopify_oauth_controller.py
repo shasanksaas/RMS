@@ -35,6 +35,14 @@ async def initiate_shopify_install(
     3. Returns Shopify authorization URL
     4. Redirects user to Shopify for approval
     """
+    # Check feature flag
+    shopify_oauth_enabled = os.getenv('SHOPIFY_OAUTH_ENABLED', 'true').lower() == 'true'
+    if not shopify_oauth_enabled:
+        raise HTTPException(
+            status_code=503, 
+            detail={"error": "Shopify OAuth disabled", "message": "Shopify OAuth is currently disabled"}
+        )
+    
     try:
         install_request = ShopifyInstallRequest(shop=shop)
         install_response = await shopify_oauth.build_install_url(install_request)
@@ -54,6 +62,14 @@ async def redirect_to_shopify_install(
     Redirect endpoint that immediately sends user to Shopify OAuth
     Used by frontend "Login with Shopify" button
     """
+    # Check feature flag
+    shopify_oauth_enabled = os.getenv('SHOPIFY_OAUTH_ENABLED', 'true').lower() == 'true'
+    if not shopify_oauth_enabled:
+        raise HTTPException(
+            status_code=503, 
+            detail={"error": "Shopify OAuth disabled", "message": "Shopify OAuth is currently disabled"}
+        )
+    
     try:
         install_request = ShopifyInstallRequest(shop=shop)
         install_response = await shopify_oauth.build_install_url(install_request)
@@ -91,6 +107,14 @@ async def handle_shopify_callback(
     7. Queues 90-day backfill
     8. Sets session cookie and redirects to dashboard
     """
+    # Check feature flag
+    shopify_oauth_enabled = os.getenv('SHOPIFY_OAUTH_ENABLED', 'true').lower() == 'true'
+    if not shopify_oauth_enabled:
+        return RedirectResponse(
+            url=f"/auth/login?error=oauth_disabled&message=Shopify OAuth is currently disabled",
+            status_code=302
+        )
+    
     try:
         callback_request = ShopifyCallbackRequest(
             code=code,
