@@ -28,10 +28,7 @@ const UserProfile = () => {
 
   const handleLogout = async () => {
     try {
-      // First navigate to a neutral route to avoid ProtectedRoute admin redirect
-      navigate('/auth/login', { replace: true });
-      
-      // Then perform logout
+      // Perform logout to clear authentication state
       await logout();
       
       toast({
@@ -39,6 +36,10 @@ const UserProfile = () => {
         description: "You have been logged out of your account.",
         variant: "default"
       });
+      
+      // Force redirect using window.location.replace to bypass React Router
+      window.location.replace('/auth/login');
+      
     } catch (error) {
       console.error('Logout error:', error);
       toast({
@@ -46,8 +47,9 @@ const UserProfile = () => {
         description: "There was a problem logging you out. Please try again.",
         variant: "destructive"
       });
-      // Still navigate to login even if logout fails
-      navigate('/auth/login', { replace: true });
+      
+      // Still force redirect even if logout fails
+      window.location.replace('/auth/login');
     }
   };
 
