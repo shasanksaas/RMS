@@ -33,7 +33,7 @@ client = MongoClient(MONGO_URL)
 db = client.returns_manager
 
 # JWT settings for impersonation tokens
-JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "your-secret-key")
+JWT_SECRET_KEY = os.environ.get("SECRET_KEY", "user-management-secret-key-change-in-production-very-secure-key")
 IMPERSONATION_EXPIRY_MINUTES = 30
 
 @router.get("", response_model=TenantListResponse)
