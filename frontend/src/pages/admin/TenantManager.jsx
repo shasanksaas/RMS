@@ -32,6 +32,7 @@ import { useToast } from '../../components/ui/use-toast';
 
 import { tenantService } from '../../services/tenantService';
 import { useAuth } from '../../contexts/AuthContext';
+import CreateTenantModal from '../../components/tenant/CreateTenantModal';
 
 const TenantManager = () => {
   const navigate = useNavigate();
