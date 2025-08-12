@@ -8,11 +8,11 @@ const AdminLayout = () => {
   const location = useLocation();
 
   const navigation = [
-    { name: 'Tenants', href: '/admin/tenants', icon: Users },
-    { name: 'Operations', href: '/admin/ops', icon: Activity },
-    { name: 'Audit', href: '/admin/audit', icon: FileText },
-    { name: 'Feature Flags', href: '/admin/flags', icon: Flag },
-    { name: 'Catalog', href: '/admin/catalog', icon: BookOpen },
+    { name: 'Tenants', href: '/admin/tenants', icon: Users, description: 'Manage tenant accounts' },
+    { name: 'Operations', href: '/admin/ops', icon: Activity, description: 'Monitor system operations' },
+    { name: 'Audit', href: '/admin/audit', icon: FileText, description: 'View audit logs' },
+    { name: 'Feature Flags', href: '/admin/flags', icon: Flag, description: 'Configure features' },
+    { name: 'Catalog', href: '/admin/catalog', icon: BookOpen, description: 'Manage product catalog' },
   ];
 
   const isActive = (path) => location.pathname === path;
