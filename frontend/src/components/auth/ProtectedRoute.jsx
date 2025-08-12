@@ -26,7 +26,15 @@ const ProtectedRoute = ({
 
   // If authentication is required but user is not authenticated
   if (requireAuth && !isAuthenticated) {
-    // Determine appropriate login page based on route
+    // Check if we're already navigating to a login page (logout scenario)
+    const isNavigatingToLogin = location.pathname === '/auth/login' || location.pathname === '/admin/login';
+    
+    if (isNavigatingToLogin) {
+      // Don't interfere with logout navigation - let the user reach their intended login page
+      return children;
+    }
+    
+    // Determine appropriate login page based on route for normal unauthenticated access
     const isAdminRoute = location.pathname.startsWith('/admin');
     const loginUrl = isAdminRoute 
       ? `/admin/login?return_url=${encodeURIComponent(location.pathname)}`
