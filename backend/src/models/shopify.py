@@ -127,10 +127,12 @@ class ShopifyConnectionResponse(BaseModel):
     """Response model for connection status"""
     connected: bool
     shop: Optional[str] = None
+    shop_domain: Optional[str] = None  # Additional field for flexibility
     tenant_id: Optional[str] = None
     last_sync_at: Optional[datetime] = None
-    status: ShopifyConnectionStatus
+    status: Union[ShopifyConnectionStatus, str]  # Allow string fallback
     scopes: List[str] = Field(default_factory=list)
+    error: Optional[str] = None  # For error cases
 
 class ShopifyInstallResponse(BaseModel):
     """Response model for installation URL"""
