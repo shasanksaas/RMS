@@ -38,8 +38,8 @@ async def get_current_user(request: Request, token: str = Depends(security)) -> 
                 detail="Invalid authentication token"
             )
         
-        # Get user from database
-        user = await auth_service.get_user_by_id(user_id)
+        # Get user from database (global lookup for admin authentication)
+        user = await auth_service.get_user_by_id_global(user_id)
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
