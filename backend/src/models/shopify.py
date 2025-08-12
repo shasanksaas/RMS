@@ -3,7 +3,7 @@ Shopify Integration Models - Shop-based Multi-tenant Architecture
 """
 
 from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Union
 from datetime import datetime
 from enum import Enum
 import uuid
