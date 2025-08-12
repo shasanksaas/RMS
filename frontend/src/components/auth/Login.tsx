@@ -48,13 +48,16 @@ const Login: React.FC = () => {
   const [error, setError] = useState<string>('');
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
-  // Check if user is already logged in
+  // Check if user is already logged in or handle post-login redirect
   useEffect(() => {
     const token = localStorage.getItem('auth_token');
-    if (token) {
-      navigate('/dashboard', { replace: true });
+    if (token && user) {
+      // User is authenticated, redirect based on role
+      const redirectPath = getRedirectPath(user.role);
+      console.log('🎯 REDIRECTING AUTHENTICATED USER TO:', redirectPath);
+      navigate(redirectPath, { replace: true });
     }
-  }, [navigate]);
+  }, [navigate, user]);
 
   // Handle form input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
