@@ -23,15 +23,56 @@ export const AuthProvider = ({ children }) => {
     
     const initAuth = async () => {
       try {
-        // Check if user is authenticated
+        // Check if user is authenticated (regular or impersonation)
         const token = authService.getToken();
-        const userInfo = authService.getCurrentUserFromStorage();
-        const tenantInfo = authService.getCurrentTenantFromStorage();
         
-        if (token && userInfo && tenantInfo && isMounted) {
-          setUser(userInfo);
-          setTenant(tenantInfo);
-          setIsAuthenticated(true);
+        if (token && isMounted) {
+          // Check if this is an impersonation session
+          if (authService.isImpersonationSession()) {
+            const impersonationInfo = authService.getImpersonationInfo();
+            
+            if (impersonationInfo.isImpersonating) {
+              // Set up impersonation session
+              const impersonatedUser = {
+                user_id: impersonationInfo.originalUserId,
+                email: impersonationInfo.originalAdminEmail,
+                role: "merchant",  // Admin is impersonating as merchant
+                tenant_id: impersonationInfo.tenantId,
+                auth_provider: "impersonation",
+                permissions: ["read", "write", "delete", "admin"], // Admin has full permissions
+                isImpersonating: true,
+                originalAdminEmail: impersonationInfo.originalAdminEmail
+              };
+              
+              const tenant = {
+                tenant_id: impersonationInfo.tenantId,
+                name: `Impersonated Tenant (${impersonationInfo.tenantId})`
+              };
+              
+              setUser(impersonatedUser);
+              setTenant(tenant);
+              setIsAuthenticated(true);
+              
+              console.log('🔐 Impersonation session detected:', impersonatedUser);
+              return;
+            }
+          }
+          
+          // Regular authentication session
+          const userInfo = authService.getCurrentUserFromStorage();
+          const tenantInfo = authService.getCurrentTenantFromStorage();
+          
+          if (userInfo && tenantInfo) {
+            setUser(userInfo);
+            setTenant(tenantInfo);
+            setIsAuthenticated(true);
+          } else {
+            // Token exists but no user info - clear everything
+            authService.clearAuthData();
+            setUser(null);
+            setTenant(null);
+            setIsAuthenticated(false);
+          }
         } else if (isMounted) {
           setUser(null);
           setTenant(null);
