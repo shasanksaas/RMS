@@ -17,7 +17,7 @@ import AdminLogin from './components/auth/AdminLogin';
 import ConnectedDashboard from './components/dashboard/ConnectedDashboard';
 
 // Legacy Auth (Now used for simple email/password login)
-import Login from './components/auth/DualPathLogin.tsx';
+import Login from './components/auth/DualPathLogin';
 // import Register from './components/auth/Register.tsx';
 // import GoogleCallback from './components/auth/GoogleCallback';
 // import ForgotPassword from './components/auth/ForgotPassword';
