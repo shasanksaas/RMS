@@ -25,31 +25,22 @@ const ShopifyLogin = () => {
       // Get backend URL from environment
       const backendUrl = process.env.REACT_APP_BACKEND_URL;
       
+      if (!backendUrl) {
+        throw new Error('Backend URL not configured');
+      }
+      
       // Direct redirect to Shopify OAuth
       const shopifyInstallUrl = `${backendUrl}/api/auth/shopify/install-redirect?shop=${encodeURIComponent(shopDomain.trim())}`;
       
       console.log('🚀 Redirecting to Shopify OAuth:', shopifyInstallUrl);
+      console.log('🚀 Backend URL:', backendUrl);
       
-      // Show loading message
-      toast({
-        title: "Connecting to Shopify",
-        description: "Redirecting to Shopify for authorization...",
-        variant: "default"
-      });
-
-      // Redirect to Shopify OAuth flow
+      // Immediate redirect without toast or async delays
       window.location.href = shopifyInstallUrl;
 
     } catch (error) {
       console.error('❌ Shopify login error:', error);
-      setError('Failed to connect to Shopify. Please try again.');
-      
-      toast({
-        title: "Connection Failed",
-        description: "Failed to connect to Shopify. Please check your shop domain and try again.",
-        variant: "destructive"
-      });
-      
+      setError(`Failed to connect: ${error.message}`);
       setIsLoading(false);
     }
   };
