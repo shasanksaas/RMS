@@ -5,7 +5,7 @@ Provides admin-only access control for platform administration endpoints
 
 from fastapi import HTTPException, Depends, status
 from src.controllers.tenant_controller import get_current_user
-from src.models.user import User
+from src.models.user import UserDB as User
 import logging
 
 logger = logging.getLogger(__name__)
