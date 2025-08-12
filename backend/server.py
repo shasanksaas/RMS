@@ -742,6 +742,7 @@ api_router.include_router(unified_returns_router)
 # Then include the api_router in the main app
 app.include_router(api_router)
 
+# Add CORS middleware FIRST (before tenant isolation)
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
@@ -750,7 +751,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Add tenant isolation middleware for multi-tenancy security
+# Add tenant isolation middleware AFTER CORS
 tenant_isolation = TenantIsolationMiddleware()
 app.middleware("http")(tenant_isolation)
 
