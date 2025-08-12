@@ -28,15 +28,17 @@ const UserProfile = () => {
 
   const handleLogout = async () => {
     try {
+      // First navigate to a neutral route to avoid ProtectedRoute admin redirect
+      navigate('/auth/login', { replace: true });
+      
+      // Then perform logout
       await logout();
+      
       toast({
         title: "Logged out successfully",
         description: "You have been logged out of your account.",
         variant: "default"
       });
-      
-      // Always redirect to main login form for all users
-      navigate('/auth/login', { replace: true });
     } catch (error) {
       console.error('Logout error:', error);
       toast({
@@ -44,6 +46,8 @@ const UserProfile = () => {
         description: "There was a problem logging you out. Please try again.",
         variant: "destructive"
       });
+      // Still navigate to login even if logout fails
+      navigate('/auth/login', { replace: true });
     }
   };
 
