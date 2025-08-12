@@ -467,7 +467,7 @@ const TenantManager = () => {
         <CreateTenantModal
           isOpen={showCreateModal}
           onClose={() => setShowCreateModal(false)}
-          onSubmit={handleCreateTenant}
+          onCreate={handleCreateTenant}
         />
       )}
     </div>
