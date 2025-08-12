@@ -48,6 +48,11 @@ class TenantIsolationMiddleware:
         """Process request with tenant isolation checks"""
         
         try:
+            # Always allow OPTIONS requests for CORS preflight
+            if request.method == "OPTIONS":
+                response = await call_next(request)
+                return response
+            
             # Skip public paths
             if self._is_public_path(request.url.path):
                 response = await call_next(request)
