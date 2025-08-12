@@ -35,9 +35,8 @@ const UserProfile = () => {
         variant: "default"
       });
       
-      // Role-based logout redirect
-      const redirectPath = user?.role === 'admin' ? '/admin/login' : '/auth/login';
-      navigate(redirectPath, { replace: true });
+      // Always redirect to main login form for all users
+      navigate('/auth/login', { replace: true });
     } catch (error) {
       console.error('Logout error:', error);
       toast({
