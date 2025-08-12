@@ -64,6 +64,9 @@ import AdminFeatureFlags from './pages/admin/FeatureFlags';
 import AdminCatalog from './pages/admin/Catalog';
 import TenantManager from './pages/admin/TenantManager';
 
+// Public Pages
+import MerchantSignup from './pages/public/MerchantSignup';
+
 import './App.css';
 
 const App = () => {
