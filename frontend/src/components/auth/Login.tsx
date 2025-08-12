@@ -69,7 +69,15 @@ const Login: React.FC = () => {
   };
 
   // Handle Shopify OAuth login
-  const handleShopifyLogin = async () => {
+  const handleShopifyLogin = async (e?: React.MouseEvent) => {
+    // Prevent any default browser behavior
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
+    console.log('🔥 SHOPIFY LOGIN BUTTON CLICKED'); // Debug log
+    
     if (!shopDomain.trim()) {
       setError('Please enter your shop domain');
       return;
