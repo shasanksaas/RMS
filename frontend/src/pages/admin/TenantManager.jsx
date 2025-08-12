@@ -467,7 +467,7 @@ const TenantManager = () => {
                         <div className="flex items-center gap-2">
                           <Button
                             size="sm"
-                            onClick={() => handleImpersonateTenant(tenant.tenant_id, tenant.name)}
+                            onClick={() => handleImpersonate(tenant.tenant_id, tenant.name)}
                             className="bg-blue-600 hover:bg-blue-700"
                           >
                             <LogIn className="h-4 w-4 mr-1" />
