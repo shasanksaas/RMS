@@ -115,10 +115,8 @@ const Login: React.FC = () => {
       const redirectPath = getRedirectPath(response.user.role);
       console.log('🎯 REDIRECTING TO:', redirectPath);
       
-      // Small delay to ensure state is properly set
-      setTimeout(() => {
-        navigate(redirectPath, { replace: true });
-      }, 100);
+      // Immediate redirect without delay
+      navigate(redirectPath, { replace: true });
 
     } catch (error: any) {
       console.error('❌ LOGIN ERROR:', error);
