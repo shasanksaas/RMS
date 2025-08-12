@@ -56,6 +56,7 @@ const Login: React.FC = () => {
   // Handle email/password login
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation(); // Prevent event bubbling
     setError('');
     
     console.log('🔥 LOGIN ATTEMPT:', formData);
@@ -84,21 +85,22 @@ const Login: React.FC = () => {
     }
 
     setIsLoading(true);
+    
+    // Create a copy of form data to prevent React state issues
+    const loginData = {
+      tenant_id: formData.tenantId,
+      email: formData.email,
+      password: formData.password,
+      remember_me: formData.rememberMe
+    };
 
     try {
       console.log('🚀 CALLING contextLogin with:', {
-        tenant_id: formData.tenantId,
-        email: formData.email,
-        password: '***',
-        remember_me: formData.rememberMe
+        ...loginData,
+        password: '***'
       });
 
-      const response = await contextLogin({
-        tenant_id: formData.tenantId,
-        email: formData.email,
-        password: formData.password,
-        remember_me: formData.rememberMe
-      });
+      const response = await contextLogin(loginData);
 
       console.log('✅ LOGIN SUCCESS:', response);
 
@@ -112,22 +114,37 @@ const Login: React.FC = () => {
       // Navigate based on user role
       const redirectPath = getRedirectPath(response.user.role);
       console.log('🎯 REDIRECTING TO:', redirectPath);
-      navigate(redirectPath, { replace: true });
+      
+      // Small delay to ensure state is properly set
+      setTimeout(() => {
+        navigate(redirectPath, { replace: true });
+      }, 100);
 
     } catch (error: any) {
       console.error('❌ LOGIN ERROR:', error);
       
+      // Don't reset form on error - keep user data
+      let errorMessage = 'Login failed. Please check your connection and try again.';
+      
       if (error.status === 401) {
-        setError('Invalid email or password. Please try again.');
+        errorMessage = 'Invalid email or password. Please try again.';
       } else if (error.status === 423) {
-        setError('Account is temporarily locked. Please try again later.');
+        errorMessage = 'Account is temporarily locked. Please try again later.';
       } else if (error.status === 429) {
-        setError('Too many login attempts. Please try again later.');
+        errorMessage = 'Too many login attempts. Please try again later.';
       } else if (error.message) {
-        setError(error.message);
-      } else {
-        setError('Login failed. Please check your connection and try again.');
+        errorMessage = error.message;
       }
+      
+      setError(errorMessage);
+      
+      // Show error toast as well
+      toast({
+        title: "Login Failed",
+        description: errorMessage,
+        variant: "destructive"
+      });
+      
     } finally {
       setIsLoading(false);
     }
