@@ -60,8 +60,10 @@ export const AuthProvider = ({ children }) => {
   }, []); // Empty dependency array - runs only once
 
   const login = async (loginData) => {
+    console.log('🔐 AuthContext.login called with:', loginData);
     try {
       const response = await authService.login(loginData);
+      console.log('📡 AuthService.login response:', response);
       
       // Store authentication data
       localStorage.setItem('auth_token', response.access_token);
@@ -76,9 +78,10 @@ export const AuthProvider = ({ children }) => {
       setTenant(loginData.tenant_id);
       setIsAuthenticated(true);
 
+      console.log('✅ AuthContext state updated, user:', response.user);
       return response;
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('❌ AuthContext.login error:', error);
       throw error;
     }
   };
