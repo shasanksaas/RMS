@@ -241,7 +241,7 @@ const TenantManager = () => {
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Tenant Manager</h1>
             <p className="text-gray-600 mt-1">
-              Manage tenants and monitor merchant signups
+              Manage tenants and monitor merchant signups (Real Data - No Mocks)
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -260,7 +260,7 @@ const TenantManager = () => {
           </div>
         </div>
 
-        {/* Statistics Cards */}
+        {/* Statistics Cards - Real Data */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <Card>
             <CardContent className="p-4">
@@ -268,7 +268,7 @@ const TenantManager = () => {
                 <Store className="h-8 w-8 text-blue-600 mr-3" />
                 <div>
                   <p className="text-sm font-medium text-gray-600">Total Tenants</p>
-                  <p className="text-2xl font-bold text-gray-900">{pagination.total}</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
                 </div>
               </div>
             </CardContent>
@@ -278,10 +278,8 @@ const TenantManager = () => {
               <div className="flex items-center">
                 <Users className="h-8 w-8 text-green-600 mr-3" />
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Active Tenants</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {tenants.filter(t => ['claimed', 'active'].includes(t.status)).length}
-                  </p>
+                  <p className="text-sm font-medium text-gray-600">Connected</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.active}</p>
                 </div>
               </div>
             </CardContent>
@@ -291,10 +289,8 @@ const TenantManager = () => {
               <div className="flex items-center">
                 <Calendar className="h-8 w-8 text-yellow-600 mr-3" />
                 <div>
-                  <p className="text-sm font-medium text-gray-600">New Tenants</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {tenants.filter(t => t.status === 'new').length}
-                  </p>
+                  <p className="text-sm font-medium text-gray-600">Not Connected</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.new}</p>
                 </div>
               </div>
             </CardContent>
@@ -305,48 +301,45 @@ const TenantManager = () => {
                 <Archive className="h-8 w-8 text-gray-600 mr-3" />
                 <div>
                   <p className="text-sm font-medium text-gray-600">Archived</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {tenants.filter(t => t.status === 'archived').length}
-                  </p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.archived}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
-      </div>
 
-      {/* Filters and Search */}
-      <Card className="mb-6">
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Search tenants by name or ID..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="all">All Status</option>
-                <option value="new">New</option>
-                <option value="claimed">Claimed</option>
-                <option value="active">Active</option>
-                <option value="suspended">Suspended</option>
-                <option value="archived">Archived</option>
-              </select>
-            </div>
+        {/* Search and Filters */}
+        <div className="flex items-center gap-4 mb-6">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              placeholder="Search tenants by name or ID..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
           </div>
-        </CardContent>
-      </Card>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                <Filter className="h-4 w-4 mr-2" />
+                {statusFilter === 'all' ? 'All Status' : statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => setStatusFilter('all')}>
+                All Status
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setStatusFilter('connected')}>
+                Connected
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setStatusFilter('new')}>
+                Not Connected
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
 
       {/* Tenants Table */}
       <Card>
