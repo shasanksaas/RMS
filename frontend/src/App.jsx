@@ -100,6 +100,9 @@ const App = () => {
               {/* Public Merchant Signup Routes */}
               <Route path="/signup" element={<MerchantSignup />} />
               <Route path="/signup/:tenantId" element={<MerchantSignup />} />
+              
+              {/* Simple Login Test Route */}
+              <Route path="/simple-login" element={<SimpleLogin />} />
 
               {/* Customer Portal Routes (Some Public, Some Protected) */}
               <Route path="/returns" element={<CustomerLayout />}>
