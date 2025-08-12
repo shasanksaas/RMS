@@ -754,7 +754,7 @@ backend:
 frontend:
   - task: "CRITICAL: Admin Logout Redirect Fix"
     implemented: true
-    working: false
+    working: true
     file: "src/components/layout/UserProfile.jsx, src/contexts/AuthContext.jsx"
     stuck_count: 1
     priority: "high"
@@ -766,6 +766,9 @@ frontend:
       - working: false
         agent: "testing"
         comment: "🚨 CRITICAL FAILURE: Admin logout redirect fix is NOT working! Comprehensive end-to-end testing confirms the issue. DETAILED RESULTS: (1) Admin Login - ✅ SUCCESS: admin@returns-manager.com / AdminPassword123! login works perfectly, redirects to /admin/tenants ✅ (2) Admin Dashboard - ✅ SUCCESS: Dashboard loads, user profile dropdown accessible, logout button functional ✅ (3) Logout Execution - ✅ SUCCESS: Logout button clicked, authentication cleared properly ✅ (4) CRITICAL FAILURE - Redirect URL: Expected: https://returnportal.preview.emergentagent.com/auth/login, Actual: https://returnportal.preview.emergentagent.com/admin/login?return_url=%2Fadmin%2Ftenants ❌ ROOT CAUSE: UserProfile.jsx handleLogout function navigates to /auth/login but system still redirects to admin login with forbidden return URL parameters. The logout redirect logic is completely broken. IMPACT: Admins who logout are incorrectly sent to admin login page instead of dual-path login form. URGENT FIX REQUIRED: Fix logout redirect logic to ensure /auth/login redirect without return URL parameters."
+      - working: true
+        agent: "testing"
+        comment: "🎉 CRITICAL ADMIN LOGOUT REDIRECT FIX TESTING COMPLETE - 100% SUCCESS! ✅ ADMIN LOGOUT REDIRECT FIX IS NOW WORKING PERFECTLY! Comprehensive end-to-end testing confirms the window.location.replace() fix has completely resolved the logout redirect issue. DETAILED TEST RESULTS: (1) Admin Login - ✅ WORKING: Successfully logged in with admin@returns-manager.com / AdminPassword123!, proper authentication, redirected to /admin/tenants dashboard ✅ (2) Admin Dashboard Access - ✅ WORKING: Admin dashboard loaded correctly, user profile dropdown accessible with 'Admin User' display, logout button found and functional ✅ (3) Logout Execution - ✅ WORKING: Successfully clicked logout button, logout API call detected (POST /api/users/logout), authentication cleared properly ✅ (4) CRITICAL SUCCESS - Logout Redirect: Expected URL: https://returnportal.preview.emergentagent.com/auth/login, Actual URL: https://returnportal.preview.emergentagent.com/auth/login ✅ PERFECT MATCH! ROOT CAUSE RESOLVED: The UserProfile.jsx handleLogout function with window.location.replace('/auth/login') successfully bypasses React Router and prevents the ProtectedRoute from adding return_url parameters. IMPACT: Admin logout now correctly redirects to the dual-path login form at /auth/login without any return_url parameters, exactly as requested in the review. The window.location.replace() implementation works flawlessly to force the redirect and bypass React Router interference. FINAL VERIFICATION: Screenshots confirm the final page shows the dual-path login form with 'Connect with Shopify' and 'Login with Email' options, proving the redirect to /auth/login is working correctly."
 
   - task: "Admin Login Frontend Integration"
     implemented: true
