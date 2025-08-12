@@ -121,27 +121,12 @@ const App = () => {
               {/* Customer Portal Routes (Some Public, Some Protected) */}
               <Route path="/returns" element={<CustomerLayout />}>
                 <Route path="start" element={<CustomerStart />} />
-                <Route path="create" element={
-                  <ProtectedRoute requiredRole="customer">
-                    <CustomerCreateReturn />
-                  </ProtectedRoute>
-                } />
+                <Route path="create" element={<CustomerCreateReturn />} />
                 <Route path="confirmation/:returnId" element={<CustomerReturnConfirmation />} />
-                <Route path="select" element={
-                  <ProtectedRoute requiredRole="customer">
-                    <CustomerSelectItems />
-                  </ProtectedRoute>
-                } />
-                <Route path="resolution" element={
-                  <ProtectedRoute requiredRole="customer">
-                    <CustomerResolution />
-                  </ProtectedRoute>
-                } />
-                <Route path="confirm" element={
-                  <ProtectedRoute requiredRole="customer">
-                    <CustomerConfirm />
-                  </ProtectedRoute>
-                } />
+                <Route path="select" element={<CustomerSelectItems />} />
+                <Route path="resolution" element={<CustomerResolution />} />
+                <Route path="confirm" element={<CustomerConfirm />} />
+                <Route path="status/:returnId" element={<CustomerStatus />} />
                 <Route path="status/:returnId" element={<CustomerStatus />} />
                 <Route index element={<Navigate to="/returns/start" replace />} />
               </Route>
