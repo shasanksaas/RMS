@@ -38,6 +38,10 @@ httpx>=0.25.0
 python-multipart>=0.0.6
 # Shopify integration dependencies
 ShopifyAPI==12.3.0
+# Shopify OAuth Integration
+emergentintegrations
+cryptography==41.0.8
+tenacity==8.2.3
 # Additional testing dependencies
 pytest-asyncio==0.21.1
 pytest-cov==4.1.0
