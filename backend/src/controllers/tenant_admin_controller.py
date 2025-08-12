@@ -346,8 +346,9 @@ async def end_impersonation(
         response.delete_cookie(
             key="session_token",
             httponly=True,
-            secure=True,
-            samesite="lax"
+            secure=False,  # Allow HTTP for development
+            samesite="lax",
+            path="/"
         )
         
         # Try to get impersonation info for logging
