@@ -213,10 +213,20 @@ const TenantManager = () => {
               Manage tenants and monitor merchant signups
             </p>
           </div>
-          <Button onClick={() => setShowCreateModal(true)} size="lg">
-            <Plus className="h-4 w-4 mr-2" />
-            Create Tenant
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="outline" 
+              onClick={() => window.open('/auth/login', '_blank')}
+              size="lg"
+            >
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Merchant Login
+            </Button>
+            <Button onClick={() => setShowCreateModal(true)} size="lg">
+              <Plus className="h-4 w-4 mr-2" />
+              Create Tenant
+            </Button>
+          </div>
         </div>
 
         {/* Statistics Cards */}
