@@ -711,6 +711,11 @@ api_router.include_router(auth_router)
 api_router.include_router(public_signup_router)  # Public merchant signup
 api_router.include_router(users_router)  # User management system
 api_router.include_router(tenant_management_router)  # Admin tenant management
+
+# Shopify OAuth & Webhook Routes
+api_router.include_router(shopify_oauth_router)  # Shopify OAuth flow
+api_router.include_router(shopify_webhook_router)  # Shopify webhooks
+
 api_router.include_router(integration_router)
 api_router.include_router(webhook_router)
 api_router.include_router(testing_router)
