@@ -149,7 +149,7 @@ agent_communication:
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: Implement and verify 10 end-to-end capabilities - Customer Return Initiation, Rules Engine Processing, Merchant Dashboard View, Return Status Updates, Refund/Resolution, Analytics Dashboard, Settings Management, Multi-Tenant Isolation, Mobile/Responsive, and Error Handling. Additionally, complete the unified "Create Return" full process for both admin and customer portals.
+user_problem_statement: Create a simple merchant user for tenant-rms34 so the user can directly login to the merchant dashboard. URGENT REQUEST - STOP ALL COMPLEXITY: 1. Create/verify merchant user for tenant-rms34 (Email: merchant@rms34.com, Password: merchant123, Role: merchant, Tenant: tenant-rms34) 2. Test direct merchant login - verify this user can login normally without any admin impersonation 3. Ensure tenant-rms34 dashboard works - confirm the merchant dashboard loads with Shopify connection. SIMPLE GOAL: Give user direct merchant credentials to access tenant-rms34 dashboard immediately. NO ADMIN IMPERSONATION NEEDED - just create a working merchant user and test the login flow. Expected result: User can go to /auth/login, login as merchant@rms34.com / merchant123, and see the tenant-rms34 merchant dashboard with Shopify connection.
 
 backend:
   - task: "Elite-Grade Returns Creation System - Domain Layer"
