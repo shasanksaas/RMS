@@ -16,8 +16,8 @@ import AdminLogin from './components/auth/AdminLogin';
 // Dashboard Components  
 import ConnectedDashboard from './components/dashboard/ConnectedDashboard';
 
-// Legacy Auth (Commented out - replaced by Shopify OAuth for merchants)
-// import Login from './components/auth/Login.tsx';
+// Legacy Auth (Now used for simple email/password login)
+import Login from './components/auth/Login.tsx';
 // import Register from './components/auth/Register.tsx';
 // import GoogleCallback from './components/auth/GoogleCallback';
 // import ForgotPassword from './components/auth/ForgotPassword';
