@@ -204,6 +204,44 @@ const TenantManager = () => {
     archived: 0 // Would need to include archived tenants in API
   };
 
+  // Utility functions
+  const getStatusBadgeColor = (status) => {
+    switch (status) {
+      case 'active':
+        return {
+          badge: 'bg-green-100 text-green-800 border-green-200',
+          bg: 'bg-green-100',
+          text: 'text-green-600'
+        };
+      case 'pending':
+        return {
+          badge: 'bg-orange-100 text-orange-800 border-orange-200',
+          bg: 'bg-orange-100',
+          text: 'text-orange-600'
+        };
+      case 'suspended':
+        return {
+          badge: 'bg-red-100 text-red-800 border-red-200',
+          bg: 'bg-red-100',
+          text: 'text-red-600'
+        };
+      default:
+        return {
+          badge: 'bg-gray-100 text-gray-800 border-gray-200',
+          bg: 'bg-gray-100',
+          text: 'text-gray-600'
+        };
+    }
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
   if (loading) {
     return (
       <div className="p-6 max-w-7xl mx-auto">
