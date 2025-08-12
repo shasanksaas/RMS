@@ -6,6 +6,8 @@ import { Alert, AlertDescription } from '../ui/alert';
 import TenantSwitcher from './TenantSwitcher';
 import UserProfile from './UserProfile';
 import SearchBar from './SearchBar';
+import ImpersonationBanner from '../admin/ImpersonationBanner';
+import { useAuth } from '../../contexts/AuthContext';
 
 const MerchantLayout = ({ isOnline }) => {
   const location = useLocation();
