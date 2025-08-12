@@ -80,7 +80,9 @@ const Login: React.FC = () => {
 
     try {
       // Get backend URL from environment
-      const backendUrl = process.env.REACT_APP_BACKEND_URL;
+      const backendUrl = import.meta.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+      
+      console.log('🔍 Backend URL from env:', backendUrl);
       
       if (!backendUrl) {
         throw new Error('Backend URL not configured');
