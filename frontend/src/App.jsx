@@ -7,13 +7,16 @@ import AuthProvider from './contexts/AuthContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import AuthGuard from './components/auth/AuthGuard';
 
-// Shopify OAuth Components
+// Shopify OAuth Components (for Merchants)
 import ShopifyLogin from './components/auth/ShopifyLogin';
+
+// Admin Components (separate email/password login)
+import AdminLogin from './components/auth/AdminLogin';
 
 // Dashboard Components  
 import ConnectedDashboard from './components/dashboard/ConnectedDashboard';
 
-// Legacy Auth (Commented out - replaced by Shopify OAuth)
+// Legacy Auth (Commented out - replaced by Shopify OAuth for merchants)
 // import Login from './components/auth/Login.tsx';
 // import Register from './components/auth/Register.tsx';
 // import GoogleCallback from './components/auth/GoogleCallback';
