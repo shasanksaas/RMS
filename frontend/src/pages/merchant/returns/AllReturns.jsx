@@ -10,6 +10,9 @@ import { Alert, AlertDescription } from '../../../components/ui/alert';
 import { useAuth } from '../../../contexts/AuthContext';
 
 const AllReturns = () => {
+  // Get authenticated user and tenant from AuthContext
+  const { user, tenant } = useAuth();
+
   const [allReturns, setAllReturns] = useState([]); // Store all returns
   const [filteredReturns, setFilteredReturns] = useState([]); // Store filtered results
   const [loading, setLoading] = useState(true);
