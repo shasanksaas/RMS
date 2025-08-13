@@ -23,6 +23,9 @@ import { Textarea } from '../../../components/ui/textarea';
 import { useAuth } from '../../../contexts/AuthContext';
 
 const Integrations = () => {
+  // Get authenticated user and tenant from AuthContext
+  const { user, tenant } = useAuth();
+
   // Connection form state
   const [showConnectionForm, setShowConnectionForm] = useState(false);
   const [connectionForm, setConnectionForm] = useState({
