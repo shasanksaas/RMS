@@ -350,8 +350,8 @@ class ShopifyIntegrationTestSuite:
             self.log_test("Data API: Returns Endpoint", True, 
                          f"Returns endpoint accessible for {TEST_TENANT_ID}")
             
-            if isinstance(returns_response, dict) and "items" in returns_response:
-                returns = returns_response["items"]
+            if isinstance(returns_response, dict) and "returns" in returns_response:
+                returns = returns_response["returns"]
                 self.log_test("Data API: Returns Data Structure", True, 
                              f"Retrieved {len(returns)} returns with proper structure")
                 
