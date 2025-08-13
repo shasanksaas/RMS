@@ -13,6 +13,10 @@ import { useAuth } from '../../../contexts/AuthContext';
 
 const ReturnDetail = () => {
   const { id } = useParams();
+
+  // Get authenticated user and tenant from AuthContext
+  const { user, tenant } = useAuth();
+
   const [returnRequest, setReturnRequest] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionNotes, setActionNotes] = useState('');
