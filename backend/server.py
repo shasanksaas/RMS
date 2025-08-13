@@ -725,7 +725,8 @@ api_router.include_router(shopify_webhook_router)  # Shopify webhooks
 # Legacy routes (temporarily disabled to prevent conflicts)
 # api_router.include_router(integration_router)  # OLD - conflicts with shopify_integration_router
 # api_router.include_router(webhook_router)  # OLD - conflicts with shopify_webhook_router
-# api_router.include_router(shopify_router)  # OLD - conflicts with shopify_oauth_router
+# Testing & Development Routes
+api_router.include_router(testing_router)  # Keep for development
 api_router.include_router(enhanced_router)
 api_router.include_router(orders_enhanced_router)
 api_router.include_router(returns_enhanced_router)
