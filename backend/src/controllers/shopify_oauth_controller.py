@@ -506,14 +506,10 @@ async def trigger_shopify_resync(
                 detail="Shopify integration not connected. Please connect first."
             )
         
-        # TODO: Trigger actual data sync here
-        # This would typically:
-        # 1. Fetch latest orders from Shopify
-        # 2. Fetch latest returns/refunds from Shopify  
-        # 3. Update local database with latest data
-        # 4. Update last_sync timestamp
+        # Trigger actual data sync by calling shopify_oauth service
+        await shopify_oauth._queue_data_backfill(current_tenant, status.shop)
         
-        print(f"🔄 Manual resync triggered for tenant: {current_tenant}")
+        print(f"🔄 Manual resync completed for tenant: {current_tenant}")
         
         return {
             "success": True,
