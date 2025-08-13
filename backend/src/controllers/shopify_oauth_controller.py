@@ -484,14 +484,18 @@ async def get_shopify_integration_status(
 
 @integration_router.post("/resync")
 async def trigger_shopify_resync(
-    request: Request,
-    current_tenant: str = Depends(lambda: "tenant-rms34")  # TODO: Get from auth context
+    request: Request
 ):
     """
     Trigger manual Shopify data resync for the current tenant
     
     Used by the frontend Integrations screen "Resync" button
     """
+    # Get tenant from X-Tenant-Id header (sent by frontend)
+    current_tenant = request.headers.get("X-Tenant-Id")
+    if not current_tenant:
+        raise HTTPException(status_code=400, detail="X-Tenant-Id header required")
+    
     # Check feature flag
     shopify_oauth_enabled = os.getenv('SHOPIFY_OAUTH_ENABLED', 'true').lower() == 'true'
     if not shopify_oauth_enabled:
