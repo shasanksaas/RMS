@@ -145,15 +145,14 @@ async def create_tenant(
                 detail=f"Tenant with ID '{tenant_data.tenant_id}' already exists"
             )
         
-        # Check if email already exists for this tenant
+        # Check if email already exists (globally across all tenants)
         existing_user = users_collection.find_one({
-            "email": tenant_data.email,
-            "tenant_id": tenant_data.tenant_id
+            "email": tenant_data.email
         })
         if existing_user:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail=f"User with email '{tenant_data.email}' already exists for this tenant"
+                detail=f"User with email '{tenant_data.email}' already exists"
             )
         
         # Hash password for user account
