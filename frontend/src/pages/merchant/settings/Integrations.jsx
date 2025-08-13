@@ -20,6 +20,7 @@ import { Label } from '../../../components/ui/label';
 import { Badge } from '../../../components/ui/badge';
 import { Alert, AlertDescription } from '../../../components/ui/alert';
 import { Textarea } from '../../../components/ui/textarea';
+import { useAuth } from '../../../contexts/AuthContext';
 
 const Integrations = () => {
   // Connection form state
