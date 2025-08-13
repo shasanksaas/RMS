@@ -168,10 +168,18 @@ async def handle_shopify_callback(
         
         print(f"✅ Shopify connection complete for {connect_result.shop}")
         
-        # Redirect to dashboard with connection success
-        redirect_url = f"{connect_result.redirect_url}?shop={connect_result.shop}&tenant_id={connect_result.tenant_id}&connected=1"
+        # Redirect to dashboard with connection success and authentication token
+        # Instead of using the complex redirect_url, redirect directly to frontend dashboard
+        dashboard_url = f"https://multi-tenant-rms.preview.emergentagent.com/app/dashboard?connected=1&shop={connect_result.shop}&tenant_id={connect_result.tenant_id}"
+        
+        if user:
+            # Add token to URL for frontend to handle (temporary solution)
+            dashboard_url += f"&token={jwt_token}"
+        
+        print(f"🔄 Redirecting to: {dashboard_url}")
+        
         return RedirectResponse(
-            url=redirect_url,
+            url=dashboard_url,
             status_code=302
         )
         
