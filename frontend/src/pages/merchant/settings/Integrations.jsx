@@ -154,7 +154,7 @@ const Integrations = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Tenant-Id': 'tenant-rms34' // Updated to match connected store
+          'X-Tenant-Id': tenantId // Use authenticated user's tenant
         }
       });
 
