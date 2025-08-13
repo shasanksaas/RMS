@@ -1,17 +1,22 @@
 #!/usr/bin/env python3
 """
-CRITICAL END-TO-END SHOPIFY OAUTH FLOW TEST
+COMPREHENSIVE OAUTH & DATA MAPPING TEST: Complete Shopify integration flow with proper tenant association
 
-This test suite verifies the complete Shopify OAuth login + install flow 
-with new integration endpoints as requested in the review.
+This test suite verifies:
+1. OAuth Routing Fix Verification - Test all OAuth endpoints with proper routing
+2. Integration Dashboard OAuth - Test with proper X-Tenant-Id headers  
+3. Data Mapping & Tenant Association - Verify data sync with correct tenant_id
+4. Webhook Data Processing - Test webhook endpoints properly map shop domain → tenant_id
+5. Multi-Tenant Data Isolation - Test tenant isolation in integration endpoints
+6. Complete Integration Flow - Test end-to-end OAuth system
 
-PRIORITY TESTS:
-1. Integration Status Endpoint - GET /api/integrations/shopify/status with tenant-rms34
-2. Shopify OAuth Install Flow - GET /api/auth/shopify/install-redirect?shop=rms34
-3. OAuth Callback Processing - POST /api/auth/shopify/callback
-4. Integration Status After Connection - verify connected=true
-5. Resync Functionality - POST /api/integrations/shopify/resync
-6. Error Handling - invalid tenant IDs, shop domains, etc.
+SUCCESS CRITERIA:
+- OAuth routing works without conflicts or 404 errors
+- Integration dashboard endpoints use proper tenant isolation
+- Data sync associates all orders/returns with correct tenant_id
+- Webhooks map shop domains to correct tenants
+- Complete end-to-end flow works for any tenant
+- Zero hardcoded tenant references remaining
 """
 
 import asyncio
