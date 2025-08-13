@@ -122,11 +122,12 @@ async def create_tenant(
     admin_user: User = Depends(require_admin)
 ):
     """
-    Create a new tenant (admin-only)
-    Validates unique tenant_id and returns created record
+    Create a new tenant with merchant account (admin-only)
+    Creates both tenant record and merchant user account for login
     """
     try:
         tenants_collection = db.tenants
+        users_collection = db.users
         
         # Check if tenant_id already exists
         existing_tenant = tenants_collection.find_one({"tenant_id": tenant_data.tenant_id})
@@ -136,42 +137,108 @@ async def create_tenant(
                 detail=f"Tenant with ID '{tenant_data.tenant_id}' already exists"
             )
         
+        # Check if email already exists for this tenant
+        existing_user = users_collection.find_one({
+            "email": tenant_data.email,
+            "tenant_id": tenant_data.tenant_id
+        })
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"User with email '{tenant_data.email}' already exists for this tenant"
+            )
+        
+        # Hash password for user account
+        from passlib.context import CryptContext
+        pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+        hashed_password = pwd_context.hash(tenant_data.password)
+        
         # Create tenant document
         tenant_doc = {
             "tenant_id": tenant_data.tenant_id,
             "name": tenant_data.name,
             "shop_domain": tenant_data.shop_domain,
             "connected_provider": None,  # Will be set when Shopify is connected
+            "status": "active",
             "created_at": datetime.utcnow(),
-            "archived": False
+            "archived": False,
+            "notes": tenant_data.notes
         }
         
-        # Insert into database
-        result = tenants_collection.insert_one(tenant_doc)
+        # Create merchant user document
+        import uuid
+        user_doc = {
+            "user_id": str(uuid.uuid4()),
+            "tenant_id": tenant_data.tenant_id,
+            "email": tenant_data.email,
+            "password_hash": hashed_password,
+            "role": "merchant",
+            "permissions": ["merchant.*"],  # Full merchant permissions
+            "first_name": "",
+            "last_name": "",
+            "is_active": True,
+            "email_verified": True,  # Auto-verify admin-created accounts
+            "created_at": datetime.utcnow(),
+            "last_login": None
+        }
         
-        if result.inserted_id:
-            # Log audit event
-            await log_audit_event(
-                action="TENANT_CREATED",
-                admin_user=admin_user,
-                tenant_id=tenant_data.tenant_id,
-                details={"name": tenant_data.name, "shop_domain": tenant_data.shop_domain}
-            )
-            
-            logger.info(f"Tenant {tenant_data.tenant_id} created by admin {admin_user.email}")
-            
-            return TenantResponse(
-                tenant_id=tenant_doc["tenant_id"],
-                name=tenant_doc["name"],
-                shop_domain=tenant_doc["shop_domain"],
-                connected_provider=tenant_doc["connected_provider"],
-                created_at=tenant_doc["created_at"]
-            )
-        else:
+        # Insert tenant first
+        tenant_result = tenants_collection.insert_one(tenant_doc)
+        
+        if not tenant_result.inserted_id:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to create tenant"
             )
+        
+        # Insert user account
+        user_result = users_collection.insert_one(user_doc)
+        
+        if not user_result.inserted_id:
+            # Rollback tenant creation if user creation fails
+            tenants_collection.delete_one({"tenant_id": tenant_data.tenant_id})
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to create merchant user account"
+            )
+        
+        # Log audit event
+        await log_audit_event(
+            action="TENANT_CREATED_WITH_USER",
+            admin_user=admin_user,
+            tenant_id=tenant_data.tenant_id,
+            details={
+                "name": tenant_data.name, 
+                "shop_domain": tenant_data.shop_domain,
+                "merchant_email": tenant_data.email,
+                "user_id": user_doc["user_id"]
+            }
+        )
+        
+        logger.info(f"Tenant {tenant_data.tenant_id} and merchant user {tenant_data.email} created by admin {admin_user.email}")
+        
+        return TenantResponse(
+            tenant_id=tenant_doc["tenant_id"],
+            name=tenant_doc["name"],
+            shop_domain=tenant_doc["shop_domain"],
+            connected_provider=tenant_doc["connected_provider"],
+            created_at=tenant_doc["created_at"],
+            stats={
+                "orders_count": 0,
+                "returns_count": 0,
+                "users_count": 1,
+                "merchant_email": tenant_data.email
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating tenant with user: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create tenant and user account: {str(e)}"
+        )
             
     except HTTPException:
         raise
