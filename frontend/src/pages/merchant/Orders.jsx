@@ -31,7 +31,7 @@ const Orders = () => {
 
   // Get backend URL and tenant from environment
   const backendUrl = process.env.REACT_APP_BACKEND_URL;
-  const tenantId = 'tenant-rms34'; // Updated to match connected store
+  const tenantId = tenant?.tenant_id || user?.tenant_id; // Use authenticated user's tenant
 
   useEffect(() => {
     loadOrders();
