@@ -441,14 +441,18 @@ integration_router = APIRouter(prefix="/integrations/shopify", tags=["shopify-in
 
 @integration_router.get("/status")
 async def get_shopify_integration_status(
-    request: Request,
-    current_tenant: str = Depends(lambda: "tenant-rms34")  # TODO: Get from auth context
+    request: Request
 ):
     """
     Get Shopify integration connection status for the current tenant
     
     Used by the frontend Integrations screen to show connection status
     """
+    # Get tenant from X-Tenant-Id header (sent by frontend)
+    current_tenant = request.headers.get("X-Tenant-Id")
+    if not current_tenant:
+        raise HTTPException(status_code=400, detail="X-Tenant-Id header required")
+    
     # Check feature flag
     shopify_oauth_enabled = os.getenv('SHOPIFY_OAUTH_ENABLED', 'true').lower() == 'true'
     if not shopify_oauth_enabled:
