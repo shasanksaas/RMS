@@ -276,6 +276,78 @@ const CreateTenantModal = ({ isOpen, onClose, onCreate }) => {
             </p>
           </div>
 
+          {/* Merchant Account Email */}
+          <div>
+            <Label htmlFor="email" className="text-sm font-medium">
+              Merchant Email *
+            </Label>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              placeholder="merchant@store.com"
+              value={formData.email}
+              onChange={handleInputChange}
+              className={`mt-1 ${errors.email ? 'border-red-500' : ''}`}
+              disabled={loading}
+            />
+            {errors.email && (
+              <p className="text-sm text-red-600 mt-1 flex items-center">
+                <AlertCircle className="h-4 w-4 mr-1" />
+                {errors.email}
+              </p>
+            )}
+            <p className="text-xs text-gray-500 mt-1">
+              This email will be used to login to the merchant dashboard
+            </p>
+          </div>
+
+          {/* Merchant Account Password */}
+          <div>
+            <Label htmlFor="password" className="text-sm font-medium">
+              Password *
+            </Label>
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              placeholder="Enter secure password"
+              value={formData.password}
+              onChange={handleInputChange}
+              className={`mt-1 ${errors.password ? 'border-red-500' : ''}`}
+              disabled={loading}
+            />
+            {errors.password && (
+              <p className="text-sm text-red-600 mt-1 flex items-center">
+                <AlertCircle className="h-4 w-4 mr-1" />
+                {errors.password}
+              </p>
+            )}
+          </div>
+
+          {/* Confirm Password */}
+          <div>
+            <Label htmlFor="confirmPassword" className="text-sm font-medium">
+              Confirm Password *
+            </Label>
+            <Input
+              id="confirmPassword"
+              name="confirmPassword"
+              type="password"
+              placeholder="Confirm password"
+              value={formData.confirmPassword}
+              onChange={handleInputChange}
+              className={`mt-1 ${errors.confirmPassword ? 'border-red-500' : ''}`}
+              disabled={loading}
+            />
+            {errors.confirmPassword && (
+              <p className="text-sm text-red-600 mt-1 flex items-center">
+                <AlertCircle className="h-4 w-4 mr-1" />
+                {errors.confirmPassword}
+              </p>
+            )}
+          </div>
+
           {/* Notes */}
           <div>
             <Label htmlFor="notes" className="text-sm font-medium">
