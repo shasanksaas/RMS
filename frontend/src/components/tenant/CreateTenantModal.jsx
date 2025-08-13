@@ -13,6 +13,9 @@ const CreateTenantModal = ({ isOpen, onClose, onCreate }) => {
   const [formData, setFormData] = useState({
     name: '',
     tenant_id: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
     notes: ''
   });
   const [loading, setLoading] = useState(false);
