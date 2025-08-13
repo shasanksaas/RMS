@@ -89,6 +89,14 @@ async def list_tenants(
                 # Count users for this tenant
                 users_count = db.users.count_documents({"tenant_id": tenant_id})
                 stats["users_count"] = users_count
+                
+                # Get merchant email for this tenant
+                merchant_user = db.users.find_one({
+                    "tenant_id": tenant_id, 
+                    "role": "merchant"
+                })
+                if merchant_user:
+                    stats["merchant_email"] = merchant_user.get("email")
             
             tenant_response = TenantResponse(
                 tenant_id=doc.get("tenant_id", ""),
