@@ -467,13 +467,212 @@ class ShopifyOAuthService:
         )
 
     async def _queue_data_backfill(self, tenant_id: str, shop: str):
-        """Queue 90-day historical data backfill"""
-        # Placeholder for background job system
-        # In production, this would queue jobs for:
-        # - Historical orders sync
-        # - Historical returns sync 
-        # - Customer data sync
-        print(f"🔄 Queued 90-day backfill for tenant: {tenant_id}, shop: {shop}")
+        """Queue 90-day historical data backfill and sync real Shopify data"""
+        try:
+            print(f"🔄 Starting real data backfill for tenant: {tenant_id}, shop: {shop}")
+            
+            # Get stored access token
+            db = await get_database()
+            integration = await db["integrations_shopify"].find_one({"tenant_id": tenant_id, "shop": shop})
+            
+            if not integration or not integration.get("access_token"):
+                print(f"❌ No access token found for {shop}")
+                return
+            
+            # Decrypt access token
+            access_token = self.decrypt_token(integration["access_token"])
+            
+            # Sync orders from last 90 days
+            await self._sync_shopify_orders(tenant_id, shop, access_token)
+            
+            # Sync returns/refunds from last 90 days  
+            await self._sync_shopify_returns(tenant_id, shop, access_token)
+            
+            # Update last sync timestamp
+            await db["integrations_shopify"].update_one(
+                {"tenant_id": tenant_id, "shop": shop},
+                {"$set": {"last_sync_at": datetime.utcnow()}}
+            )
+            
+            print(f"✅ Data backfill completed for tenant: {tenant_id}")
+            
+        except Exception as e:
+            print(f"❌ Data backfill failed: {e}")
+            import traceback
+            traceback.print_exc()
+
+    async def _sync_shopify_orders(self, tenant_id: str, shop: str, access_token: str):
+        """Sync orders from Shopify for the last 90 days"""
+        try:
+            print(f"🔄 Syncing Shopify orders for {shop}...")
+            
+            # Calculate 90 days ago
+            ninety_days_ago = datetime.utcnow() - timedelta(days=90)
+            created_at_min = ninety_days_ago.isoformat()
+            
+            # Fetch orders from Shopify API
+            orders_url = f"https://{shop}/admin/api/2023-04/orders.json"
+            headers = {"X-Shopify-Access-Token": access_token}
+            params = {
+                "created_at_min": created_at_min,
+                "status": "any",
+                "limit": 250  # Max per request
+            }
+            
+            async with httpx.AsyncClient() as client:
+                response = await client.get(orders_url, headers=headers, params=params)
+                
+                if response.status_code != 200:
+                    print(f"❌ Failed to fetch orders: {response.text}")
+                    return
+                
+                orders_data = response.json()["orders"]
+                print(f"📦 Found {len(orders_data)} orders from Shopify")
+                
+                # Store orders in database
+                db = await get_database()
+                orders_collection = db["orders"]
+                
+                for order_data in orders_data:
+                    # Transform Shopify order to our format
+                    order_doc = {
+                        "tenant_id": tenant_id,
+                        "order_id": str(order_data["id"]),
+                        "order_number": order_data.get("order_number") or order_data.get("name", ""),
+                        "shopify_order_id": order_data["id"],
+                        "customer": {
+                            "id": order_data.get("customer", {}).get("id"),
+                            "email": order_data.get("customer", {}).get("email") or order_data.get("email"),
+                            "first_name": order_data.get("customer", {}).get("first_name") or order_data.get("billing_address", {}).get("first_name", ""),
+                            "last_name": order_data.get("customer", {}).get("last_name") or order_data.get("billing_address", {}).get("last_name", ""),
+                            "phone": order_data.get("customer", {}).get("phone") or order_data.get("billing_address", {}).get("phone")
+                        },
+                        "items": [
+                            {
+                                "id": str(item["id"]),
+                                "product_id": str(item["product_id"]) if item.get("product_id") else None,
+                                "variant_id": str(item["variant_id"]) if item.get("variant_id") else None,
+                                "title": item["title"],
+                                "quantity": item["quantity"],
+                                "price": float(item["price"]),
+                                "sku": item.get("sku"),
+                                "image_url": None  # Could fetch product images if needed
+                            }
+                            for item in order_data.get("line_items", [])
+                        ],
+                        "financial_status": order_data.get("financial_status"),
+                        "fulfillment_status": order_data.get("fulfillment_status"),
+                        "total_price": float(order_data.get("total_price", 0)),
+                        "currency": order_data.get("currency", "USD"),
+                        "created_at": datetime.fromisoformat(order_data["created_at"].replace("Z", "+00:00")),
+                        "updated_at": datetime.fromisoformat(order_data["updated_at"].replace("Z", "+00:00")),
+                        "tags": order_data.get("tags", "").split(", ") if order_data.get("tags") else [],
+                        "source": "shopify",
+                        "synced_at": datetime.utcnow()
+                    }
+                    
+                    # Upsert order (update if exists, insert if new)
+                    await orders_collection.update_one(
+                        {"tenant_id": tenant_id, "shopify_order_id": order_data["id"]},
+                        {"$set": order_doc},
+                        upsert=True
+                    )
+                
+                print(f"✅ Synced {len(orders_data)} orders to database")
+                
+        except Exception as e:
+            print(f"❌ Order sync failed: {e}")
+            import traceback
+            traceback.print_exc()
+
+    async def _sync_shopify_returns(self, tenant_id: str, shop: str, access_token: str):
+        """Sync returns/refunds from Shopify for the last 90 days"""
+        try:
+            print(f"🔄 Syncing Shopify returns/refunds for {shop}...")
+            
+            # Calculate 90 days ago
+            ninety_days_ago = datetime.utcnow() - timedelta(days=90)
+            created_at_min = ninety_days_ago.isoformat()
+            
+            # First, get orders to find refunds
+            orders_url = f"https://{shop}/admin/api/2023-04/orders.json"
+            headers = {"X-Shopify-Access-Token": access_token}
+            params = {
+                "created_at_min": created_at_min,
+                "status": "any",
+                "financial_status": "refunded,partially_refunded",
+                "limit": 250
+            }
+            
+            async with httpx.AsyncClient() as client:
+                response = await client.get(orders_url, headers=headers, params=params)
+                
+                if response.status_code != 200:
+                    print(f"❌ Failed to fetch refunded orders: {response.text}")
+                    return
+                
+                orders_with_refunds = response.json()["orders"]
+                print(f"🔄 Found {len(orders_with_refunds)} orders with refunds")
+                
+                # Store returns in database
+                db = await get_database()
+                returns_collection = db["returns"]
+                
+                for order in orders_with_refunds:
+                    # Get detailed refunds for each order
+                    refunds_url = f"https://{shop}/admin/api/2023-04/orders/{order['id']}/refunds.json"
+                    refunds_response = await client.get(refunds_url, headers=headers)
+                    
+                    if refunds_response.status_code == 200:
+                        refunds_data = refunds_response.json()["refunds"]
+                        
+                        for refund in refunds_data:
+                            # Transform Shopify refund to our return format
+                            return_doc = {
+                                "tenant_id": tenant_id,
+                                "return_id": f"shopify-refund-{refund['id']}",
+                                "order_id": str(order["id"]),
+                                "order_number": order.get("order_number") or order.get("name", ""),
+                                "shopify_refund_id": refund["id"],
+                                "customer": {
+                                    "email": order.get("customer", {}).get("email") or order.get("email"),
+                                    "first_name": order.get("customer", {}).get("first_name") or "",
+                                    "last_name": order.get("customer", {}).get("last_name") or "",
+                                    "phone": order.get("customer", {}).get("phone")
+                                },
+                                "items": [
+                                    {
+                                        "id": str(item["line_item"]["id"]),
+                                        "product_title": item["line_item"]["title"],
+                                        "quantity": item["quantity"],
+                                        "reason": "shopify_refund",
+                                        "condition": "unknown"
+                                    }
+                                    for item in refund.get("refund_line_items", [])
+                                ],
+                                "status": "approved",  # Shopify refunds are already processed
+                                "reason": "customer_request",
+                                "refund_amount": float(refund.get("subtotal", 0)),
+                                "currency": order.get("currency", "USD"),
+                                "created_at": datetime.fromisoformat(refund["created_at"].replace("Z", "+00:00")),
+                                "processed_at": datetime.fromisoformat(refund["processed_at"].replace("Z", "+00:00")) if refund.get("processed_at") else None,
+                                "source": "shopify",
+                                "synced_at": datetime.utcnow()
+                            }
+                            
+                            # Upsert return
+                            await returns_collection.update_one(
+                                {"tenant_id": tenant_id, "shopify_refund_id": refund["id"]},
+                                {"$set": return_doc},
+                                upsert=True
+                            )
+                
+                print(f"✅ Synced Shopify returns/refunds to database")
+                
+        except Exception as e:
+            print(f"❌ Returns sync failed: {e}")
+            import traceback
+            traceback.print_exc()
 
     async def get_connection_status(self, tenant_id: str) -> ShopifyConnectionResponse:
         """Get Shopify connection status for tenant"""
