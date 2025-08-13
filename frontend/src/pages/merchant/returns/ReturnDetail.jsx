@@ -9,6 +9,7 @@ import { Button } from '../../../components/ui/button';
 import { Badge } from '../../../components/ui/badge';
 import { Textarea } from '../../../components/ui/textarea';
 import { Alert, AlertDescription } from '../../../components/ui/alert';
+import { useAuth } from '../../../contexts/AuthContext';
 
 const ReturnDetail = () => {
   const { id } = useParams();
