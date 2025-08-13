@@ -729,9 +729,14 @@ api_router.include_router(shopify_webhook_router)  # Shopify webhooks
 api_router.include_router(testing_router)  # Keep for development
 api_router.include_router(enhanced_router)
 api_router.include_router(orders_enhanced_router)
-api_router.include_router(returns_enhanced_router)
-api_router.include_router(portal_returns_router)
-api_router.include_router(admin_returns_router)
+# Returns Management (MAIN - PRODUCTION READY)
+api_router.include_router(returns_enhanced_router)  # Main returns API
+
+# Specialized Returns Routes
+api_router.include_router(portal_returns_router)   # Customer portal returns
+api_router.include_router(admin_returns_router)    # Admin returns management
+
+# Legacy/Conflicting Routes (disabled to prevent conflicts)
 # api_router.include_router(order_lookup_router)  # Disabled - conflicts with returns_enhanced_router prefix
 api_router.include_router(admin_drafts_router)
 # Elite-Grade Controllers
