@@ -744,7 +744,7 @@ api_router.include_router(elite_portal_router)
 api_router.include_router(elite_admin_router)
 api_router.include_router(shopify_test_router)
 api_router.include_router(rules_router)
-api_router.include_router(unified_returns_router)
+# api_router.include_router(unified_returns_router)  # OLD - conflicts with returns_enhanced_router
 
 # Then include the api_router in the main app
 app.include_router(api_router)
