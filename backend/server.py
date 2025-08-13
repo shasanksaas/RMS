@@ -730,18 +730,18 @@ api_router.include_router(testing_router)  # Keep for development
 api_router.include_router(enhanced_router)
 api_router.include_router(orders_enhanced_router)
 # Returns Management (MAIN - PRODUCTION READY)
-api_router.include_router(returns_enhanced_router)  # Main returns API
+api_router.include_router(returns_enhanced_router)  # Main returns API - ACTIVE
 
-# Specialized Returns Routes
-api_router.include_router(portal_returns_router)   # Customer portal returns
-api_router.include_router(admin_returns_router)    # Admin returns management
+# Specialized Returns Routes (disabled to prevent routing conflicts)
+# api_router.include_router(portal_returns_router)   # Customer portal returns - DISABLED
+# api_router.include_router(admin_returns_router)    # Admin returns management - DISABLED
 
 # Legacy/Conflicting Routes (disabled to prevent conflicts)
 # api_router.include_router(order_lookup_router)  # Disabled - conflicts with returns_enhanced_router prefix
 api_router.include_router(admin_drafts_router)
-# Elite-Grade Controllers
-api_router.include_router(elite_portal_router)
-api_router.include_router(elite_admin_router)
+# Elite-Grade Controllers (disabled to prevent routing conflicts)
+# api_router.include_router(elite_portal_router)  # Elite customer portal - DISABLED
+# api_router.include_router(elite_admin_router)    # Elite admin management - DISABLED
 api_router.include_router(shopify_test_router)
 api_router.include_router(rules_router)
 # api_router.include_router(unified_returns_router)  # OLD - conflicts with returns_enhanced_router
