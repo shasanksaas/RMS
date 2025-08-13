@@ -344,7 +344,7 @@ class ShopifyIntegrationTestSuite:
                          f"Orders endpoint not accessible, status: {orders_status}, response: {orders_response}")
         
         # Test GET /api/returns/ with tenant-laxmi12-m9zgom
-        success, returns_response, returns_status = await self.make_request("GET", "/returns?limit=10")
+        success, returns_response, returns_status = await self.make_request("GET", "/returns/")
         
         if success:
             self.log_test("Data API: Returns Endpoint", True, 
