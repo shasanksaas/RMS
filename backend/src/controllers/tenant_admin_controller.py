@@ -167,13 +167,18 @@ async def create_tenant(
         
         # Create merchant user document
         import uuid
+        from src.models.user import UserRole, ROLE_PERMISSIONS
+        
+        # Get proper merchant permissions
+        merchant_permissions = [perm.value for perm in ROLE_PERMISSIONS[UserRole.MERCHANT]]
+        
         user_doc = {
             "user_id": str(uuid.uuid4()),
             "tenant_id": tenant_data.tenant_id,
             "email": tenant_data.email,
             "password_hash": hashed_password,
             "role": "merchant",
-            "permissions": ["merchant.*"],  # Full merchant permissions
+            "permissions": merchant_permissions,  # Proper merchant permissions
             "first_name": "",
             "last_name": "",
             "is_active": True,
