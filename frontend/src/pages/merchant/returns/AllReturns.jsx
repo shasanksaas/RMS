@@ -7,6 +7,7 @@ import { Input } from '../../../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
 import { Badge } from '../../../components/ui/badge';
 import { Alert, AlertDescription } from '../../../components/ui/alert';
+import { useAuth } from '../../../contexts/AuthContext';
 
 const AllReturns = () => {
   const [allReturns, setAllReturns] = useState([]); // Store all returns
