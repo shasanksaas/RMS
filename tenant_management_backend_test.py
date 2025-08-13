@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 class TenantManagementTester:
     def __init__(self):
         # Use production URL from frontend/.env
-        self.base_url = "https://returnportal.preview.emergentagent.com/api"
+        self.base_url = "https://multi-tenant-rms.preview.emergentagent.com/api"
         self.admin_token = None
         self.merchant_token = None
         self.test_tenant_id = None

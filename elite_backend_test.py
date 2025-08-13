@@ -20,7 +20,7 @@ from datetime import datetime
 from typing import Dict, Any, List
 
 # Test Configuration
-BASE_URL = "https://returnportal.preview.emergentagent.com"
+BASE_URL = "https://multi-tenant-rms.preview.emergentagent.com"
 TEST_TENANT = "tenant-rms34"  # Primary test tenant with Shopify integration
 FALLBACK_TENANT = "tenant-fashion-store"  # Secondary tenant for fallback testing
 

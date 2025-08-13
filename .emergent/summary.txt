@@ -1,73 +1,95 @@
 <analysis>
-The AI engineer's work evolved from stabilizing the core SaaS application to building robust user and tenant management systems. Initial efforts fixed critical issues like data duplication and N+1 queries, followed by a production-ready email/password and Google OAuth user system. This phase involved extensive debugging of React infinite re-render loops and Google OAuth redirect mismatches. Subsequently, a strict multi-tenant system was implemented, with backend complete and frontend components initiated. Most recently, the focus shifted to a single-click Shopify OAuth login for merchants, aiming to streamline onboarding. This involved creating new backend services and controllers for OAuth and webhooks, and updating frontend components. Challenges included resolving persistent frontend login form issues (requiring a troubleshooter agent call for React state management), and critical Shopify OAuth errors (CSRF, HMAC verification, redirect URL whitelisting, Install app button not appearing), which often pointed to external Shopify app configuration. The work concluded by separating admin email/password login from merchant Shopify OAuth.
+The previous AI engineer's work trajectory can be divided into several critical phases. Initially, the focus was on establishing a robust, multi-tenant application with comprehensive user and tenant management, including Shopify and Google OAuth. This foundational work also involved resolving persistent frontend state and redirect issues.
+
+A significant portion of the recent trajectory was dedicated to addressing user-reported regressions and implementing core features. This included fixing an admin login redirection bug, implementing a real-time tenant management system with admin impersonation, and restoring the integrity of the main merchant portal (). A persistent challenge involved the customer-facing return form redirecting to the merchant dashboard, which was resolved by removing  from customer flow routes.
+
+Subsequently, the engineer pivoted to implementing a dual-path login UI (Shopify OAuth and Email/Password). This effort was plagued by frontend caching/compilation issues,  double-execution, and confusing UI. Once these were resolved, critical security issues arose, including an admin portal accessibility bug and a tenant data leakage problem due to hardcoded tenant IDs. Both were meticulously fixed using dynamic tenant identification. The latest focus shifted to ensuring full Shopify integration, including real data backfill, webhook processing, and resolving persistent OAuth routing conflicts and external Shopify app configuration issues (e.g.,  not whitelisted, CSRF, App under review). The current work is centered on resolving conflicting backend API routers, specifically for returns endpoints, to ensure data visibility.
 </analysis>
 
 <product_requirements>
-The application is a multi-tenant Returns Management SaaS platform for e-commerce, primarily integrating with Shopify. It provides customer and merchant portals for streamlined returns, including Shopify OAuth, real-time sync, a configurable rules engine, AI suggestions, label issuance, email notifications, and analytics. It strictly enforces multi-tenancy to prevent data leakage. The user initially required a complete user management system with Google OAuth and subsequently a strict Tenant Management System. Admins need to create tenants quickly, with merchants signing up using a  to claim it. Role-Based Access Control (RBAC) ensures admin manages tenants and merchants see only their data. Unconnected stores should display empty states. The latest, overriding requirement is a Single-Click Shopify OAuth Login for merchants. This flow must authenticate the merchant, auto-provision or attach a tenant, save encrypted Shopify tokens, register webhooks, kick off a 90-day backfill, and redirect to the dashboard with live data, all without separate signup steps. Admin access must remain a separate email/password portal to manage all merchants.
+The application is a multi-tenant Returns Management SaaS platform for e-commerce, designed to integrate primarily with Shopify. It features customer and merchant portals, Shopify OAuth for seamless merchant onboarding, real-time data synchronization via webhooks, a configurable rules engine, and analytics. Strict multi-tenancy is enforced to prevent data leakage. Initial requirements included a complete user management system (email/password, Google OAuth) and a strict Tenant Management System, allowing admins to create tenants and merchants to sign up via . Role-Based Access Control (RBAC) ensures distinct access levels. A key feature is Single-Click Shopify OAuth Login for merchants to authenticate, auto-provision/attach a tenant, save encrypted Shopify tokens, register webhooks, backfill 90 days of data, and redirect to their dashboard without separate signup steps. Admin access must remain a separate email/password portal. The Main Portal () is considered a sacred, unchangeable core destination for merchants post-login. More recently, the user required creating real tenant accounts from the admin dashboard with associated user logins, ensuring strict data isolation per tenant, and a 100% functional Shopify integration with real-time data flow.
 </product_requirements>
 
 <key_technical_concepts>
-- **Multi-Tenancy**: Strict data isolation per .
-- **Modular Architecture**: FastAPI backend, React frontend, MongoDB.
-- **Shopify Integration**: OAuth 2.0, GraphQL/REST APIs, Webhooks.
-- **Hexagonal Architecture**: Ports & Adapters for separation of concerns.
-- **Authentication/Authorization**: JWT, RBAC, bcrypt, Google OAuth, Shopify OAuth.
-- **State Management**: React Context API, , , .
+-   **Multi-Tenancy**: Data isolation per .
+-   **Full-Stack**: FastAPI (Python) backend, React.js frontend, MongoDB database.
+-   **Authentication**: JWT, RBAC, bcrypt, Google OAuth, Shopify OAuth, admin impersonation.
+-   **Architecture**: Hexagonal (Ports & Adapters), CQRS.
+-   **State Management**: React Context API, , .
+-   **Communication**: CORS, Webhooks (Shopify).
+-   **Deployment**: Kubernetes container environment, Supervisorctl.
 </key_technical_concepts>
 
 <code_architecture>
-The application uses a FastAPI backend and React frontend with MongoDB, following a Hexagonal Architecture and CQRS.
 
-
-
-- : Main FastAPI application. Configures FastAPI, registers routers, and sets up middleware. Updated to include  and  and modified  middleware to allow public Shopify OAuth paths.
-- : Enforces tenant context. Modified to exclude new Shopify OAuth endpoints () and webhook paths from tenant context requirement for new installations.
-- : (New) Pydantic models for Shopify data (e.g., , ). Essential for structuring data related to Shopify store connections and OAuth.
-- : (New) Business logic for Shopify OAuth, including , , token encryption, and HMAC verification. Underwent extensive debugging for state parameter and HMAC issues.
-- : (New) FastAPI endpoints for Shopify OAuth (, ). Handles the initial redirection to Shopify and processes the callback after authorization. Modified during debugging for better error handling and temporary state bypass.
-- : (New) FastAPI endpoints for Shopify webhooks. Designed to receive real-time updates from Shopify.
-- : (New) Script to set up test admin and tenant data in MongoDB. Modified multiple times to correct import paths,  usage, and / model data to successfully create test users and tenants.
-- : Main React router. Updated to remove old login/register routes, introduce  as the primary merchant login, and  for separate admin access. Also includes the new .
-- : (New) React component for the Login with Shopify button and shop domain input. Drives the single-click OAuth flow. Debugged for button click handler issues and  conflicts.
-- : (New) React component for the separate admin email/password login. Provides a distinct portal for administrators.
-- : (New) Dashboard component to display after successful Shopify connection.
-- : Original React email/password login form. Was heavily debugged for persistent form reset/state management issues.  was a temporary bypass. Fixes involved wrapping with  and .
-- : Handles frontend API calls for authentication. Debugged for  vs  issue and base URL construction.
-- : Stores . Verified for correct environment variable setup.
+The application follows a full-stack architecture with a FastAPI backend and a React frontend, interacting with a MongoDB database.
+-   : The main FastAPI application. This file registers all API routers and configures middleware.
+    -   Changes: Adjusted middleware order, included new , , . Critically, conflicting  and multiple Shopify/returns routers were identified and cleaned up to ensure correct routing. New integration endpoints for Shopify status and resync were registered.
+-   : Middleware enforcing data isolation.
+    -   Changes: Updated to exclude new Shopify OAuth and webhook paths.
+-   : New FastAPI endpoints for admin tenant management.
+    -   Changes: Enhanced the  endpoint to also create a merchant user account with email/password, along with the tenant.
+-   : Pydantic models for tenant administration.
+    -   Changes:  model was updated to include fields for email and password for creating an associated user during tenant creation.
+-   : Business logic for Shopify OAuth.
+    -   Changes:  was enhanced to fetch real Shopify orders/returns. Webhook registration logic was verified.
+-   : Handles Shopify OAuth initiation and callback.
+    -   Changes: Added new  and  endpoints. Fixed a critical bug where integration endpoints were hardcoded to . The  endpoint was updated from a placeholder to call real data sync functions.
+-   : Main React router.
+    -   Changes: Removed  from customer return flow routes. Simplified login routing.
+-   : Main entry point for the React app.
+    -   Changes:  wrapper was temporarily removed to resolve a double-execution bug affecting the OAuth button.
+-   : Primary login component.
+    -   Changes: Implemented a modern dual-path (Shopify OAuth / Email) tabbed interface. Was heavily debugged for frontend caching, environment variable reading ( vs ), event handling (, , ), and UI clarity (renaming tab button). Previously bypassed  and manually stored data, which was fixed to use .
+-   : Enforces role-based access.
+    -   Changes: Modified to prevent incorrect redirects to  after logout by checking if the target path is a login page.
+-   : Contains logout functionality.
+    -   Changes: Modified to redirect all logouts to  using  to bypass  interference and ensure a consistent logout experience.
+-   : Layout for the admin portal.
+    -   Changes: Enhanced with modern UI elements and integrated  for logout.
+-   : Layout for merchant portal.
+    -   Changes: Verified to already include  for logout.
+-   : Admin modal for tenant creation.
+    -   Changes: Enhanced to include email and password fields for creating an initial merchant user.
+-   : Admin interface for tenant management.
+    -   Changes: Modernized its UI with card-based layouts and improved styling.
+-   : Displays all returns for a merchant.
+    -   Changes: Fixed hardcoded  reference to use dynamic  from .
+-   : Displays orders for a merchant.
+    -   Changes: Fixed hardcoded  reference to use dynamic  from .
+-   : Displays details of a specific return.
+    -   Changes: Fixed hardcoded  reference to use dynamic  from .
+-   : Integrations settings page.
+    -   Changes: Fixed hardcoded  header to use dynamic tenant ID. Updated Connect Shopify button to use the correct OAuth install URL.
 </code_architecture>
 
 <pending_tasks>
-- Implement  webhook handler for tenant cleanup.
-- Implement full webhook consumers for all registered topics (beyond returns).
-- Finalize backfill sync strategy for initial order data on install.
-- Finalize testing setup for webhook and dev store interactions.
-- Implement AI Suggestions, Label Issuing, Email Notifications (beyond basic templates), Stripe Billing.
-- Finalize test coverage to ≥70%, performance optimization, and Lighthouse ≥90.
-- Complete the implementation of the Elite-Grade Returns Creation system, including all detailed API contracts, UI/UX (merchant overrides, bulk creation), security, observability, and full testing.
-- Resolve remaining Shopify OAuth flow issues: Install app button not showing, Invalid state parameter - CSRF protection callback error, and post-login redirect.
+-   Implement  webhook handler for tenant cleanup.
+-   Implement full webhook consumers for all registered topics (beyond returns).
+-   Finalize backfill sync strategy for initial order data on install.
+-   Finalize testing setup for webhook and dev store interactions.
+-   Implement AI Suggestions, Label Issuing, Email Notifications (beyond basic templates), Stripe Billing.
+-   Finalize test coverage to ≥70%, performance optimization, and Lighthouse ≥90.
+-   Complete the implementation of the Elite-Grade Returns Creation system, including all detailed API contracts, UI/UX (merchant overrides, bulk creation), security, observability, and full testing.
+-   Resolve remaining Shopify OAuth flow issues: Install app button not showing, Invalid state parameter - CSRF protection callback error, and post-login redirect (these might be external Shopify app configuration issues, but user may expect resolution).
+-   Fine-tune impersonation banner display (minor aesthetic issue).
+-   The current  is named  in the directory structure, which might lead to confusion and is worth reviewing.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary, the AI engineer was focused on implementing a Single-Click Shopify OAuth Login system for merchants and ensuring a separate login portal for administrators.
+Immediately before this summary request, the AI engineer was deep into ensuring the Shopify OAuth and data mapping work flawlessly and without data leakage for new tenants. The user had explicitly requested to fix the OAuth flow completely and ensure real data flows into the application after a merchant connects their Shopify store via the Integrations dashboard.
 
-**Completed and Verified Work:**
-1.  **Separate Admin Login Portal**: A dedicated  component and  route were created, allowing administrators to log in with email/password (e.g.,  / ). This correctly separates admin authentication from the merchant-focused Shopify OAuth flow, addressing a critical user requirement. This portal is visually distinct and functional.
-2.  **Test Data Setup**: A script () was successfully created and run to provision test admin and merchant users, along with sample tenants in the MongoDB database, ensuring valid credentials and data for testing.
-3.  **Basic Frontend UI Stability**: The general React application loads and displays correctly, with the login and signup pages functioning without white screen errors. UI components are in place.
+The previous actions involved:
+1.  **Implementing real data backfill and resync**: The  and  functions in  and  were updated to actually fetch and store real orders and returns from Shopify, replacing placeholder logic.
+2.  **Verifying webhook handlers**: Confirmed that  correctly processes incoming Shopify webhooks and stores data with proper tenant isolation.
+3.  **Fixing critical tenant data leakage**: A major issue was resolved where several frontend components (, , , ) had hardcoded  IDs. These were updated to dynamically fetch the tenant ID from the authenticated user's context, ensuring strict tenant isolation.
+4.  **Addressing OAuth routing conflicts**: Multiple conflicting Shopify-related routers were identified in  and cleaned up to ensure only the correct ones are active.
+5.  **Fixing hardcoded tenant ID in OAuth controller**:  was found to still be using  for integration endpoints, which was corrected to use the dynamic tenant ID.
+6.  **Ensuring correct OAuth redirect**: Confirmed that after a successful Shopify OAuth, the backend correctly redirects to . The frontend Connect Shopify button in  was also updated to use the correct OAuth install URL.
 
-**Work In Progress / Previously Addressed with Lingering Issues:**
-1.  **Single-Click Shopify OAuth Integration (for Merchants)**:
-    *   **Backend**: New models (), OAuth service (), and controllers (, ) were created and integrated into . Shopify API keys were added to , and dependencies installed. The backend endpoints for OAuth (, ) were confirmed to issue correct 302 redirects and handle token exchange.
-    *   **Frontend**: A  component was implemented as the primary merchant login, and  routing was updated to prioritize this flow. A  was introduced for post-login display.
-    *   **Challenges and Debugging**:
-        *   **Initial Frontend Login Issues**: The  component (original email/password) suffered from persistent React state management issues (form resetting). Attempts to fix included  and , and a  was created as a simpler React-based bypass.
-        *   **Shopify OAuth Invalid State Parameter - CSRF Protection**: This recurring error during the OAuth callback was traced to an HMAC verification error: str object has no attribute new in . Debugging revealed a conflict with HMAC module usage, and the OAuth callback's state verification was temporarily bypassed. However, the user reported this error again, indicating an underlying, unresolved issue.
-        *   **Shopify OAuth Install app button not showing/Redirect Failure**: The user reported that after initiating the OAuth flow, Shopify did not display the Install app button or redirect back to our application. Initial diagnosis pointed to external factors: the  not being whitelisted in the Shopify Partner app settings, using an invalid API key, or accessing a password-protected Shopify store () that prevented app installation. The AI engineer provided guidance on creating a Shopify Partner account and development store for proper testing.
-2.  **Tenant Isolation Middleware**: The  middleware was modified to correctly whitelist new public Shopify OAuth endpoints, preventing Tenant context required errors for new merchant sign-ups.
-
-The application currently has a distinct and working admin login, while the merchant Shopify OAuth flow has been implemented but requires further debugging and user action (Shopify app configuration) to achieve a seamless end-to-end experience.
+The most recent activity involves troubleshooting a  encountered during comprehensive testing of the OAuth and data mapping flow. The engineer has identified that there are **multiple returns routers** configured in  that might be conflicting. The immediate task is to clean up these conflicting routers to resolve the 404 error and ensure returns data is displayed correctly for the newly connected tenants.
 </current_work>
 
 <optional_next_step>
-The next step is to ensure the Shopify OAuth flow for merchants is fully functional and seamless, addressing the user's report of the Install app button not showing or redirection issues.
+Consolidate and fix conflicting returns routers in  to resolve the .
 </optional_next_step>

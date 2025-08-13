@@ -92,7 +92,7 @@ Hosting: Kubernetes + Docker
 ## **Environment Configuration**
 ```bash
 # Frontend (.env)
-REACT_APP_BACKEND_URL=https://returnportal.preview.emergentagent.com
+REACT_APP_BACKEND_URL=https://multi-tenant-rms.preview.emergentagent.com
 
 # Backend (.env)  
 MONGO_URL=mongodb://localhost:27017/returns_manager
@@ -805,7 +805,7 @@ Login as admin → Click "Open Dashboard" on any tenant → Should see merchant 
 ```python
 # 1. Set up Shopify Partner App
 # - Create app at https://partners.shopify.com
-# - Add redirect URL: https://returnportal.preview.emergentagent.com/api/auth/shopify/callback  
+# - Add redirect URL: https://multi-tenant-rms.preview.emergentagent.com/api/auth/shopify/callback  
 # - Copy API key and secret to backend .env
 
 # 2. Fix HMAC verification in shopify_oauth_service.py
@@ -978,7 +978,7 @@ SHOPIFY_ENCRYPTION_KEY=your-encryption-key
 HARD_DELETE_ALLOWED=false
 
 # Frontend (.env)  
-REACT_APP_BACKEND_URL=https://returnportal.preview.emergentagent.com
+REACT_APP_BACKEND_URL=https://multi-tenant-rms.preview.emergentagent.com
 ```
 
 ## **Production Deployment**
@@ -991,7 +991,7 @@ backend: Port 8001 (FastAPI)
 mongodb: Port 27017 (Database)
 
 # External URL
-https://returnportal.preview.emergentagent.com
+https://multi-tenant-rms.preview.emergentagent.com
 
 # Service Management
 sudo supervisorctl restart frontend
@@ -1017,11 +1017,11 @@ sudo supervisorctl status
 # All services should show RUNNING
 
 # ✅ 5. Test critical paths
-curl -X POST https://returnportal.preview.emergentagent.com/api/users/login
+curl -X POST https://multi-tenant-rms.preview.emergentagent.com/api/users/login
 # Should return 422 (validation error) not 404
 
 # ✅ 6. Test frontend
-curl https://returnportal.preview.emergentagent.com
+curl https://multi-tenant-rms.preview.emergentagent.com
 # Should return React app HTML
 ```
 
@@ -1083,7 +1083,7 @@ mongo returns_manager
 db.users.find({"email": "merchant@rms34.com"})
 
 # 2. Test login API directly  
-curl -X POST https://returnportal.preview.emergentagent.com/api/users/login \
+curl -X POST https://multi-tenant-rms.preview.emergentagent.com/api/users/login \
   -H "Content-Type: application/json" \
   -H "X-Tenant-Id: tenant-rms34" \
   -d '{"tenant_id":"tenant-rms34","email":"merchant@rms34.com","password":"merchant123"}'

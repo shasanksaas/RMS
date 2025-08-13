@@ -30,7 +30,7 @@ import uuid
 import time
 
 # Configuration - Use frontend environment URL as per instructions
-BACKEND_URL = "https://27491f9d-ae56-442b-a0a7-367e251d3b37.preview.emergentagent.com/api"
+BACKEND_URL = "https://multi-tenant-rms.preview.emergentagent.com/api"
 
 # Test tenants for multi-tenant isolation testing
 TEST_TENANTS = {
@@ -535,7 +535,7 @@ class ShopifyOAuthDataMappingTestSuite:
         
         # Test CORS configuration
         headers = {
-            "Origin": "https://returnportal.preview.emergentagent.com",
+            "Origin": "https://multi-tenant-rms.preview.emergentagent.com",
             "Access-Control-Request-Method": "POST",
             "Access-Control-Request-Headers": "X-Tenant-Id,Content-Type"
         }

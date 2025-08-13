@@ -4,7 +4,7 @@
 # Last updated: 2025-01-11
 
 ### Variables
-@baseUrl = https://returnportal.preview.emergentagent.com
+@baseUrl = https://multi-tenant-rms.preview.emergentagent.com
 @tenantId = tenant-rms34
 
 ### Health Check

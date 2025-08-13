@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 from typing import Dict, Any, Optional
 
 # Test Configuration
-BACKEND_URL = "https://returnportal.preview.emergentagent.com"
+BACKEND_URL = "https://multi-tenant-rms.preview.emergentagent.com"
 ADMIN_EMAIL = "admin@returns-manager.com"
 ADMIN_PASSWORD = "AdminPassword123!"
 ADMIN_TENANT_ID = "tenant-rms34"

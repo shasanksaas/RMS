@@ -23,7 +23,7 @@ from datetime import datetime
 from typing import Dict, Any, List
 
 # Test Configuration
-BASE_URL = "https://returnportal.preview.emergentagent.com"
+BASE_URL = "https://multi-tenant-rms.preview.emergentagent.com"
 TEST_TENANT = "tenant-rms34"  # Real Shopify store tenant
 TEST_ORDERS = ["1001", "1002", "1003", "1004"]  # Real order numbers to test
 
