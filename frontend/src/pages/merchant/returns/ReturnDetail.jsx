@@ -25,8 +25,8 @@ const ReturnDetail = () => {
   const [newComment, setNewComment] = useState('');
 
   // Get backend URL and tenant from environment  
-  const backendUrl = process.env.REACT_APP_BACKEND_URL;
-  const tenantId = 'tenant-rms34';
+  const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+  const tenantId = tenant?.tenant_id || user?.tenant_id; // Use authenticated user's tenant
 
   const buildApiUrl = (endpoint) => {
     const apiUrl = backendUrl || 'http://localhost:8001';
