@@ -23,6 +23,73 @@ export const AuthProvider = ({ children }) => {
     
     const initAuth = async () => {
       try {
+        // Check for OAuth token in URL parameters (from Shopify OAuth callback)
+        const urlParams = new URLSearchParams(window.location.search);
+        const oauthToken = urlParams.get('token');
+        const connected = urlParams.get('connected');
+        const tenantId = urlParams.get('tenant_id');
+        
+        if (oauthToken && isMounted) {
+          console.log('🔄 OAuth token detected in URL - logging in user');
+          
+          // Store the token and try to fetch user info
+          authService.setToken(oauthToken);
+          
+          try {
+            // Fetch user profile with the OAuth token
+            const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/users/profile`, {
+              headers: {
+                'Authorization': `Bearer ${oauthToken}`,
+                'Content-Type': 'application/json'
+              }
+            });
+            
+            if (response.ok) {
+              const userData = await response.json();
+              
+              // Create user and tenant objects
+              const user = {
+                user_id: userData.user_id,
+                email: userData.email,
+                role: userData.role,
+                tenant_id: userData.tenant_id,
+                auth_provider: "shopify_oauth",
+                permissions: userData.permissions || ["read", "write"]
+              };
+              
+              const tenant = {
+                tenant_id: userData.tenant_id,
+                name: userData.tenant_name || `Tenant ${userData.tenant_id}`
+              };
+              
+              // Store user and tenant info
+              authService.setUserData(user, tenant);
+              
+              setUser(user);
+              setTenant(tenant);
+              setIsAuthenticated(true);
+              
+              console.log('✅ OAuth login successful:', user);
+              
+              // Clean up URL parameters
+              const newUrl = new URL(window.location);
+              newUrl.searchParams.delete('token');
+              window.history.replaceState({}, '', newUrl);
+              
+              if (isMounted) {
+                setIsLoading(false);
+              }
+              return;
+            } else {
+              console.error('❌ Failed to fetch user profile with OAuth token');
+              authService.clearAuthData();
+            }
+          } catch (profileError) {
+            console.error('❌ Error fetching user profile:', profileError);
+            authService.clearAuthData();
+          }
+        }
+        
         // Check if user is authenticated (regular or impersonation)
         const token = authService.getToken();
         
