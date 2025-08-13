@@ -129,22 +129,47 @@ async def handle_shopify_callback(
         # Handle OAuth callback and get connection result
         connect_result = await shopify_oauth.handle_oauth_callback(callback_request)
         
-        # Create session payload for JWT
-        session_payload = {
-            "tenant_id": connect_result.tenant_id,
-            "shop": connect_result.shop,
-            "user_role": "merchant_owner",
-            "provider": "shopify",
-            "connected": True
-        }
+        # Create proper JWT session for the authenticated user
+        from src.services.auth_service import auth_service
+        from ..config.database import get_database
         
-        # In production, create HttpOnly JWT session cookie here
-        # For now, we'll use a simple approach and let frontend handle session
+        db = await get_database()
+        
+        # Find the user that was created/updated during OAuth
+        user = await db.users.find_one({
+            "tenant_id": connect_result.tenant_id,
+            "role": "merchant"
+        })
+        
+        if user:
+            # Create JWT token for the user
+            jwt_token = auth_service.create_access_token({
+                "user_id": user["id"],
+                "email": user["email"],
+                "role": user["role"],
+                "tenant_id": user["tenant_id"]
+            })
+            
+            print(f"✅ JWT token created for user: {user['email']}")
+            
+            # Set HTTP-only cookie with JWT token
+            response.set_cookie(
+                key="access_token",
+                value=jwt_token,
+                httponly=True,
+                secure=True,
+                samesite="lax",
+                max_age=86400  # 24 hours
+            )
+            
+            print(f"✅ Authentication cookie set for {user['email']}")
+        else:
+            print("⚠️ User not found after OAuth - redirecting to login")
         
         print(f"✅ Shopify connection complete for {connect_result.shop}")
         
         # Redirect to dashboard with connection success
-        redirect_url = f"{connect_result.redirect_url}&shop={connect_result.shop}&tenant_id={connect_result.tenant_id}"
+        redirect_url = f"{connect_result.redirect_url}?shop={connect_result.shop}&tenant_id={connect_result.tenant_id}&connected=1"
         return RedirectResponse(
             url=redirect_url,
             status_code=302
