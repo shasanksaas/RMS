@@ -9,10 +9,15 @@ from datetime import datetime
 import re
 
 class TenantCreateRequest(BaseModel):
-    """Request model for creating a new tenant"""
+    """Request model for creating a new tenant with merchant account"""
     tenant_id: str = Field(..., description="Unique tenant identifier (slug format)")
     name: str = Field(..., min_length=1, max_length=100, description="Display name for the tenant")
     shop_domain: Optional[str] = Field(None, description="Shopify shop domain (optional)")
+    
+    # Merchant account fields
+    email: str = Field(..., description="Merchant email for login account")
+    password: str = Field(..., min_length=8, description="Merchant password for login account")
+    notes: Optional[str] = Field(None, description="Optional admin notes about this tenant")
     
     @validator('tenant_id')
     def validate_tenant_id(cls, v):
@@ -30,6 +35,20 @@ class TenantCreateRequest(BaseModel):
             # Allow both formats: shop-name.myshopify.com or just shop-name
             if not re.match(r'^[a-z0-9-]+(?:\.myshopify\.com)?$', v.lower()):
                 raise ValueError('shop_domain must be valid Shopify domain format')
+        return v
+    
+    @validator('email')
+    def validate_email(cls, v):
+        """Validate email format"""
+        if not re.match(r'^[^\s@]+@[^\s@]+\.[^\s@]+$', v):
+            raise ValueError('Invalid email format')
+        return v.lower()
+    
+    @validator('password')
+    def validate_password(cls, v):
+        """Validate password strength"""
+        if len(v) < 8:
+            raise ValueError('Password must be at least 8 characters long')
         return v
 
 class TenantResponse(BaseModel):
