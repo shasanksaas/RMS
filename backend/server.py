@@ -717,15 +717,15 @@ api_router.include_router(users_router)  # User management system
 api_router.include_router(tenant_management_router)  # Admin tenant management
 api_router.include_router(tenant_admin_router)  # Real tenant CRUD with impersonation
 
-# Shopify OAuth & Webhook Routes
+# Shopify OAuth & Integration Routes (MAIN - PRODUCTION READY)
 api_router.include_router(shopify_oauth_router)  # Shopify OAuth flow
 api_router.include_router(shopify_integration_router)  # Shopify integration status/resync endpoints
 api_router.include_router(shopify_webhook_router)  # Shopify webhooks
 
-api_router.include_router(integration_router)
-api_router.include_router(webhook_router)
-api_router.include_router(testing_router)
-api_router.include_router(shopify_router)
+# Legacy routes (temporarily disabled to prevent conflicts)
+# api_router.include_router(integration_router)  # OLD - conflicts with shopify_integration_router
+# api_router.include_router(webhook_router)  # OLD - conflicts with shopify_webhook_router
+# api_router.include_router(shopify_router)  # OLD - conflicts with shopify_oauth_router
 api_router.include_router(enhanced_router)
 api_router.include_router(orders_enhanced_router)
 api_router.include_router(returns_enhanced_router)
