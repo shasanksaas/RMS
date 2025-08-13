@@ -61,9 +61,9 @@ const AllReturns = () => {
     }
   };
 
-  // Get backend URL and tenant from environment  
+  // Get backend URL and use authenticated tenant (NOT hardcoded!)
   const backendUrl = process.env.REACT_APP_BACKEND_URL;
-  const tenantId = 'tenant-rms34';
+  const tenantId = tenant?.tenant_id || user?.tenant_id; // Use authenticated user's tenant
 
   const buildApiUrl = (endpoint) => {
     const apiUrl = backendUrl || 'http://localhost:8001';
