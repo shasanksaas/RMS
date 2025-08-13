@@ -39,8 +39,9 @@ const Integrations = () => {
   const [message, setMessage] = useState({ type: '', text: '' });
   const [validationResults, setValidationResults] = useState(null);
 
-  // Get backend URL
-  const backendUrl = process.env.REACT_APP_BACKEND_URL;
+  // Backend configuration
+  const backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://returnportal.preview.emergentagent.com';
+  const tenantId = tenant?.tenant_id || user?.tenant_id; // Use authenticated user's tenant
   
   // Handle URL parameters for OAuth callback
   const [searchParams] = useSearchParams();
