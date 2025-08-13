@@ -116,6 +116,8 @@ const CreateTenantModal = ({ isOpen, onClose, onCreate }) => {
       const tenantData = {
         name: formData.name.trim(),
         tenant_id: formData.tenant_id.trim(),
+        email: formData.email.trim(),
+        password: formData.password.trim(),
         notes: formData.notes.trim() || undefined
       };
 
