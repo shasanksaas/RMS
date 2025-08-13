@@ -10,6 +10,9 @@ import { Alert, AlertDescription } from '../../components/ui/alert';
 import { useAuth } from '../../contexts/AuthContext';
 
 const Orders = () => {
+  // Get authenticated user and tenant from AuthContext
+  const { user, tenant } = useAuth();
+
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
