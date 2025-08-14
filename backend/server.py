@@ -15,6 +15,7 @@ from src.controllers.webhook_controller import router as webhook_router
 from src.controllers.testing_controller import router as testing_router
 from src.controllers.shopify_test_controller import router as shopify_test_router
 from src.controllers.rules_controller import router as rules_router
+from src.controllers.policy_management_controller import router as policy_management_router
 from src.controllers.unified_returns_controller import router as unified_returns_router
 from src.controllers.shopify_integration_controller import router as integration_router
 from src.controllers.orders_controller_enhanced import router as orders_enhanced_router
