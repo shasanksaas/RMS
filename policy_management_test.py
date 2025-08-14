@@ -60,7 +60,13 @@ class PolicyManagementTester:
                 "tenant_id": TENANT_ID
             }
             
-            response = self.session.post(f"{BACKEND_URL}/users/login", json=auth_data)
+            # Include X-Tenant-Id header for authentication
+            auth_headers = {
+                "Content-Type": "application/json",
+                "X-Tenant-Id": TENANT_ID
+            }
+            
+            response = self.session.post(f"{BACKEND_URL}/users/login", json=auth_data, headers=auth_headers)
             
             if response.status_code == 200:
                 data = response.json()
