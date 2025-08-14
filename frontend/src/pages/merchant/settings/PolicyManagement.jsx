@@ -14,6 +14,7 @@ import { Switch } from '../../../components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui/tabs';
 import { Badge } from '../../../components/ui/badge';
+import { Separator } from '../../../components/ui/separator';
 import { useAuth } from '../../../contexts/AuthContext';
 import { 
   Settings, 
@@ -31,7 +32,18 @@ import {
   Mail,
   Shield,
   BarChart3,
-  Zap
+  Zap,
+  MapPin,
+  Truck,
+  DollarSign,
+  Gift,
+  ShoppingBag,
+  Star,
+  Users,
+  Bot,
+  FileText,
+  Workflow,
+  Database
 } from 'lucide-react';
 
 const PolicyManagement = () => {
