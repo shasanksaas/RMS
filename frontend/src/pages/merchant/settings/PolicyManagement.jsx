@@ -942,7 +942,56 @@ const PolicyManagement = () => {
           >
             <Plus className="h-4 w-4 mr-2" />
             Add New Zone
-          </Button>
+  // Policy Overview Component
+  const PolicyOverview = () => (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            Policy Information
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="policy-name">Policy Name</Label>
+            <Input
+              id="policy-name"
+              value={policyForm.name}
+              onChange={(e) => updatePolicyField('name', e.target.value)}
+              placeholder="Enter policy name"
+            />
+          </div>
+          <div>
+            <Label htmlFor="policy-description">Description</Label>
+            <Textarea
+              id="policy-description"
+              value={policyForm.description}
+              onChange={(e) => updatePolicyField('description', e.target.value)}
+              placeholder="Describe this policy"
+              rows={3}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Policy Status</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={policyForm.is_active || false}
+                onCheckedChange={(value) => updatePolicyField('is_active', value)}
+              />
+              <Label>Active Policy</Label>
+            </div>
+            <Badge variant={policyForm.is_active ? 'success' : 'secondary'}>
+              {policyForm.is_active ? 'Active' : 'Inactive'}
+            </Badge>
+          </div>
         </CardContent>
       </Card>
     </div>
