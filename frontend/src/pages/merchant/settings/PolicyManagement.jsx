@@ -737,7 +737,216 @@ const PolicyManagement = () => {
     setPolicyForm(newForm);
   };
 
-  const PolicyOverview = () => (
+  // Policy Zones & Location Settings Component
+  const PolicyZones = () => (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Globe className="h-5 w-5" />
+            Policy Zones & Location Settings
+          </CardTitle>
+          <CardDescription>
+            Configure geographic zones, shipping destinations, and location-specific rules
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {policyForm.policy_zones?.map((zone, zoneIndex) => (
+            <div key={zoneIndex} className="border rounded-lg p-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium">Zone {zoneIndex + 1}: {zone.zone_name}</h4>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => {
+                    const newZones = [...policyForm.policy_zones];
+                    newZones.splice(zoneIndex, 1);
+                    updatePolicyField('policy_zones', newZones);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              <div>
+                <Label>Zone Name</Label>
+                <Input
+                  value={zone.zone_name}
+                  onChange={(e) => {
+                    const newZones = [...policyForm.policy_zones];
+                    newZones[zoneIndex].zone_name = e.target.value;
+                    updatePolicyField('policy_zones', newZones);
+                  }}
+                  placeholder="Enter zone name"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Countries Included</Label>
+                  <Input
+                    value={zone.countries_included?.join(', ') || ''}
+                    onChange={(e) => {
+                      const newZones = [...policyForm.policy_zones];
+                      newZones[zoneIndex].countries_included = e.target.value.split(',').map(s => s.trim()).filter(s => s);
+                      updatePolicyField('policy_zones', newZones);
+                    }}
+                    placeholder="US, CA, UK, AU (country codes)"
+                  />
+                </div>
+                <div>
+                  <Label>States/Provinces</Label>
+                  <Input
+                    value={zone.states_provinces?.join(', ') || ''}
+                    onChange={(e) => {
+                      const newZones = [...policyForm.policy_zones];
+                      newZones[zoneIndex].states_provinces = e.target.value.split(',').map(s => s.trim()).filter(s => s);
+                      updatePolicyField('policy_zones', newZones);
+                    }}
+                    placeholder="NY, CA, TX, FL"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label>Postal Code Ranges (Include)</Label>
+                <Input
+                  value={zone.postal_codes?.include_ranges?.join(', ') || ''}
+                  onChange={(e) => {
+                    const newZones = [...policyForm.policy_zones];
+                    if (!newZones[zoneIndex].postal_codes) newZones[zoneIndex].postal_codes = {};
+                    newZones[zoneIndex].postal_codes.include_ranges = e.target.value.split(',').map(s => s.trim()).filter(s => s);
+                    updatePolicyField('policy_zones', newZones);
+                  }}
+                  placeholder="00000-99999, 10000-19999"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Destination Warehouse</Label>
+                  <Select 
+                    value={zone.destination_warehouse || 'warehouse_main'}
+                    onValueChange={(value) => {
+                      const newZones = [...policyForm.policy_zones];
+                      newZones[zoneIndex].destination_warehouse = value;
+                      updatePolicyField('policy_zones', newZones);
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="warehouse_main">Main Warehouse</SelectItem>
+                      <SelectItem value="warehouse_east">East Coast Warehouse</SelectItem>
+                      <SelectItem value="warehouse_west">West Coast Warehouse</SelectItem>
+                      <SelectItem value="warehouse_intl">International Warehouse</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Preferred Carrier</Label>
+                  <Select 
+                    value={zone.carrier_restrictions?.preferred_carrier || 'UPS'}
+                    onValueChange={(value) => {
+                      const newZones = [...policyForm.policy_zones];
+                      if (!newZones[zoneIndex].carrier_restrictions) newZones[zoneIndex].carrier_restrictions = {};
+                      newZones[zoneIndex].carrier_restrictions.preferred_carrier = value;
+                      updatePolicyField('policy_zones', newZones);
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="UPS">UPS</SelectItem>
+                      <SelectItem value="FedEx">FedEx</SelectItem>
+                      <SelectItem value="USPS">USPS</SelectItem>
+                      <SelectItem value="DHL">DHL</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <h5 className="font-medium">Zone Features</h5>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      checked={zone.generate_labels || false}
+                      onCheckedChange={(value) => {
+                        const newZones = [...policyForm.policy_zones];
+                        newZones[zoneIndex].generate_labels = value;
+                        updatePolicyField('policy_zones', newZones);
+                      }}
+                    />
+                    <Label>Generate Return Labels</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      checked={zone.generate_packing_slips || false}
+                      onCheckedChange={(value) => {
+                        const newZones = [...policyForm.policy_zones];
+                        newZones[zoneIndex].generate_packing_slips = value;
+                        updatePolicyField('policy_zones', newZones);
+                      }}
+                    />
+                    <Label>Generate Packing Slips</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      checked={zone.bypass_manual_review || false}
+                      onCheckedChange={(value) => {
+                        const newZones = [...policyForm.policy_zones];
+                        newZones[zoneIndex].bypass_manual_review = value;
+                        updatePolicyField('policy_zones', newZones);
+                      }}
+                    />
+                    <Label>Bypass Manual Review</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      checked={zone.customs_handling?.enabled || false}
+                      onCheckedChange={(value) => {
+                        const newZones = [...policyForm.policy_zones];
+                        if (!newZones[zoneIndex].customs_handling) newZones[zoneIndex].customs_handling = {};
+                        newZones[zoneIndex].customs_handling.enabled = value;
+                        updatePolicyField('policy_zones', newZones);
+                      }}
+                    />
+                    <Label>Auto Customs Handling</Label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+          
+          <Button 
+            variant="outline" 
+            onClick={() => {
+              const newZone = {
+                zone_name: `Zone ${policyForm.policy_zones.length + 1}`,
+                countries_included: [],
+                states_provinces: [],
+                postal_codes: { include_ranges: [], exclude_specific: [] },
+                destination_warehouse: 'warehouse_main',
+                backup_destinations: [],
+                generate_labels: true,
+                bypass_manual_review: false,
+                generate_packing_slips: true,
+                customs_handling: { enabled: false },
+                carrier_restrictions: { preferred_carrier: 'UPS' }
+              };
+              updatePolicyField('policy_zones', [...policyForm.policy_zones, newZone]);
+            }}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add New Zone
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
     <div className="space-y-6">
       <Card>
         <CardHeader>
