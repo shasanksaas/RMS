@@ -54,17 +54,17 @@ const PolicyManagement = () => {
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   
-  // Policy form state with ALL comprehensive options
+  // Initialize with comprehensive default policy
   const [policyForm, setPolicyForm] = useState({
-    name: '',
-    description: '',
+    name: 'Comprehensive Return Policy',
+    description: 'Complete return management policy with all features',
     
-    // 1. POLICY ZONES & LOCATION SETTINGS
+    // Policy Zones & Location Settings
     policy_zones: [
       {
-        zone_name: 'Default Zone',
+        zone_name: 'North America',
         countries_included: ['US', 'CA'],
-        states_provinces: ['NY', 'CA', 'TX', 'FL'],
+        states_provinces: ['NY', 'CA', 'TX', 'FL', 'ON', 'BC'],
         postal_codes: {
           include_ranges: ['00000-99999'],
           exclude_specific: []
@@ -87,7 +87,7 @@ const PolicyManagement = () => {
       }
     ],
     
-    // 2. RETURN WINDOW CONFIGURATIONS
+    // Return Window Configurations
     return_windows: {
       standard_window: {
         type: 'limited',
@@ -100,24 +100,24 @@ const PolicyManagement = () => {
       },
       extended_windows: {
         holiday_extension: {
-          enabled: false,
+          enabled: true,
           extra_days: 15,
           applicable_months: ['November', 'December', 'January']
         },
         loyalty_member_extension: {
-          enabled: false,
+          enabled: true,
           bronze_extra_days: 7,
           silver_extra_days: 14,
           gold_extra_days: 30,
           platinum_extra_days: 60
         },
         first_time_buyer_extension: {
-          enabled: false,
+          enabled: true,
           extra_days: 10
         }
       },
       category_specific_windows: {
-        enabled: false,
+        enabled: true,
         rules: [
           { category: 'Electronics', days: 14 },
           { category: 'Clothing', days: 30 },
@@ -126,7 +126,7 @@ const PolicyManagement = () => {
         ]
       },
       price_based_windows: {
-        enabled: false,
+        enabled: true,
         tiers: [
           { min_price: 0, max_price: 50, days: 14 },
           { min_price: 50, max_price: 200, days: 30 },
@@ -135,7 +135,7 @@ const PolicyManagement = () => {
       }
     },
     
-    // 3. PRODUCT ELIGIBILITY & EXCLUSIONS
+    // Product Eligibility & Exclusions
     product_eligibility: {
       default_returnable: true,
       tag_based_rules: {
@@ -151,16 +151,13 @@ const PolicyManagement = () => {
           'Perishable_Food',
           'Intimate_Apparel',
           'Swimwear',
-          'Custom_Made',
-          'Live_Plants',
-          'Hazardous_Materials',
-          'Prescription_Items'
+          'Custom_Made'
         ]
       },
       condition_requirements: {
         unworn_unused_only: true,
-        original_packaging_required: false,
-        tags_attached_required: false,
+        original_packaging_required: true,
+        tags_attached_required: true,
         hygiene_seal_intact: true,
         accessories_included: true,
         manual_receipt_required: false
@@ -170,20 +167,10 @@ const PolicyManagement = () => {
         max_return_value: 10000.00,
         high_value_manual_review: true,
         high_value_threshold: 500.00
-      },
-      age_restrictions: {
-        max_days_since_purchase: 365,
-        perishable_max_days: 3,
-        electronics_max_days: 30
-      },
-      quantity_restrictions: {
-        max_items_per_return: 50,
-        max_returns_per_order: 3,
-        partial_quantity_allowed: true
       }
     },
     
-    // 4. RETURN OUTCOMES & RESOLUTIONS
+    // Refund Settings
     refund_settings: {
       enabled: true,
       processing_events: ['delivered'],
@@ -206,41 +193,25 @@ const PolicyManagement = () => {
           minor_damage_percent: 10,
           moderate_damage_percent: 25,
           major_damage_percent: 50
-        },
-        wear_deduction: {
-          light_wear_percent: 5,
-          moderate_wear_percent: 15,
-          heavy_wear_percent: 30
         }
       },
       fees: {
         restocking_fee: { 
-          enabled: false, 
+          enabled: true, 
           amount: 15.00, 
           type: 'flat_rate',
-          percentage_amount: 10,
           waive_for_defective: true,
           waive_for_vip: true
         },
-        processing_fee: { 
-          enabled: false, 
-          amount: 5.00 
-        },
         return_shipping_deduction: { 
           enabled: true, 
-          deduct_from_refund: true,
           amount: 'flat_rate', 
           flat_rate_amount: 7.95 
         }
-      },
-      tax_handling: {
-        refund_taxes: true,
-        refund_duties: false,
-        refund_shipping: false,
-        refund_gift_wrap: true
       }
     },
     
+    // Exchange Settings
     exchange_settings: {
       enabled: true,
       same_product_only: false,
@@ -252,352 +223,53 @@ const PolicyManagement = () => {
         downgrade_product: true
       },
       instant_exchanges: {
-        enabled: false,
-        authorization_method: 'one_dollar',
-        return_deadline_days: [14],
-        require_for_all: false,
-        require_for_high_value: true,
-        high_value_threshold: 200.00
-      },
-      price_difference_handling: {
-        customer_pays_more: true,
-        refund_difference: true,
-        store_credit_difference: true,
-        max_price_difference: 500.00
-      },
-      shipping_methods: {
-        standard_shipping: 'Standard',
-        expedited_shipping: 'Express',
-        overnight_shipping: 'Overnight',
-        customer_choice: true
-      },
-      inventory_allocation: {
-        reserve_inventory: true,
-        reservation_duration_hours: 72,
-        multi_location_fulfillment: true,
-        preferred_locations: ['warehouse_1', 'store_2']
-      },
-      exchanges_of_exchanges: {
         enabled: true,
-        max_sequential_exchanges: 2,
-        reset_return_window: false
+        authorization_method: 'one_dollar',
+        return_deadline_days: [14]
       }
     },
     
+    // Store Credit Settings
     store_credit_settings: {
       enabled: true,
       provider: 'shopify',
       bonus_incentives: {
-        enabled: false,
+        enabled: true,
         bonus_type: 'percentage',
-        flat_rate_amount: 10.00,
         percentage_amount: 15,
-        max_bonus_amount: 50.00,
         minimum_order_for_bonus: 25.00
-      },
-      credit_features: {
-        stackable_with_discounts: true,
-        transferable: false,
-        expiration_enabled: true,
-        expiration_days: [365],
-        reminder_notifications: true,
-        reminder_days_before_expiry: [30, 14, 7, 1]
-      },
-      redemption_rules: {
-        minimum_spend_required: false,
-        minimum_spend_amount: 0.00,
-        exclude_categories: ['Gift_Cards', 'Digital'],
-        exclude_sale_items: false,
-        online_only: false,
-        in_store_only: false
       }
     },
     
-    keep_item_settings: {
-      enabled: false,
-      triggers: {
-        low_value_threshold: 15.00,
-        damage_reported: true,
-        wrong_item_sent: true,
-        goodwill_gesture: true,
-        high_shipping_cost: true
-      },
-      conditions: {
-        require_photo_evidence: true,
-        require_manager_approval: false,
-        automatic_approval_under: 10.00,
-        customer_history_check: true,
-        max_keep_items_per_customer: 3,
-        max_keep_items_timeframe_days: 365
-      },
-      donation_option: {
-        enabled: true,
-        partner_charities: ['charity_1', 'charity_2'],
-        customer_choice: true,
-        tax_receipt: true
-      }
-    },
-    
-    shop_now_settings: {
-      enabled: false,
-      immediate_shopping: true,
-      bonus_incentives: {
-        enabled: false,
-        bonus_type: 'percentage',
-        flat_rate_amount: 20.00,
-        percentage_amount: 20,
-        minimum_spend_for_bonus: 50.00
-      },
-      shopping_experience: {
-        full_catalog_access: true,
-        recommended_products: true,
-        upsell_opportunities: true,
-        cross_sell_opportunities: true,
-        honor_original_discounts: true,
-        apply_current_promotions: true
-      },
-      shop_later: {
-        enabled: true,
-        conversion_options: ['shop_now', 'store_credit', 'refund'],
-        conversion_deadline_days: 14,
-        conversion_incentives: true,
-        reminder_emails: true
-      }
-    },
-    
-    // 5. ADVANCED WORKFLOW AUTOMATION
-    workflow_conditions: {
-      customer_attributes: [
-        'customer_tag',
-        'customer_id',
-        'email_address',
-        'total_orders',
-        'lifetime_value',
-        'return_history_count',
-        'account_age_days',
-        'loyalty_tier',
-        'geographic_location'
-      ],
-      order_attributes: [
-        'order_number',
-        'order_tag',
-        'order_total_value',
-        'order_date',
-        'fulfillment_date',
-        'delivery_date',
-        'payment_method',
-        'discount_codes_used',
-        'channel_source'
-      ],
-      product_attributes: [
-        'product_id',
-        'product_sku',
-        'product_title',
-        'product_type',
-        'product_vendor',
-        'product_category',
-        'product_price',
-        'product_tags'
-      ],
-      return_attributes: [
-        'return_reason',
-        'return_reason_note',
-        'customer_note',
-        'return_value',
-        'item_count',
-        'photos_provided',
-        'return_method'
-      ],
-      temporal_conditions: [
-        'day_of_week',
-        'time_of_day',
-        'month_of_year',
-        'season',
-        'holiday_period',
-        'business_hours'
-      ]
-    },
-    
-    // 6. FRAUD DETECTION & PREVENTION
+    // Fraud Detection
     fraud_detection: {
       ai_models: {
-        enabled: false,
+        enabled: true,
         risk_scoring: {
           low_risk: '0-30',
           medium_risk: '31-70',
           high_risk: '71-100'
-        },
-        detection_categories: [
-          'serial_returners',
-          'bracketing_behavior',
-          'geographic_anomalies',
-          'velocity_abuse',
-          'return_without_purchase',
-          'damaged_item_claims',
-          'sizing_abuse',
-          'friendly_fraud'
-        ]
+        }
       },
       behavioral_patterns: {
         max_returns_per_month: 10,
-        max_return_value_per_month: 1000.00,
-        suspicious_return_percentage: 50,
-        rapid_return_timeframe_hours: 24,
-        geographic_inconsistencies: true,
-        multiple_addresses: true,
-        payment_method_mismatches: true
-      },
-      blocklist_management: {
-        customer_blocklist: true,
-        email_blocklist: true,
-        phone_blocklist: true,
-        address_blocklist: true,
-        ip_address_blocklist: true,
-        automatic_blocking: true,
-        temporary_suspensions: true,
-        manual_override_allowed: true
-      },
-      fraud_actions: {
-        low_risk: 'auto_approve',
-        medium_risk: 'manual_review',
-        high_risk: 'require_receipt',
-        confirmed_fraud: 'block_customer'
+        max_return_value_per_month: 1000.00
       }
     },
     
-    // 7. SHIPPING & LOGISTICS
+    // Shipping & Logistics
     shipping_logistics: {
       label_generation: {
-        providers: ['EasyPost', 'ShipStation', 'Shippo'],
+        providers: ['EasyPost'],
         carrier_integration: {
-          domestic_carriers: ['UPS', 'FedEx', 'USPS', 'DHL'],
-          international_carriers: ['DHL', 'FedEx_Intl', 'UPS_Intl'],
-          regional_carriers: ['Canada_Post', 'Royal_Mail']
-        },
-        label_formats: ['PDF', 'ZPL', 'PNG'],
-        label_sizes: ['4x6', '8.5x11']
+          domestic_carriers: ['UPS', 'FedEx', 'USPS']
+        }
       },
       return_methods: {
         mail_return: true,
         drop_off_locations: {
-          carrier_locations: true,
-          retail_partners: ['Staples', 'Walgreens', 'CVS'],
-          lockers: ['Amazon_Hub', 'FedEx_Office'],
-          branded_locations: []
-        },
-        pickup_service: {
-          scheduled_pickup: true,
-          on_demand_pickup: false,
-          pickup_fees: 'customer_pays'
+          carrier_locations: true
         }
-      },
-      packaging_requirements: {
-        original_packaging_preferred: true,
-        accept_any_packaging: true,
-        provide_packaging: false,
-        packaging_instructions: '',
-        fragile_item_requirements: true,
-        hazmat_restrictions: true
-      },
-      tracking: {
-        real_time_tracking: true,
-        sms_notifications: true,
-        email_notifications: true,
-        webhook_notifications: true,
-        delivery_confirmation: true,
-        photo_on_delivery: false
-      }
-    },
-    
-    // 8. COMMUNICATION & NOTIFICATIONS
-    email_communications: {
-      branding: {
-        logo_url: '',
-        primary_color: '#3B82F6',
-        secondary_color: '#64748B',
-        font_family: 'Arial',
-        custom_css: '',
-        footer_text: '',
-        social_links: {
-          facebook: '',
-          twitter: '',
-          instagram: ''
-        }
-      },
-      templates: {
-        return_confirmation: {
-          enabled: true,
-          trigger: 'return_submitted',
-          delay_minutes: 0,
-          subject: 'Your return request #{rma_number} is confirmed',
-          personalization: true,
-          attachments: ['return_label', 'instructions']
-        },
-        return_received: {
-          enabled: true,
-          trigger: 'package_delivered_to_warehouse',
-          subject: "We've received your return #{rma_number}"
-        },
-        return_processed: {
-          enabled: true,
-          trigger: 'return_completed',
-          subject: 'Your return has been processed #{rma_number}'
-        },
-        refund_issued: {
-          enabled: true,
-          trigger: 'refund_processed',
-          subject: 'Your refund of {amount} has been issued'
-        }
-      },
-      sms_notifications: {
-        enabled: false,
-        return_updates: true,
-        shipping_updates: true,
-        urgent_notifications_only: true
-      }
-    },
-    
-    // 9. REPORTING & ANALYTICS
-    reporting_analytics: {
-      dashboard_metrics: {
-        return_rate: {
-          overall_rate: true,
-          category_breakdown: true,
-          time_period_comparison: true,
-          benchmark_comparison: false
-        },
-        financial_impact: {
-          total_return_value: true,
-          processing_costs: true,
-          revenue_recovered: true,
-          net_loss: true
-        },
-        processing_metrics: {
-          average_processing_time: true,
-          sla_compliance: true,
-          staff_productivity: false,
-          automation_rate: true
-        },
-        customer_metrics: {
-          customer_satisfaction: true,
-          repeat_return_rate: true,
-          post_return_purchase_rate: true,
-          nps_score: false
-        }
-      },
-      custom_reports: {
-        report_builder: true,
-        scheduled_reports: false,
-        export_formats: ['CSV', 'Excel', 'PDF'],
-        api_access: true,
-        real_time_data: true
-      },
-      predictive_analytics: {
-        return_forecasting: false,
-        seasonal_trends: true,
-        product_risk_scoring: false,
-        customer_risk_scoring: false,
-        inventory_impact_prediction: false
       }
     }
   });
