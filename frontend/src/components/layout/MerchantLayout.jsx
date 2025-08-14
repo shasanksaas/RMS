@@ -29,6 +29,7 @@ const MerchantLayout = ({ isOnline }) => {
     { name: 'Branding', href: '/app/settings/branding' },
     { name: 'Email', href: '/app/settings/email' },
     { name: 'Integrations', href: '/app/settings/integrations' },
+    { name: 'Policies', href: '/app/settings/policies' },
     { name: 'Team', href: '/app/settings/team' },
   ];
 
