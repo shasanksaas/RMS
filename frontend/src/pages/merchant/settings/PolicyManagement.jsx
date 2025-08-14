@@ -614,6 +614,12 @@ const PolicyManagement = () => {
           >
             <Plus className="h-4 w-4 mr-2" />
             Add New Zone
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
   // Policy Overview Component
   const PolicyOverview = () => (
     <div className="space-y-6">
