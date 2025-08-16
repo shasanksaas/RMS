@@ -195,9 +195,6 @@ async def create_exchange_request(
     """Create an exchange request"""
     
     try:
-        # Validate exchange eligibility using policy engine
-        policy_engine = PolicyEngineService(tenant_id)
-        
         # Get active policy
         active_policy = await db.return_policies.find_one({
             'tenant_id': tenant_id,
