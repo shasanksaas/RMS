@@ -248,7 +248,7 @@ const Confirm = () => {
             </div>
           </div>
 
-          {/* Resolution */}
+          {/* Resolution Details */}
           <div>
             <h3 className="font-semibold text-lg mb-3">Resolution</h3>
             <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
@@ -256,10 +256,60 @@ const Confirm = () => {
                 <div>
                   <h4 className="font-medium text-blue-900">{resolution.title}</h4>
                   <p className="text-sm text-blue-700">{resolution.description}</p>
+                  
+                  {/* Exchange Item Details */}
+                  {resolution.id === 'exchange' && resolution.exchange && (
+                    <div className="mt-3 p-3 bg-white rounded border border-blue-200">
+                      <h5 className="font-medium text-blue-900 mb-2">Exchange Item:</h5>
+                      <div className="flex items-center space-x-3">
+                        <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center overflow-hidden">
+                          {resolution.exchange.product.image_url ? (
+                            <img 
+                              src={resolution.exchange.product.image_url} 
+                              alt={resolution.exchange.product.title}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gray-200 rounded flex items-center justify-center">
+                              <span className="text-xs text-gray-500">IMG</span>
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm">{resolution.exchange.product.title}</p>
+                          <p className="text-sm text-gray-600">{resolution.exchange.variant.title}</p>
+                          <p className="text-sm font-semibold text-green-600">
+                            ${parseFloat(resolution.exchange.variant.price).toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {/* Price Difference */}
+                      {resolution.exchange.price_difference && (
+                        <div className="mt-3 pt-3 border-t border-blue-200">
+                          <div className="text-sm">
+                            {resolution.exchange.price_difference.difference_type === 'charge' && (
+                              <p className="text-red-600 font-medium">
+                                Additional payment required: ${resolution.exchange.price_difference.absolute_difference.toFixed(2)}
+                              </p>
+                            )}
+                            {resolution.exchange.price_difference.difference_type === 'refund' && (
+                              <p className="text-green-600 font-medium">
+                                Refund due: ${resolution.exchange.price_difference.absolute_difference.toFixed(2)}
+                              </p>
+                            )}
+                            {resolution.exchange.price_difference.difference_type === 'even' && (
+                              <p className="text-gray-600 font-medium">No price difference</p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div className="text-right">
                   <div className="text-2xl font-bold text-blue-600">
-                    ${resolution.amount.toFixed(2)}
+                    {resolution.id === 'exchange' ? 'Exchange' : `$${resolution.amount.toFixed(2)}`}
                   </div>
                   <p className="text-sm text-blue-600">{resolution.processing}</p>
                 </div>
