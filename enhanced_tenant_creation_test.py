@@ -15,7 +15,7 @@ import uuid
 import re
 
 # Configuration
-BACKEND_URL = "https://multi-tenant-rms.preview.emergentagent.com/api"
+BACKEND_URL = "https://returns-manager-1.preview.emergentagent.com/api"
 
 # Admin credentials for testing
 ADMIN_CREDENTIALS = {

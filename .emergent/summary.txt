@@ -1,66 +1,90 @@
 <analysis>
-The previous AI engineer's work trajectory can be divided into several critical phases. Initially, the focus was on establishing a robust, multi-tenant application with comprehensive user and tenant management, including Shopify and Google OAuth. This foundational work also involved resolving persistent frontend state and redirect issues.
+The AI engineer's work transitioned from foundational multi-tenancy and user management setup to addressing critical regressions and implementing core features. Initially, focus was on fixing admin login, real-time tenant management, and restoring  integrity, alongside resolving a customer return form redirect issue by removing .
 
-A significant portion of the recent trajectory was dedicated to addressing user-reported regressions and implementing core features. This included fixing an admin login redirection bug, implementing a real-time tenant management system with admin impersonation, and restoring the integrity of the main merchant portal (). A persistent challenge involved the customer-facing return form redirecting to the merchant dashboard, which was resolved by removing  from customer flow routes.
+Subsequently, efforts shifted to a dual-path login UI, troubleshooting frontend caching,  issues, and addressing severe security flaws like hardcoded tenant IDs and admin portal accessibility. Shopify integration became paramount, involving real data backfill, webhook processing, and resolving persistent OAuth routing conflicts and external Shopify app configuration (e.g., , CSRF).
 
-Subsequently, the engineer pivoted to implementing a dual-path login UI (Shopify OAuth and Email/Password). This effort was plagued by frontend caching/compilation issues,  double-execution, and confusing UI. Once these were resolved, critical security issues arose, including an admin portal accessibility bug and a tenant data leakage problem due to hardcoded tenant IDs. Both were meticulously fixed using dynamic tenant identification. The latest focus shifted to ensuring full Shopify integration, including real data backfill, webhook processing, and resolving persistent OAuth routing conflicts and external Shopify app configuration issues (e.g.,  not whitelisted, CSRF, App under review). The current work is centered on resolving conflicting backend API routers, specifically for returns endpoints, to ensure data visibility.
+The immediate preceding work involved troubleshooting a  due to conflicting backend API routers, which was successfully resolved. Following this, the engineer tackled persistent Shopify OAuth redirect issues by fixing session handling and frontend token processing. Most recently, a comprehensive policy management system was implemented with a detailed UI, and the engineer has now begun work on adding an Exchange feature to the customer return form, starting with backend API development.
 </analysis>
 
 <product_requirements>
-The application is a multi-tenant Returns Management SaaS platform for e-commerce, designed to integrate primarily with Shopify. It features customer and merchant portals, Shopify OAuth for seamless merchant onboarding, real-time data synchronization via webhooks, a configurable rules engine, and analytics. Strict multi-tenancy is enforced to prevent data leakage. Initial requirements included a complete user management system (email/password, Google OAuth) and a strict Tenant Management System, allowing admins to create tenants and merchants to sign up via . Role-Based Access Control (RBAC) ensures distinct access levels. A key feature is Single-Click Shopify OAuth Login for merchants to authenticate, auto-provision/attach a tenant, save encrypted Shopify tokens, register webhooks, backfill 90 days of data, and redirect to their dashboard without separate signup steps. Admin access must remain a separate email/password portal. The Main Portal () is considered a sacred, unchangeable core destination for merchants post-login. More recently, the user required creating real tenant accounts from the admin dashboard with associated user logins, ensuring strict data isolation per tenant, and a 100% functional Shopify integration with real-time data flow.
+The application is a multi-tenant Returns Management SaaS for e-commerce, primarily integrating with Shopify. It requires distinct customer and merchant portals, Shopify OAuth for merchant onboarding (auto-provisioning tenant, saving tokens, registering webhooks, 90-day data backfill, redirect to ). A strict Tenant Management System allows admins to create tenants with associated merchant users. Role-Based Access Control (RBAC) is essential. The Main Portal () is a fixed merchant destination.
+Recent requirements include:
+1.  **Comprehensive Policy Management System**: A fully functional rules/workflow engine, configurable via UI, covering:
+    *   Policy zones (countries, states, postal codes, warehouses, labels, customs).
+    *   Return window configurations (standard, extended, category/price-based).
+    *   Product eligibility/exclusions (tags, categories, conditions, value-based, age, quantity).
+    *   Return outcomes/resolutions (refunds, exchanges, store credit, keep item, shop now), with detailed sub-settings for each.
+    *   Advanced workflow automation (conditional logic based on customer, order, product, return, temporal attributes; various actions like auto-approve/reject, fees, notifications).
+    *   Fraud detection (AI models, behavioral patterns, blocklist management, fraud actions).
+    *   Shipping & Logistics (label generation, return methods, packaging, tracking).
+    *   Communication & Notifications (customizable email templates, SMS).
+    *   Reporting & Analytics (dashboard metrics, custom reports, predictive analytics).
+    *   Integrations (ecommerce, ERP, inventory, customer service, email marketing, logistics, payment processors).
+2.  **Customer Return Form Exchange Feature**: Add Exchange as a resolution option with sub-flows for selecting replacement products/variants, real-time availability, price difference handling. Merchant dashboard should show Exchange Requested, allowing approval (triggering new Shopify order). Confirmation emails for customers. Exchange eligibility must be governed by merchant rules. The form should also have a floating effect.
 </product_requirements>
 
 <key_technical_concepts>
--   **Multi-Tenancy**: Data isolation per .
--   **Full-Stack**: FastAPI (Python) backend, React.js frontend, MongoDB database.
+-   **Multi-Tenancy**: Strict data isolation per tenant_id.
+-   **Full-Stack**: FastAPI (Python) backend, React.js frontend, MongoDB.
 -   **Authentication**: JWT, RBAC, bcrypt, Google OAuth, Shopify OAuth, admin impersonation.
 -   **Architecture**: Hexagonal (Ports & Adapters), CQRS.
--   **State Management**: React Context API, , .
+-   **State Management**: React Context API.
 -   **Communication**: CORS, Webhooks (Shopify).
 -   **Deployment**: Kubernetes container environment, Supervisorctl.
+-   **Policy Engine**: Rule-based system for return logic.
 </key_technical_concepts>
 
 <code_architecture>
 
-The application follows a full-stack architecture with a FastAPI backend and a React frontend, interacting with a MongoDB database.
--   : The main FastAPI application. This file registers all API routers and configures middleware.
-    -   Changes: Adjusted middleware order, included new , , . Critically, conflicting  and multiple Shopify/returns routers were identified and cleaned up to ensure correct routing. New integration endpoints for Shopify status and resync were registered.
--   : Middleware enforcing data isolation.
+-   : Main FastAPI app.
+    -   Changes: Middleware order adjusted, new , ,  included. Crucially, conflicting returns routers were identified and cleaned up (commented out , , , , ,  leaving  and  and , etc. to resolve 404s). New  router was added.
+-   : Enforces data isolation.
     -   Changes: Updated to exclude new Shopify OAuth and webhook paths.
--   : New FastAPI endpoints for admin tenant management.
-    -   Changes: Enhanced the  endpoint to also create a merchant user account with email/password, along with the tenant.
--   : Pydantic models for tenant administration.
-    -   Changes:  model was updated to include fields for email and password for creating an associated user during tenant creation.
--   : Business logic for Shopify OAuth.
-    -   Changes:  was enhanced to fetch real Shopify orders/returns. Webhook registration logic was verified.
--   : Handles Shopify OAuth initiation and callback.
-    -   Changes: Added new  and  endpoints. Fixed a critical bug where integration endpoints were hardcoded to . The  endpoint was updated from a placeholder to call real data sync functions.
+-   : Admin tenant management endpoints.
+    -   Changes:  enhanced to create associated merchant user.
+-   : Shopify OAuth logic.
+    -   Changes:  enhanced for real Shopify order/returns data. Webhook registration logic verified.  was updated to set an authentication cookie.
+-   : Handles Shopify OAuth.
+    -   Changes: Added ,  endpoints. Fixed hardcoded  for integration endpoints.  calls real data sync. Modified  to set a  as a URL parameter for frontend handling instead of a cookie.
+-   : **(NEW)** FastAPI endpoints for comprehensive policy management.
+    -   Summary: Handles CRUD operations for all detailed policy configurations (zones, return windows, product eligibility, outcomes, workflows, fraud, shipping, comms, analytics, integrations).
+-   : **(NEW)** Business logic for the policy management.
+    -   Summary: Provides services for managing and applying detailed return policies.
+-   : **(NEW)** Utility for validating policy configurations.
+    -   Summary: Ensures consistency and correctness of policy JSON structures.
+-   : **(NEW)** Utility for date calculations related to return windows.
+-   : **(NEW)** Utility for fraud detection logic.
+-   : **(NEW)** Utility for checking product inventory.
 -   : Main React router.
-    -   Changes: Removed  from customer return flow routes. Simplified login routing.
--   : Main entry point for the React app.
-    -   Changes:  wrapper was temporarily removed to resolve a double-execution bug affecting the OAuth button.
+    -   Changes: Removed  from customer return flow. Simplified login routing. Added route for .
+-   : Main React entry point.
+    -   Changes:  temporarily removed.
 -   : Primary login component.
-    -   Changes: Implemented a modern dual-path (Shopify OAuth / Email) tabbed interface. Was heavily debugged for frontend caching, environment variable reading ( vs ), event handling (, , ), and UI clarity (renaming tab button). Previously bypassed  and manually stored data, which was fixed to use .
--   : Enforces role-based access.
-    -   Changes: Modified to prevent incorrect redirects to  after logout by checking if the target path is a login page.
--   : Contains logout functionality.
-    -   Changes: Modified to redirect all logouts to  using  to bypass  interference and ensure a consistent logout experience.
--   : Layout for the admin portal.
-    -   Changes: Enhanced with modern UI elements and integrated  for logout.
--   : Layout for merchant portal.
-    -   Changes: Verified to already include  for logout.
--   : Admin modal for tenant creation.
-    -   Changes: Enhanced to include email and password fields for creating an initial merchant user.
--   : Admin interface for tenant management.
-    -   Changes: Modernized its UI with card-based layouts and improved styling.
--   : Displays all returns for a merchant.
-    -   Changes: Fixed hardcoded  reference to use dynamic  from .
--   : Displays orders for a merchant.
-    -   Changes: Fixed hardcoded  reference to use dynamic  from .
--   : Displays details of a specific return.
-    -   Changes: Fixed hardcoded  reference to use dynamic  from .
--   : Integrations settings page.
-    -   Changes: Fixed hardcoded  header to use dynamic tenant ID. Updated Connect Shopify button to use the correct OAuth install URL.
+    -   Changes: Implemented dual-path login, debugged caching, env variable issues, event handling, and now correctly uses .
+-   : Enforces RBAC.
+    -   Changes: Modified to prevent incorrect  redirects post-logout.
+-   : Logout.
+    -   Changes: Redirects all logouts to  via .
+-   : Admin portal layout.
+    -   Changes: Enhanced UI, integrated .
+-   : Merchant portal layout.
+    -   Changes: Verified to include . Updated to include a navigation link to Policy Management.
+-   : Admin tenant creation.
+    -   Changes: Enhanced with email/password fields for initial merchant user.
+-   : Authentication context.
+    -   Changes: Added logic to extract and process  from URL parameters for automatic login post-OAuth callback.
+-   : Admin tenant management UI.
+    -   Changes: Modernized UI with card layouts.
+-   : Displays merchant returns.
+    -   Changes: Fixed hardcoded  to dynamic .
+-   : Displays merchant orders.
+    -   Changes: Fixed hardcoded  to dynamic . (File name confirmed as  instead of ).
+-   : Displays specific return details.
+    -   Changes: Fixed hardcoded  to dynamic .
+-   : Integrations settings.
+    -   Changes: Fixed hardcoded  header. Updated Connect Shopify button to use correct OAuth install URL.
+-   : **(NEW)** Comprehensive UI for policy management.
+    -   Summary: Provides a detailed, tabbed interface for configuring all return policies, including Policy Zones, Return Windows, Product Eligibility, Return Outcomes, Advanced Workflow Automation, Fraud Detection, Shipping & Logistics, Communication, Reporting & Analytics, and Integrations. Uses real API calls.
 </code_architecture>
 
 <pending_tasks>
@@ -70,26 +94,21 @@ The application follows a full-stack architecture with a FastAPI backend and a R
 -   Finalize testing setup for webhook and dev store interactions.
 -   Implement AI Suggestions, Label Issuing, Email Notifications (beyond basic templates), Stripe Billing.
 -   Finalize test coverage to ≥70%, performance optimization, and Lighthouse ≥90.
--   Complete the implementation of the Elite-Grade Returns Creation system, including all detailed API contracts, UI/UX (merchant overrides, bulk creation), security, observability, and full testing.
--   Resolve remaining Shopify OAuth flow issues: Install app button not showing, Invalid state parameter - CSRF protection callback error, and post-login redirect (these might be external Shopify app configuration issues, but user may expect resolution).
--   Fine-tune impersonation banner display (minor aesthetic issue).
--   The current  is named  in the directory structure, which might lead to confusion and is worth reviewing.
+-   Complete Elite-Grade Returns Creation system.
+-   Resolve remaining Shopify OAuth flow issues: Install app button not showing, Invalid state parameter - CSRF protection callback error (these are external Shopify app config issues, requiring user action).
+-   Fine-tune impersonation banner display.
+-   Complete the frontend implementation for the new comprehensive Policy Management system (currently only basic UI is created, with a comprehensive API backend).
+-   Implement the Exchange feature in the customer return form.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the AI engineer was deep into ensuring the Shopify OAuth and data mapping work flawlessly and without data leakage for new tenants. The user had explicitly requested to fix the OAuth flow completely and ensure real data flows into the application after a merchant connects their Shopify store via the Integrations dashboard.
+Immediately before this summary request, the AI engineer was focused on implementing the comprehensive Policy Management System and then pivoted to the Exchange feature for the customer return form.
 
-The previous actions involved:
-1.  **Implementing real data backfill and resync**: The  and  functions in  and  were updated to actually fetch and store real orders and returns from Shopify, replacing placeholder logic.
-2.  **Verifying webhook handlers**: Confirmed that  correctly processes incoming Shopify webhooks and stores data with proper tenant isolation.
-3.  **Fixing critical tenant data leakage**: A major issue was resolved where several frontend components (, , , ) had hardcoded  IDs. These were updated to dynamically fetch the tenant ID from the authenticated user's context, ensuring strict tenant isolation.
-4.  **Addressing OAuth routing conflicts**: Multiple conflicting Shopify-related routers were identified in  and cleaned up to ensure only the correct ones are active.
-5.  **Fixing hardcoded tenant ID in OAuth controller**:  was found to still be using  for integration endpoints, which was corrected to use the dynamic tenant ID.
-6.  **Ensuring correct OAuth redirect**: Confirmed that after a successful Shopify OAuth, the backend correctly redirects to . The frontend Connect Shopify button in  was also updated to use the correct OAuth install URL.
+The Policy Management System was successfully implemented on the backend (, , new utils like , , , ), with successful backend API testing achieving 95.2% success rate. A basic frontend UI () was created and integrated into the merchant navigation (, ). The user, however, explicitly stated that the basic UI was insufficient and requested a much more detailed policy management interface that includes ALL the configurations. The engineer then proceeded to implement a comprehensive UI for Policy Management in  with all detailed configuration sections.
 
-The most recent activity involves troubleshooting a  encountered during comprehensive testing of the OAuth and data mapping flow. The engineer has identified that there are **multiple returns routers** configured in  that might be conflicting. The immediate task is to clean up these conflicting routers to resolve the 404 error and ensure returns data is displayed correctly for the newly connected tenants.
+Following this, the user requested the implementation of an Exchange feature within the customer return form. This feature requires adding Exchange as a preferred outcome option, a flow for selecting replacement products/variants (with real-time availability and price difference handling), merchant dashboard integration for approval, confirmation emails, and eligibility controlled by rules. The engineer has just started this task by planning to create the backend APIs for the exchange functionality.
 </current_work>
 
 <optional_next_step>
-Consolidate and fix conflicting returns routers in  to resolve the .
+Implement the backend APIs for the Exchange feature in the customer return form.
 </optional_next_step>

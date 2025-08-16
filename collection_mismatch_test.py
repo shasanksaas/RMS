@@ -13,7 +13,7 @@ import os
 import sys
 
 # Backend URL from environment
-BACKEND_URL = "https://multi-tenant-rms.preview.emergentagent.com"
+BACKEND_URL = "https://returns-manager-1.preview.emergentagent.com"
 
 class CollectionMismatchTester:
     def __init__(self):

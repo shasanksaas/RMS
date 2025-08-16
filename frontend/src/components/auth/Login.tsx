@@ -94,7 +94,7 @@ const Login: React.FC = () => {
 
     try {
       // Get backend URL from environment with fallback
-      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://multi-tenant-rms.preview.emergentagent.com';
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://returns-manager-1.preview.emergentagent.com';
       
       console.log('🔍 Backend URL from env:', backendUrl);
       

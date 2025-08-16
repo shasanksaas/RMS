@@ -21,7 +21,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Any
 
 # Use the external backend URL from frontend/.env for real testing
-BACKEND_URL = "https://multi-tenant-rms.preview.emergentagent.com"
+BACKEND_URL = "https://returns-manager-1.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 # Real Shopify credentials from backend/.env

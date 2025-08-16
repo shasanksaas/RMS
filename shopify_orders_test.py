@@ -12,7 +12,7 @@ from datetime import datetime
 from typing import Dict, List, Any, Optional
 
 # Configuration
-BACKEND_URL = "https://multi-tenant-rms.preview.emergentagent.com/api"
+BACKEND_URL = "https://returns-manager-1.preview.emergentagent.com/api"
 SHOPIFY_STORE = "rms34.myshopify.com"
 TENANT_ID = "tenant-rms34"
 

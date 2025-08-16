@@ -5,7 +5,7 @@ The logout functionality is now fully working in the user profile dropdown (top 
 
 ### 🚨 **URL ISSUE SOLUTION**
 
-The issue where you're seeing `https://multi-tenant-rms.preview.emergentagent.com/app/dashboard` instead of the correct URL is likely due to browser caching or old localStorage data.
+The issue where you're seeing `https://returns-manager-1.preview.emergentagent.com/app/dashboard` instead of the correct URL is likely due to browser caching or old localStorage data.
 
 ### 📱 **IMMEDIATE FIX FOR URL ISSUE:**
 
@@ -16,7 +16,7 @@ The issue where you're seeing `https://multi-tenant-rms.preview.emergentagent.co
 4. **Click:** "Clear data"
 
 **Step 2: Hard Refresh**
-1. **Navigate to:** `https://multi-tenant-rms.preview.emergentagent.com/auth/login`
+1. **Navigate to:** `https://returns-manager-1.preview.emergentagent.com/auth/login`
 2. **Press:** `Ctrl+F5` (Windows) or `Cmd+Shift+R` (Mac) for hard refresh
 3. **Or try incognito/private browsing mode**
 
@@ -42,9 +42,9 @@ The issue where you're seeing `https://multi-tenant-rms.preview.emergentagent.co
 4. **Should redirect to login page with success toast**
 
 ### 🎯 **CORRECT URLS TO USE:**
-- **Login:** `https://multi-tenant-rms.preview.emergentagent.com/auth/login`
-- **Merchant Dashboard:** `https://multi-tenant-rms.preview.emergentagent.com/app/dashboard`
-- **Admin Dashboard:** `https://multi-tenant-rms.preview.emergentagent.com/admin/dashboard`
+- **Login:** `https://returns-manager-1.preview.emergentagent.com/auth/login`
+- **Merchant Dashboard:** `https://returns-manager-1.preview.emergentagent.com/app/dashboard`
+- **Admin Dashboard:** `https://returns-manager-1.preview.emergentagent.com/admin/dashboard`
 
 ### 🔧 **WHY THIS HAPPENS:**
 - Browser cache storing old URLs

@@ -13,7 +13,7 @@ import sys
 import os
 
 # Configuration
-BACKEND_URL = "https://multi-tenant-rms.preview.emergentagent.com/api"
+BACKEND_URL = "https://returns-manager-1.preview.emergentagent.com/api"
 TENANT_ID = "tenant-rms34"
 TEST_EMAIL = "merchant@rms34.com"
 TEST_PASSWORD = "merchant123"

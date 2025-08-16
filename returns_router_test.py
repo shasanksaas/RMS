@@ -14,7 +14,7 @@ from typing import Dict, List, Any, Optional
 import uuid
 
 # Configuration
-BACKEND_URL = "https://multi-tenant-rms.preview.emergentagent.com/api"
+BACKEND_URL = "https://returns-manager-1.preview.emergentagent.com/api"
 TEST_TENANT_ID = "tenant-rms34"
 MERCHANT_EMAIL = "merchant@rms34.com"
 MERCHANT_PASSWORD = "merchant123"

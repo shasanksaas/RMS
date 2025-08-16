@@ -25,8 +25,8 @@ yarn start
 ### On Emergent Platform
 ```bash
 # Already configured - just access your preview URL
-# Frontend: https://multi-tenant-rms.preview.emergentagent.com
-# Backend: https://multi-tenant-rms.preview.emergentagent.com/api
+# Frontend: https://returns-manager-1.preview.emergentagent.com
+# Backend: https://returns-manager-1.preview.emergentagent.com/api
 ```
 
 ## 📖 Table of Contents

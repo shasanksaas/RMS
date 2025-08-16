@@ -20,7 +20,7 @@ import json
 from datetime import datetime
 
 # Use the external backend URL for testing
-BACKEND_URL = "https://multi-tenant-rms.preview.emergentagent.com"
+BACKEND_URL = "https://returns-manager-1.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 # Updated credentials from user - REAL VALUES REMOVED FOR SECURITY
