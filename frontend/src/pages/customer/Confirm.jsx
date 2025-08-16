@@ -181,10 +181,13 @@ const Confirm = () => {
         <Card className="border-green-200 bg-green-50">
           <CardContent className="p-6 text-center">
             <h3 className="text-lg font-semibold text-green-900 mb-2">
-              Return ID: {returnRequest.id}
+              {returnRequest.isExchange ? 'Exchange ID:' : 'Return ID:'} {returnRequest.id}
             </h3>
             <p className="text-green-800">
-              You'll receive an email confirmation shortly with tracking details and next steps.
+              {returnRequest.isExchange 
+                ? "Your exchange request has been submitted! We'll process it once we receive your returned items."
+                : "You'll receive an email confirmation shortly with tracking details and next steps."
+              }
             </p>
           </CardContent>
         </Card>
