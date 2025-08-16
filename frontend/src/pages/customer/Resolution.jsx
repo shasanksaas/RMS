@@ -203,7 +203,7 @@ const Resolution = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {resolutionOptions.map((option) => {
+            {resolutionOptions.map((option, index) => {
               const Icon = option.icon;
               return (
                 <div key={option.id} className="animate-slide-in-up" style={{animationDelay: `${index * 100}ms`}}>
