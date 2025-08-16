@@ -37,25 +37,58 @@ const Confirm = () => {
       }
 
       // Prepare return request data using the real order ID
-      const returnRequestData = {
-        order_id: String(order.id), // Use the order ID directly
-        customer_email: email,
-        return_method: 'prepaid_label',
-        items: Object.values(selectedItems).map(item => ({
-          line_item_id: String(item.line_item_id || item.id), // Ensure string format
-          sku: item.sku || 'N/A', // Default to 'N/A' if null
-          title: item.title || item.name,
-          variant_title: item.variant_title || null,
-          quantity: parseInt(item.quantity) || 1,
-          unit_price: parseFloat(item.unit_price || item.price) || 0,
-          reason: item.reason || 'wrong_size',
-          reason_description: item.reason_description || '',
-          condition: item.condition || 'used',
-          photos: item.photos || [],
-          notes: item.notes || ''
-        })),
-        customer_note: `Selected resolution: ${resolution.title || resolution.id}`
-      };
+      let returnRequestData;
+      
+      // Handle exchange requests differently
+      if (resolution.id === 'exchange' && resolution.exchange) {
+        returnRequestData = {
+          order_id: String(order.id),
+          customer_email: email,
+          return_method: 'prepaid_label',
+          items: Object.values(selectedItems).map(item => ({
+            line_item_id: String(item.line_item_id || item.id),
+            sku: item.sku || 'N/A',
+            title: item.title || item.name,
+            variant_title: item.variant_title || null,
+            quantity: parseInt(item.quantity) || 1,
+            unit_price: parseFloat(item.unit_price || item.price) || 0,
+            reason: item.reason || 'exchange',
+            reason_description: 'Customer requested exchange',
+            condition: item.condition || 'used',
+            photos: item.photos || [],
+            notes: item.notes || ''
+          })),
+          exchange_items: [{
+            product_id: resolution.exchange.product.id,
+            variant_id: resolution.exchange.variant.id,
+            quantity: 1,
+            price: parseFloat(resolution.exchange.variant.price)
+          }],
+          customer_note: `Exchange request for ${resolution.exchange.product.title} - ${resolution.exchange.variant.title}`,
+          resolution_type: 'exchange'
+        };
+      } else {
+        // Regular return request
+        returnRequestData = {
+          order_id: String(order.id),
+          customer_email: email,
+          return_method: 'prepaid_label',
+          items: Object.values(selectedItems).map(item => ({
+            line_item_id: String(item.line_item_id || item.id),
+            sku: item.sku || 'N/A',
+            title: item.title || item.name,
+            variant_title: item.variant_title || null,
+            quantity: parseInt(item.quantity) || 1,
+            unit_price: parseFloat(item.unit_price || item.price) || 0,
+            reason: item.reason || 'wrong_size',
+            reason_description: item.reason_description || '',
+            condition: item.condition || 'used',
+            photos: item.photos || [],
+            notes: item.notes || ''
+          })),
+          customer_note: `Selected resolution: ${resolution.title || resolution.id}`
+        };
+      }
 
       console.log('Sending return request data:', JSON.stringify(returnRequestData, null, 2));
 
