@@ -351,7 +351,7 @@ const Resolution = () => {
             onClick={handleContinue} 
             className="w-full"
             size="lg"
-            disabled={!selectedResolution || loading}
+            disabled={!selectedResolution || loading || (selectedResolution === 'exchange' && (!selectedExchangeProduct || !selectedExchangeVariant))}
           >
             {loading ? (
               <>
@@ -360,7 +360,10 @@ const Resolution = () => {
               </>
             ) : (
               <>
-                Continue to Confirmation
+                {selectedResolution === 'exchange' && (!selectedExchangeProduct || !selectedExchangeVariant) 
+                  ? 'Select Exchange Item to Continue'
+                  : 'Continue to Confirmation'
+                }
                 <ArrowRight className="ml-2 h-5 w-5" />
               </>
             )}
@@ -369,6 +372,12 @@ const Resolution = () => {
           {!selectedResolution && (
             <p className="text-center text-sm text-gray-500 mt-2">
               Please select a resolution option to continue
+            </p>
+          )}
+          
+          {selectedResolution === 'exchange' && (!selectedExchangeProduct || !selectedExchangeVariant) && (
+            <p className="text-center text-sm text-gray-500 mt-2">
+              Please choose an exchange item above to continue
             </p>
           )}
         </CardContent>
