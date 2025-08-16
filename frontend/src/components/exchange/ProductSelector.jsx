@@ -188,9 +188,9 @@ const ProductSelector = ({
                 <div
                   key={product.id}
                   onClick={() => handleProductClick(product)}
-                  className={`border rounded-lg p-4 cursor-pointer transition-all hover:shadow-md ${
+                  className={`border rounded-lg p-4 cursor-pointer product-card-hover transition-all ${
                     selectedProduct?.id === product.id 
-                      ? 'border-blue-500 bg-blue-50' 
+                      ? 'border-blue-500 bg-blue-50 animate-pulse-glow' 
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
