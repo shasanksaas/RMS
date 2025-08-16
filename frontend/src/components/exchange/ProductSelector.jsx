@@ -283,7 +283,7 @@ const ProductSelector = ({
 
       {/* Price Difference Display */}
       {priceDifference && (
-        <Card className="border-orange-200 bg-orange-50">
+        <Card className="border-orange-200 bg-orange-50 animate-bounce-in price-difference-highlight">
           <CardHeader>
             <CardTitle className="text-orange-900">Price Difference</CardTitle>
           </CardHeader>
