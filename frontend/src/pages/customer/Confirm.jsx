@@ -363,7 +363,7 @@ const Confirm = () => {
         <CardContent className="p-6">
           <div className="text-center space-y-4">
             <div className="text-lg font-semibold">
-              Ready to submit your return request?
+              Ready to submit your {resolution.id === 'exchange' ? 'exchange' : 'return'} request?
             </div>
             <Button 
               onClick={handleSubmit} 
@@ -374,17 +374,17 @@ const Confirm = () => {
               {submitting ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                  Submitting Return Request...
+                  Submitting {resolution.id === 'exchange' ? 'Exchange' : 'Return'} Request...
                 </>
               ) : (
                 <>
-                  Submit Return Request
+                  Submit {resolution.id === 'exchange' ? 'Exchange' : 'Return'} Request
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </>
               )}
             </Button>
             <p className="text-sm text-gray-600">
-              By submitting, you agree to our return policy and terms of service
+              By submitting, you agree to our {resolution.id === 'exchange' ? 'exchange' : 'return'} policy and terms of service
             </p>
           </div>
         </CardContent>
