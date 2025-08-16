@@ -285,6 +285,8 @@ const Resolution = () => {
 
       {/* Exchange Details */}
       {selectedResolution === 'exchange' && !showExchangeSelector && (
+      {/* Exchange Details - Old Alert (keep as fallback) */}
+      {selectedResolution === 'exchange' && !showExchangeSelector && (
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
@@ -293,6 +295,44 @@ const Resolution = () => {
             If there's a price difference, we'll either refund the difference or request additional payment.
           </AlertDescription>
         </Alert>
+      )}
+
+      {/* Selected Exchange Summary */}
+      {selectedResolution === 'exchange' && selectedExchangeProduct && selectedExchangeVariant && (
+        <Card className="border-green-200 bg-green-50">
+          <CardHeader>
+            <CardTitle className="text-green-900">Selected Exchange Item</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center space-x-4">
+              <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                {selectedExchangeProduct.image_url ? (
+                  <img 
+                    src={selectedExchangeProduct.image_url} 
+                    alt={selectedExchangeProduct.title}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <ShoppingCart className="h-6 w-6 text-gray-400" />
+                )}
+              </div>
+              <div className="flex-1">
+                <h3 className="font-medium">{selectedExchangeProduct.title}</h3>
+                <p className="text-sm text-gray-600">{selectedExchangeVariant.title}</p>
+                <p className="text-sm font-semibold text-green-600">
+                  ${parseFloat(selectedExchangeVariant.price).toFixed(2)}
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowExchangeSelector(true)}
+              >
+                Change Selection
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Store Credit Details */}
