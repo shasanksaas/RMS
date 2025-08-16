@@ -350,9 +350,11 @@ const Confirm = () => {
       <Alert>
         <Mail className="h-4 w-4" />
         <AlertDescription>
-          <strong>What happens next:</strong> After submitting your return, you'll receive an email 
-          with a prepaid return label and packaging instructions. Simply pack your items and drop 
-          them off at any authorized location.
+          <strong>What happens next:</strong> 
+          {resolution.id === 'exchange' 
+            ? " After submitting your exchange request, you'll receive an email with a prepaid return label. Once we receive and inspect your returned items, we'll send your new exchange item and process any payment difference."
+            : " After submitting your return, you'll receive an email with a prepaid return label and packaging instructions. Simply pack your items and drop them off at any authorized location."
+          }
         </AlertDescription>
       </Alert>
 
