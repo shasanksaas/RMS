@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Button } from '../../components/ui/button';
 import { Alert, AlertDescription } from '../../components/ui/alert';
 import ProductSelector from '../../components/exchange/ProductSelector';
+import '../../styles/floating-animations.css';
 
 const Resolution = () => {
   const navigate = useNavigate();
