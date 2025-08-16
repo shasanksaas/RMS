@@ -92,8 +92,13 @@ const Confirm = () => {
 
       console.log('Sending return request data:', JSON.stringify(returnRequestData, null, 2));
 
-      // Call Elite Portal Returns API to create return
-      const response = await fetch(`${backendUrl}/api/elite/portal/returns/create`, {
+      // Choose API endpoint based on request type
+      const apiEndpoint = returnRequestData.resolution_type === 'exchange' 
+        ? '/api/exchange/create' 
+        : '/api/elite/portal/returns/create';
+
+      // Call appropriate API to create return/exchange
+      const response = await fetch(`${backendUrl}${apiEndpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
