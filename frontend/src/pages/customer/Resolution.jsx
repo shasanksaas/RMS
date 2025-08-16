@@ -206,12 +206,12 @@ const Resolution = () => {
             {resolutionOptions.map((option) => {
               const Icon = option.icon;
               return (
-                <div key={option.id}>
+                <div key={option.id} className="animate-slide-in-up" style={{animationDelay: `${index * 100}ms`}}>
                   <div 
                     onClick={() => setSelectedResolution(option.id)}
-                    className={`block p-6 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md ${
+                    className={`block p-6 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md hover:scale-[1.02] transform ${
                       selectedResolution === option.id 
-                        ? `${option.color} border-opacity-100` 
+                        ? `${option.color} border-opacity-100 scale-[1.02] shadow-lg` 
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
