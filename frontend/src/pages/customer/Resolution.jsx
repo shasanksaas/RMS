@@ -93,6 +93,14 @@ const Resolution = () => {
       return;
     }
 
+    // For exchange, validate that product and variant are selected
+    if (selectedResolution === 'exchange') {
+      if (!selectedExchangeProduct || !selectedExchangeVariant) {
+        alert('Please select a product and variant for your exchange');
+        return;
+      }
+    }
+
     setLoading(true);
 
     try {
@@ -107,6 +115,24 @@ const Resolution = () => {
         color: selectedResolutionData.color,
         badge: selectedResolutionData.badge
       };
+
+      // Add exchange-specific data if applicable
+      if (selectedResolution === 'exchange' && selectedExchangeProduct && selectedExchangeVariant) {
+        serializableResolution.exchange = {
+          product: {
+            id: selectedExchangeProduct.id,
+            title: selectedExchangeProduct.title,
+            image_url: selectedExchangeProduct.image_url
+          },
+          variant: {
+            id: selectedExchangeVariant.id,
+            title: selectedExchangeVariant.title,
+            price: selectedExchangeVariant.price,
+            sku: selectedExchangeVariant.sku
+          },
+          price_difference: exchangePriceDifference
+        };
+      }
 
       // Navigate immediately without delay
       navigate('/returns/confirm', {
