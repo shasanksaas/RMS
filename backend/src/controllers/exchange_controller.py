@@ -299,6 +299,52 @@ async def create_exchange_request(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to create exchange request: {str(e)}")
 
+@router.get("/")
+async def list_exchanges(
+    tenant_id: str = Depends(get_tenant_id),
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(20, ge=1, le=100, description="Items per page"),
+    status: Optional[str] = Query(None, description="Filter by status")
+):
+    """List exchange requests for merchant dashboard"""
+    
+    try:
+        # Build query
+        query = {'tenant_id': tenant_id}
+        if status:
+            query['status'] = status
+        
+        # Calculate skip for pagination
+        skip = (page - 1) * limit
+        
+        # Get exchanges with pagination
+        exchanges_cursor = db.exchange_requests.find(query).sort('created_at', -1).skip(skip).limit(limit)
+        exchanges = await exchanges_cursor.to_list(limit)
+        
+        # Get total count
+        total_count = await db.exchange_requests.count_documents(query)
+        
+        # Convert ObjectId to string and format response
+        formatted_exchanges = []
+        for exchange in exchanges:
+            if '_id' in exchange:
+                exchange['_id'] = str(exchange['_id'])
+            formatted_exchanges.append(exchange)
+        
+        return {
+            'success': True,
+            'exchanges': formatted_exchanges,
+            'pagination': {
+                'page': page,
+                'limit': limit,
+                'total': total_count,
+                'pages': (total_count + limit - 1) // limit
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to list exchanges: {str(e)}")
+
 @router.get("/{exchange_id}/status")
 async def get_exchange_status(
     exchange_id: str,
