@@ -258,8 +258,33 @@ const Resolution = () => {
         </CardContent>
       </Card>
 
+      {/* Exchange Product Selector */}
+      {showExchangeSelector && (
+        <div className="space-y-6">
+          <Card className="border-green-200 bg-green-50">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2 text-green-900">
+                <ShoppingCart className="h-5 w-5" />
+                <span>Select Exchange Item</span>
+              </CardTitle>
+              <CardDescription className="text-green-700">
+                Choose what you'd like to exchange your returned items for
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          <ProductSelector
+            selectedItems={selectedItems}
+            onProductSelect={handleExchangeProductSelect}
+            onVariantSelect={handleExchangeVariantSelect}
+            tenantId={tenantId || 'tenant-rms34'}
+            showPriceDifference={true}
+          />
+        </div>
+      )}
+
       {/* Exchange Details */}
-      {selectedResolution === 'exchange' && (
+      {selectedResolution === 'exchange' && !showExchangeSelector && (
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
