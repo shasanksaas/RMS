@@ -109,17 +109,33 @@ const Confirm = () => {
 
       const responseData = await response.json();
 
-      if (response.ok && responseData.success) {
+      if (response.ok && (responseData.success || responseData.exchange_request)) {
+        // Handle different response formats
+        let returnId, status, estimatedRefund;
+        
+        if (returnRequestData.resolution_type === 'exchange') {
+          // Exchange response format
+          returnId = responseData.exchange_request?.exchange_id;
+          status = responseData.exchange_request?.status || 'requested';
+          estimatedRefund = 0; // Exchanges don't have estimated refunds
+        } else {
+          // Regular return response format
+          returnId = responseData.return_request?.return_id;
+          status = responseData.return_request?.status || 'submitted';
+          estimatedRefund = responseData.return_request?.estimated_refund?.amount || resolution.amount;
+        }
+
         // Success - create return request object
         const newReturnRequest = {
-          id: responseData.return_request.return_id,
+          id: returnId,
           orderNumber,
-          status: responseData.return_request.status || 'submitted',
+          status: status,
           resolutionType: resolution.id,
-          estimatedRefund: responseData.return_request.estimated_refund?.amount || resolution.amount,
+          estimatedRefund: estimatedRefund,
           items: selectedItems,
           submittedAt: new Date().toISOString(),
-          trackingUrl: `/returns/status/${responseData.return_request.return_id}`
+          trackingUrl: `/returns/status/${returnId}`,
+          isExchange: returnRequestData.resolution_type === 'exchange'
         };
 
         setReturnRequest(newReturnRequest);
