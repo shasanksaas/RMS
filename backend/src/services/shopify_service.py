@@ -443,6 +443,89 @@ class ShopifyService:
         
         return products
 
+    # Methods needed by exchange controller
+    async def get_products(self, limit: int = 50, title: str = None, product_type: str = None, vendor: str = None) -> List[Dict[str, Any]]:
+        """Get products with filtering support for exchange functionality"""
+        try:
+            # Try to get from local database first
+            query = {"tenant_id": self.tenant_id}
+            
+            # Add filters
+            if title:
+                query["title"] = {"$regex": title, "$options": "i"}
+            if product_type:
+                query["product_type"] = {"$regex": product_type, "$options": "i"}
+            if vendor:
+                query["vendor"] = {"$regex": vendor, "$options": "i"}
+            
+            products_cursor = db.products.find(query).limit(limit)
+            products = await products_cursor.to_list(limit)
+            
+            if products:
+                return products
+            
+            # Fallback: If no products in database and we have Shopify connection, fetch from API
+            if await self.is_connected():
+                # This would be a real Shopify API call in production
+                # For now, return empty list
+                return []
+            
+            return []
+            
+        except Exception as e:
+            print(f"Error fetching products: {e}")
+            return []
+    
+    async def get_product(self, product_id: str) -> Optional[Dict[str, Any]]:
+        """Get single product by ID"""
+        try:
+            # Try local database first
+            product = await db.products.find_one({
+                "id": product_id,
+                "tenant_id": self.tenant_id
+            })
+            
+            if product:
+                return product
+                
+            # If not in database and we have Shopify connection, try API
+            if await self.is_connected():
+                # This would be a real Shopify API call in production
+                pass
+            
+            return None
+            
+        except Exception as e:
+            print(f"Error fetching product {product_id}: {e}")
+            return None
+    
+    async def get_variant(self, variant_id: str) -> Optional[Dict[str, Any]]:
+        """Get variant by ID from products collection"""
+        try:
+            # Find product containing this variant
+            product = await db.products.find_one({
+                "tenant_id": self.tenant_id,
+                "variants.id": variant_id
+            })
+            
+            if not product:
+                return None
+            
+            # Find the specific variant
+            variants = product.get("variants", [])
+            variant = next((v for v in variants if v.get("id") == variant_id), None)
+            
+            if variant:
+                # Add product context to variant
+                variant["product_id"] = product.get("id")
+                variant["product_title"] = product.get("title")
+                
+            return variant
+            
+        except Exception as e:
+            print(f"Error fetching variant {variant_id}: {e}")
+            return None
+
     # Methods needed by unified returns controller
     async def find_order_by_number(self, order_number: str, tenant_id: str = None) -> Optional[Dict[str, Any]]:
         """Real-time Shopify GraphQL lookup by order number - NO cached data"""
