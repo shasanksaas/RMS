@@ -283,8 +283,6 @@ const Resolution = () => {
         </div>
       )}
 
-      {/* Exchange Details */}
-      {selectedResolution === 'exchange' && !showExchangeSelector && (
       {/* Exchange Details - Old Alert (keep as fallback) */}
       {selectedResolution === 'exchange' && !showExchangeSelector && (
         <Alert>
