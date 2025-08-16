@@ -8,7 +8,7 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime
 import uuid
 
-from ..middleware.security import get_current_tenant_id
+from src.middleware.security import get_tenant_id
 from ..config.database import db
 from ..services.shopify_service import ShopifyService
 from ..services.policy_engine_service import PolicyEngineService
@@ -46,7 +46,7 @@ class ExchangeAvailabilityRequest(BaseModel):
 @router.post("/browse-products")
 async def browse_products(
     request: ProductSearchRequest,
-    tenant_id: str = Depends(get_current_tenant_id)
+    tenant_id: str = Depends(get_tenant_id)
 ):
     """Browse store catalog for exchange products"""
     
@@ -105,7 +105,7 @@ async def browse_products(
 @router.post("/check-availability")
 async def check_exchange_availability(
     request: ExchangeAvailabilityRequest,
-    tenant_id: str = Depends(get_current_tenant_id)
+    tenant_id: str = Depends(get_tenant_id)
 ):
     """Check availability of variants for the same product"""
     
@@ -154,7 +154,7 @@ async def calculate_price_difference(
     original_variant_id: str,
     new_variant_id: str,
     quantity: int,
-    tenant_id: str = Depends(get_current_tenant_id)
+    tenant_id: str = Depends(get_tenant_id)
 ):
     """Calculate price difference for exchange"""
     
@@ -190,7 +190,7 @@ async def calculate_price_difference(
 @router.post("/create")
 async def create_exchange_request(
     request: ExchangeRequest,
-    tenant_id: str = Depends(get_current_tenant_id)
+    tenant_id: str = Depends(get_tenant_id)
 ):
     """Create an exchange request"""
     
@@ -306,7 +306,7 @@ async def create_exchange_request(
 @router.get("/{exchange_id}/status")
 async def get_exchange_status(
     exchange_id: str,
-    tenant_id: str = Depends(get_current_tenant_id)
+    tenant_id: str = Depends(get_tenant_id)
 ):
     """Get exchange request status"""
     
