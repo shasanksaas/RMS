@@ -9,9 +9,8 @@ from datetime import datetime
 import uuid
 
 from src.middleware.security import get_tenant_id
-from ..config.database import db
-from ..services.shopify_service import ShopifyService
-from ..services.policy_engine_service import PolicyEngineService
+from src.config.database import db
+from src.services.shopify_service import ShopifyService
 
 router = APIRouter(prefix="/exchange", tags=["Exchange"])
 
