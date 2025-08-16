@@ -256,7 +256,7 @@ const ProductSelector = ({
                 <div
                   key={variant.id}
                   onClick={() => handleVariantSelect(selectedProduct, variant)}
-                  className="border rounded-lg p-4 cursor-pointer transition-all hover:shadow-sm hover:border-gray-300 hover:bg-gray-50"
+                  className="border rounded-lg p-4 cursor-pointer hover-lift transition-all hover:border-gray-300 hover:bg-gray-50"
                 >
                   <div className="flex justify-between items-start">
                     <div>
