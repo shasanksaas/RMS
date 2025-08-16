@@ -13,12 +13,37 @@ const Resolution = () => {
   
   const [selectedResolution, setSelectedResolution] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showExchangeSelector, setShowExchangeSelector] = useState(false);
+  const [selectedExchangeProduct, setSelectedExchangeProduct] = useState(null);
+  const [selectedExchangeVariant, setSelectedExchangeVariant] = useState(null);
+  const [exchangePriceDifference, setExchangePriceDifference] = useState(null);
 
   useEffect(() => {
     if (!orderNumber || !email || !selectedItems) {
       navigate('/returns/start');
     }
   }, [orderNumber, email, selectedItems, navigate]);
+
+  // Handle exchange product selection
+  const handleExchangeProductSelect = (product) => {
+    setSelectedExchangeProduct(product);
+    setSelectedExchangeVariant(null); // Reset variant when product changes
+  };
+
+  const handleExchangeVariantSelect = (product, variant) => {
+    setSelectedExchangeVariant(variant);
+  };
+
+  // Show exchange selector when exchange option is selected
+  useEffect(() => {
+    if (selectedResolution === 'exchange') {
+      setShowExchangeSelector(true);
+    } else {
+      setShowExchangeSelector(false);
+      setSelectedExchangeProduct(null);
+      setSelectedExchangeVariant(null);
+    }
+  }, [selectedResolution]);
 
   if (!selectedItems) {
     return null;
