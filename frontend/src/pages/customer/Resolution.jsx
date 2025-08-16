@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, CreditCard, RefreshCw, Gift, AlertCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CreditCard, RefreshCw, Gift, AlertCircle, ShoppingCart } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Alert, AlertDescription } from '../../components/ui/alert';
+import ProductSelector from '../../components/exchange/ProductSelector';
 
 const Resolution = () => {
   const navigate = useNavigate();
