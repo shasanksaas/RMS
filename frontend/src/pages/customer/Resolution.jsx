@@ -154,7 +154,7 @@ const Resolution = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between">
         <Button variant="ghost" onClick={() => navigate('/returns/select', { state: { orderNumber, email } })}>
@@ -162,7 +162,7 @@ const Resolution = () => {
           Back
         </Button>
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900">Choose Your Resolution</h1>
+          <h1 className="text-3xl font-bold text-gray-900 animate-float">Choose Your Resolution</h1>
           <p className="text-gray-500">How would you like us to handle your return?</p>
         </div>
         <div></div>
