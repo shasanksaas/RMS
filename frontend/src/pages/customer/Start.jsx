@@ -133,7 +133,7 @@ const CustomerStart = () => {
                 <Input
                   id="orderNumber"
                   type="text"
-                  placeholder="e.g. ORD-12345, #1001, or 1234567890"
+                  placeholder="e.g. #1001, #1002, #1003, etc."
                   value={formData.orderNumber}
                   onChange={(e) => handleInputChange('orderNumber', e.target.value)}
                   required
