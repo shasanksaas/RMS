@@ -80,7 +80,8 @@ async def get_returns(
         # First pass: identify the most recent return for each combination
         for ret in all_returns:
             order_id = ret.get("order_id", "")
-            customer_email = ret.get("customer_email", "").lower()  # Case-insensitive comparison
+            customer_email = ret.get("customer_email") or ""  # Handle None values
+            customer_email = customer_email.lower()
             combination_key = f"{order_id}:{customer_email}"
             
             if combination_key not in unique_returns_map:
