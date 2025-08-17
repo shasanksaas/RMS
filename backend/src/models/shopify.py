@@ -26,7 +26,7 @@ class TenantStatus(str, Enum):
 
 class ShopifyIntegrationBase(BaseModel):
     """Base model for Shopify integration"""
-    shop: str  # e.g., "rms34.myshopify.com"
+    shop_domain: str  # e.g., "rms34.myshopify.com" - consistent field name
     scopes: List[str] = [
         "read_orders",
         "read_fulfillments", 
