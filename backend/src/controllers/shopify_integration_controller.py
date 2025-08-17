@@ -41,7 +41,7 @@ async def get_shopify_integration_status(tenant_id: str = Depends(get_tenant_id)
         
         # Check if properly connected
         is_connected = (shopify_integration.get("status") == "connected" and 
-                       shopify_integration.get("access_token") and
+                       (shopify_integration.get("access_token_encrypted") or shopify_integration.get("access_token")) and
                        shopify_integration.get("shop_domain"))
         
         if not is_connected:
