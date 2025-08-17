@@ -191,12 +191,12 @@ class ShopifyOAuthService:
         
         return hmac.compare_digest(hmac_header, expected_hmac)
 
-    async def build_install_url(self, install_request: ShopifyInstallRequest) -> ShopifyInstallResponse:
-        """Build Shopify OAuth installation URL"""
+    async def build_install_url(self, install_request: ShopifyInstallRequest, current_tenant_id: str = None) -> ShopifyInstallResponse:
+        """Build Shopify OAuth installation URL with current tenant context"""
         shop = self.normalize_shop_domain(install_request.shop)
         
         # Generate state
-        state = self.create_oauth_state(shop)
+        state = self.create_oauth_state(shop, current_tenant_id=current_tenant_id)
         
         # Build redirect URI
         redirect_uri = f"{self.app_url}/api/auth/shopify/callback"
