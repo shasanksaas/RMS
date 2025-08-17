@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }) => {
           
           try {
             // Fetch user profile with the OAuth token
-            const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/users/profile`, {
+            const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/users/me`, {
               headers: {
                 'Authorization': `Bearer ${oauthToken}`,
                 'Content-Type': 'application/json'
