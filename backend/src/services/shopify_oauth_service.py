@@ -628,8 +628,17 @@ class ShopifyOAuthService:
                 print(f"✅ Fetched {len(orders)} orders via GraphQL")
                 
                 # Store orders in database
+                from ..config.database import get_database
                 db = await get_database()
+                print(f"🔍 Database object: {db}")
+                print(f"🔍 Database name: {db.name if db else 'None'}")
+                
+                if not db:
+                    print("❌ Database connection failed")
+                    return
+                    
                 orders_collection = db["orders"]
+                print(f"🔍 Orders collection: {orders_collection}")
                 stored_count = 0
                 
                 for order_edge in orders:
