@@ -3,6 +3,7 @@ Database configuration and connection management
 """
 import os
 from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import MongoClient
 from pathlib import Path
 from dotenv import load_dotenv
 
