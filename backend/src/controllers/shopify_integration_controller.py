@@ -38,7 +38,19 @@ async def get_shopify_integration_status(tenant_id: str = Depends(get_tenant_id)
         elif tenant_integration:
             shopify_integration = tenant_integration
         else:
-            return {"connected": False}
+            print(f"🔍 STATUS CHECK: No integration found for tenant: {tenant_id}")
+            return {
+                "connected": False,
+                "orderCounts": {
+                    "total": 0,
+                    "last30d": 0
+                },
+                "returnCounts": {
+                    "total": 0,
+                    "last30d": 0
+                },
+                "message": "No Shopify integration connected"
+            }
         
         # Check if properly connected
         is_connected = (shopify_integration.get("status") == "connected" and 
