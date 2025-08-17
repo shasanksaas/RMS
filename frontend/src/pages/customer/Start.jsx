@@ -160,7 +160,7 @@ const CustomerStart = () => {
                   disabled={loading}
                 />
                 <p className="text-xs md:text-sm text-gray-500 mt-1">
-                  Use the same email address you used when placing the order
+                  Any email works for testing
                 </p>
               </div>
             </div>
