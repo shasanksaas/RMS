@@ -108,6 +108,7 @@ class ShopifyOAuthState(BaseModel):
     nonce: str
     timestamp: float
     redirect_after: Optional[str] = "/app/dashboard?connected=1"
+    current_tenant_id: Optional[str] = None  # Preserve authenticated user's tenant
 
 class ShopifyInstallRequest(BaseModel):
     """Request model for Shopify installation"""
