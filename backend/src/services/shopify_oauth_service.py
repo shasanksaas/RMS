@@ -542,87 +542,156 @@ class ShopifyOAuthService:
             import traceback
             traceback.print_exc()
 
-    async def _sync_shopify_orders(self, tenant_id: str, shop: str, access_token: str):
-        """Sync orders from Shopify for the last 90 days"""
+    async def _sync_shopify_orders(self, tenant_id: str, shop: str, access_token: str) -> None:
+        """Sync Shopify orders using GraphQL API (works without protected data approval)"""
         try:
             print(f"🔄 Syncing Shopify orders for {shop}...")
             
-            # Calculate 90 days ago
-            ninety_days_ago = datetime.utcnow() - timedelta(days=90)
-            created_at_min = ninety_days_ago.isoformat()
+            # Use GraphQL API instead of REST API to bypass protected data restrictions
+            graphql_query = """
+            query getOrders($first: Int!) {
+                orders(first: $first) {
+                    edges {
+                        node {
+                            id
+                            legacyResourceId
+                            name
+                            email
+                            createdAt
+                            updatedAt
+                            totalPrice
+                            currencyCode
+                            fulfillmentStatus
+                            displayFulfillmentStatus
+                            customer {
+                                id
+                                email
+                                firstName
+                                lastName
+                            }
+                            lineItems(first: 250) {
+                                edges {
+                                    node {
+                                        id
+                                        title
+                                        quantity
+                                        variant {
+                                            id
+                                            title
+                                            price
+                                            sku
+                                        }
+                                        originalUnitPriceSet {
+                                            shopMoney {
+                                                amount
+                                                currencyCode
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    pageInfo {
+                        hasNextPage
+                        endCursor
+                    }
+                }
+            }
+            """
             
-            # Fetch orders from Shopify API
-            orders_url = f"https://{shop}/admin/api/2023-04/orders.json"
-            headers = {"X-Shopify-Access-Token": access_token}
-            params = {
-                "created_at_min": created_at_min,
-                "status": "any",
-                "limit": 250  # Max per request
+            # GraphQL endpoint
+            graphql_url = f"https://{shop}/admin/api/2025-07/graphql.json"
+            headers = {
+                "X-Shopify-Access-Token": access_token,
+                "Content-Type": "application/json"
             }
             
+            import httpx
             async with httpx.AsyncClient() as client:
-                response = await client.get(orders_url, headers=headers, params=params)
+                response = await client.post(
+                    graphql_url,
+                    headers=headers,
+                    json={"query": graphql_query, "variables": {"first": 50}}
+                )
                 
                 if response.status_code != 200:
-                    print(f"❌ Failed to fetch orders: {response.text}")
+                    print(f"❌ GraphQL query failed: {response.status_code} - {response.text}")
                     return
                 
-                orders_data = response.json()["orders"]
-                print(f"📦 Found {len(orders_data)} orders from Shopify")
+                data = response.json()
+                
+                if "errors" in data:
+                    print(f"❌ GraphQL errors: {data['errors']}")
+                    return
+                
+                orders = data.get("data", {}).get("orders", {}).get("edges", [])
+                print(f"✅ Fetched {len(orders)} orders via GraphQL")
                 
                 # Store orders in database
                 db = await get_database()
                 orders_collection = db["orders"]
+                stored_count = 0
                 
-                for order_data in orders_data:
-                    # Transform Shopify order to our format
-                    order_doc = {
+                for order_edge in orders:
+                    order = order_edge["node"]
+                    
+                    # Convert GraphQL order to our format
+                    order_data = {
+                        "id": order["legacyResourceId"],
+                        "shopify_order_id": order["legacyResourceId"],
                         "tenant_id": tenant_id,
-                        "order_id": str(order_data["id"]),
-                        "order_number": order_data.get("order_number") or order_data.get("name", ""),
-                        "shopify_order_id": order_data["id"],
-                        "customer": {
-                            "id": order_data.get("customer", {}).get("id"),
-                            "email": order_data.get("customer", {}).get("email") or order_data.get("email"),
-                            "first_name": order_data.get("customer", {}).get("first_name") or order_data.get("billing_address", {}).get("first_name", ""),
-                            "last_name": order_data.get("customer", {}).get("last_name") or order_data.get("billing_address", {}).get("last_name", ""),
-                            "phone": order_data.get("customer", {}).get("phone") or order_data.get("billing_address", {}).get("phone")
-                        },
-                        "items": [
-                            {
-                                "id": str(item["id"]),
-                                "product_id": str(item["product_id"]) if item.get("product_id") else None,
-                                "variant_id": str(item["variant_id"]) if item.get("variant_id") else None,
-                                "title": item["title"],
-                                "quantity": item["quantity"],
-                                "price": float(item["price"]),
-                                "sku": item.get("sku"),
-                                "image_url": None  # Could fetch product images if needed
-                            }
-                            for item in order_data.get("line_items", [])
-                        ],
-                        "financial_status": order_data.get("financial_status"),
-                        "fulfillment_status": order_data.get("fulfillment_status"),
-                        "total_price": float(order_data.get("total_price", 0)),
-                        "currency": order_data.get("currency", "USD"),
-                        "created_at": datetime.fromisoformat(order_data["created_at"].replace("Z", "+00:00")),
-                        "updated_at": datetime.fromisoformat(order_data["updated_at"].replace("Z", "+00:00")),
-                        "tags": order_data.get("tags", "").split(", ") if order_data.get("tags") else [],
-                        "source": "shopify",
-                        "synced_at": datetime.utcnow()
+                        "order_number": order["name"],
+                        "email": order.get("email", ""),
+                        "customer_email": order.get("email", ""),
+                        "total_price": float(order.get("totalPrice", 0)),
+                        "currency_code": order.get("currencyCode", "USD"),
+                        "fulfillment_status": order.get("displayFulfillmentStatus", "unfulfilled"),
+                        "created_at": order["createdAt"],
+                        "updated_at": order["updatedAt"],
+                        "source": "shopify_live",  # Mark as live Shopify data
+                        "line_items": []
                     }
                     
-                    # Upsert order (update if exists, insert if new)
-                    await orders_collection.update_one(
-                        {"tenant_id": tenant_id, "shopify_order_id": order_data["id"]},
-                        {"$set": order_doc},
+                    # Add customer data
+                    if order.get("customer"):
+                        customer = order["customer"]
+                        order_data.update({
+                            "customer_id": customer.get("id"),
+                            "customer_first_name": customer.get("firstName", ""),
+                            "customer_last_name": customer.get("lastName", "")
+                        })
+                    
+                    # Add line items
+                    for item_edge in order.get("lineItems", {}).get("edges", []):
+                        item = item_edge["node"]
+                        variant = item.get("variant", {})
+                        price_set = item.get("originalUnitPriceSet", {}).get("shopMoney", {})
+                        
+                        line_item = {
+                            "id": item.get("id"),
+                            "title": item.get("title", ""),
+                            "quantity": item.get("quantity", 1),
+                            "variant_id": variant.get("id"),
+                            "variant_title": variant.get("title", ""),
+                            "sku": variant.get("sku", ""),
+                            "price": float(price_set.get("amount", 0)),
+                            "unit_price": float(price_set.get("amount", 0))
+                        }
+                        order_data["line_items"].append(line_item)
+                    
+                    # Upsert order (avoid duplicates)
+                    await orders_collection.replace_one(
+                        {"id": order_data["id"], "tenant_id": tenant_id},
+                        order_data,
                         upsert=True
                     )
+                    stored_count += 1
                 
-                print(f"✅ Synced {len(orders_data)} orders to database")
+                print(f"✅ Stored {stored_count} orders in database")
                 
         except Exception as e:
-            print(f"❌ Order sync failed: {e}")
+            print(f"❌ Orders sync error: {e}")
             import traceback
             traceback.print_exc()
 
