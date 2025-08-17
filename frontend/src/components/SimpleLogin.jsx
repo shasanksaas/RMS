@@ -5,7 +5,7 @@ const SimpleLogin = () => {
     try {
       console.log('🚀 Starting direct login...');
       
-      const response = await fetch('https://returns-manager-1.preview.emergentagent.com/api/users/login', {
+      const response = await fetch('https://ecom-return-manager.preview.emergentagent.com/api/users/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -47,7 +47,7 @@ const SimpleLogin = () => {
   
   const handleAdminLogin = async () => {
     try {
-      const response = await fetch('https://returns-manager-1.preview.emergentagent.com/api/users/login', {
+      const response = await fetch('https://ecom-return-manager.preview.emergentagent.com/api/users/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

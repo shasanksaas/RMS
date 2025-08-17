@@ -12,7 +12,7 @@ from datetime import datetime
 from typing import Dict, List, Any, Optional
 
 # Configuration
-BACKEND_URL = "https://returns-manager-1.preview.emergentagent.com"
+BACKEND_URL = "https://ecom-return-manager.preview.emergentagent.com"
 TEST_TENANT_ID = "tenant-fashion-store"
 TEST_HEADERS = {
     "Content-Type": "application/json",

@@ -11,7 +11,7 @@ This test suite comprehensively tests the dual-path login system implementation:
 5. Integration Points
 
 Test Environment:
-- Backend URL: https://returns-manager-1.preview.emergentagent.com/api
+- Backend URL: https://ecom-return-manager.preview.emergentagent.com/api
 - Test Tenant: tenant-rms34
 - Test Merchant: merchant@rms34.com / merchant123
 """
@@ -26,7 +26,7 @@ from typing import Dict, Any, Optional
 from urllib.parse import urlparse, parse_qs
 
 # Test Configuration
-BACKEND_URL = "https://returns-manager-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://ecom-return-manager.preview.emergentagent.com/api"
 TEST_TENANT_ID = "tenant-rms34"
 TEST_MERCHANT_EMAIL = "merchant@rms34.com"
 TEST_MERCHANT_PASSWORD = "merchant123"

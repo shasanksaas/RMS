@@ -17,7 +17,7 @@ from datetime import datetime
 from typing import Dict, List, Any, Optional
 
 # Configuration from environment
-BACKEND_URL = "https://returns-manager-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://ecom-return-manager.preview.emergentagent.com/api"
 ADMIN_EMAIL = "admin@returns-manager.com"
 ADMIN_PASSWORD = "AdminPassword123!"
 TARGET_TENANT = "tenant-rms34"

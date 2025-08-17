@@ -10,7 +10,7 @@ import json
 async def debug_unified_returns():
     """Debug the unified returns endpoints"""
     
-    BACKEND_URL = "https://returns-manager-1.preview.emergentagent.com"
+    BACKEND_URL = "https://ecom-return-manager.preview.emergentagent.com"
     TEST_TENANT_ID = "tenant-fashion-store"
     
     headers = {

@@ -61,7 +61,7 @@ class AuthService:
         # Google OAuth Configuration
         self.google_client_id = "286821938662-8jjcepu96llg0v1g6maskbptmp34o15u.apps.googleusercontent.com"
         self.google_client_secret = "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"
-        self.google_redirect_uri = os.getenv("GOOGLE_REDIRECT_URI", "https://returns-manager-1.preview.emergentagent.com/auth/google/callback")
+        self.google_redirect_uri = os.getenv("GOOGLE_REDIRECT_URI", "https://ecom-return-manager.preview.emergentagent.com/auth/google/callback")
         
         # Account lockout settings
         self.max_login_attempts = 5
