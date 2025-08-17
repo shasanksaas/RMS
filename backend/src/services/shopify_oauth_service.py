@@ -383,34 +383,56 @@ class ShopifyOAuthService:
         )
 
     async def _upsert_shopify_user(self, db, tenant_id: str, shop: str, shop_info: Dict) -> Dict[str, Any]:
-        """Create or update Shopify user"""
+        """Create or update user for Shopify OAuth - creates standard User record"""
         users_collection = db["users"]
         
-        # Check if user exists
-        existing_user = await users_collection.find_one({"tenant_id": tenant_id, "shop": shop})
+        # Extract email from shop info  
+        user_email = shop_info.get("customer_email") or shop_info.get("email") or f"admin@{shop.replace('.myshopify.com', '')}.com"
+        shop_owner = shop_info.get("shop_owner", "")
         
-        user_data = ShopifyUserDB(
-            tenant_id=tenant_id,
-            shop=shop,
-            shopify_user_id=str(shop_info.get("id", "")),
-            email=shop_info.get("customer_email") or shop_info.get("email"),
-            first_name=shop_info.get("shop_owner", "").split(" ")[0] if shop_info.get("shop_owner") else None,
-            last_name=" ".join(shop_info.get("shop_owner", "").split(" ")[1:]) if shop_info.get("shop_owner") else None,
-            last_login_at=datetime.utcnow()
-        )
+        # Check if user exists by email and tenant
+        existing_user = await users_collection.find_one({
+            "tenant_id": tenant_id, 
+            "email": user_email
+        })
+        
+        # Standard user data compatible with User model
+        user_data = {
+            "tenant_id": tenant_id,
+            "email": user_email,
+            "role": "merchant",
+            "auth_provider": "shopify_oauth",
+            "is_active": True,
+            "first_name": shop_owner.split(" ")[0] if shop_owner else shop_info.get("name", "").split(" ")[0],
+            "last_name": " ".join(shop_owner.split(" ")[1:]) if len(shop_owner.split(" ")) > 1 else "",
+            "last_login_at": datetime.utcnow(),
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow(),
+            "metadata": {
+                "shop_domain": shop,
+                "shopify_shop_id": str(shop_info.get("id", "")),
+                "shop_name": shop_info.get("name", ""),
+                "shop_owner": shop_owner
+            }
+        }
         
         if existing_user:
             # Update existing user
-            user_data.user_id = existing_user["user_id"]
+            user_data["id"] = existing_user["id"]  # Keep existing ID
+            user_data["created_at"] = existing_user.get("created_at", datetime.utcnow())
             await users_collection.replace_one(
-                {"user_id": existing_user["user_id"]},
-                user_data.model_dump()
+                {"id": existing_user["id"]},
+                user_data
             )
+            print(f"✅ Updated existing user: {user_email}")
         else:
-            # Create new user
-            await users_collection.insert_one(user_data.model_dump())
+            # Create new user with UUID
+            import uuid
+            user_data["id"] = str(uuid.uuid4())
+            await users_collection.insert_one(user_data)
+            print(f"✅ Created new user: {user_email}")
         
-        return user_data.model_dump()
+        return user_data
 
     async def _register_webhooks(self, shop: str, access_token: str, tenant_id: str):
         """Register Shopify webhooks for real-time updates"""
