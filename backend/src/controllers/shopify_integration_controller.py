@@ -265,6 +265,106 @@ async def get_sync_jobs(
         raise HTTPException(status_code=500, detail="Failed to get sync jobs")
 
 
+@router.post("/sync-existing")
+async def sync_existing_shopify_installation(
+    sync_data: Dict[str, Any],
+    tenant_id: str = Depends(get_tenant_id)
+):
+    """
+    Sync an already-installed Shopify app that's not in our database
+    
+    For cases where the app is installed in Shopify but not recorded in our system
+    """
+    try:
+        shop_domain = sync_data.get("shop_domain", "").strip()
+        access_token = sync_data.get("access_token", "").strip()
+        
+        if not shop_domain or not access_token:
+            raise HTTPException(
+                status_code=400,
+                detail="shop_domain and access_token are required"
+            )
+        
+        print(f"🔄 Syncing existing Shopify installation for {shop_domain}")
+        
+        # Normalize shop domain
+        if not shop_domain.endswith('.myshopify.com'):
+            shop_domain = f"{shop_domain}.myshopify.com"
+        
+        # Test the access token by making a shop API call
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"https://{shop_domain}/admin/api/2025-07/shop.json",
+                headers={"X-Shopify-Access-Token": access_token}
+            )
+            
+            if response.status_code != 200:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Invalid access token or shop domain"
+                )
+            
+            shop_info = response.json()["shop"]
+        
+        # Create integration record
+        from src.services.shopify_oauth_service import ShopifyOAuthService
+        oauth_service = ShopifyOAuthService()
+        
+        # Store the integration
+        integration_data = {
+            "tenant_id": tenant_id,
+            "shop_domain": shop_domain,
+            "access_token_encrypted": oauth_service.encrypt_token(access_token),
+            "scopes": oauth_service.scopes,
+            "status": "connected",
+            "connected_at": datetime.utcnow(),
+            "shop_info": {
+                "name": shop_info.get("name"),
+                "email": shop_info.get("email"),
+                "domain": shop_info.get("domain"),
+                "currency": shop_info.get("currency"),
+                "timezone": shop_info.get("iana_timezone")
+            }
+        }
+        
+        # Insert or update integration
+        await db.integrations_shopify.replace_one(
+            {"tenant_id": tenant_id, "shop_domain": shop_domain},
+            integration_data,
+            upsert=True
+        )
+        
+        # Start data backfill
+        print(f"🔄 Starting data backfill for synced installation...")
+        try:
+            # Import the backfill method
+            await oauth_service._queue_data_backfill(tenant_id, shop_domain)
+        except Exception as e:
+            print(f"⚠️ Backfill failed but integration synced: {e}")
+        
+        print(f"✅ Successfully synced existing installation for {shop_domain}")
+        
+        return {
+            "success": True,
+            "message": f"Successfully synced existing Shopify installation for {shop_domain}",
+            "integration": {
+                "tenant_id": tenant_id,
+                "shop_domain": shop_domain,
+                "status": "connected",
+                "shop_name": shop_info.get("name")
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error syncing existing installation: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to sync existing installation: {str(e)}"
+        )
+
+
 @router.post("/disconnect")
 async def disconnect_shopify_integration(tenant_id: str = Depends(get_tenant_id)):
     """
