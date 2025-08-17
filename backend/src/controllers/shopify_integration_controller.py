@@ -420,12 +420,15 @@ async def disconnect_shopify_integration(tenant_id: str = Depends(get_tenant_id)
             # Clean up Shopify-sourced data for immediate count reset
             orders_result = await db.orders.delete_many({
                 "tenant_id": tenant_id,
-                "source": "shopify"
+                "source": {"$in": ["shopify", "shopify_live"]}  # Handle both source types
             })
             
             returns_result = await db.returns.delete_many({
                 "tenant_id": tenant_id,
-                "source": {"$in": ["shopify", "returns_manager"]}
+                "$or": [
+                    {"source": {"$in": ["shopify", "returns_manager"]}},
+                    {"source": None}  # Handle returns with no source set
+                ]
             })
             
             print(f"✅ Disconnection complete:")
