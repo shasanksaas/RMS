@@ -45,21 +45,40 @@ async def get_shopify_integration_status(tenant_id: str = Depends(get_tenant_id)
                        shopify_integration.get("shop_domain"))
         
         if not is_connected:
-            return {"connected": False}
+            return {
+                "connected": False,
+                "orderCounts": {
+                    "total": 0,
+                    "last30d": 0
+                },
+                "returnCounts": {
+                    "total": 0,
+                    "last30d": 0
+                },
+                "message": "No Shopify integration connected"
+            }
         
-        # Get order counts
+        # Get order counts (only from Shopify source)
         thirty_days_ago = datetime.utcnow() - timedelta(days=30)
         
-        total_orders = await db.orders.count_documents({"tenant_id": tenant_id})
+        total_orders = await db.orders.count_documents({
+            "tenant_id": tenant_id,
+            "source": "shopify"  # Only count Shopify orders
+        })
         recent_orders = await db.orders.count_documents({
             "tenant_id": tenant_id,
+            "source": "shopify",  # Only count Shopify orders
             "created_at": {"$gte": thirty_days_ago.isoformat()}
         })
         
-        # Get return counts from correct 'returns' collection
-        total_returns = await db.returns.count_documents({"tenant_id": tenant_id})
+        # Get return counts from correct 'returns' collection (only Shopify-related)
+        total_returns = await db.returns.count_documents({
+            "tenant_id": tenant_id,
+            "source": {"$in": ["shopify", "returns_manager"]}  # Returns can be created by our system for Shopify orders
+        })
         recent_returns = await db.returns.count_documents({
             "tenant_id": tenant_id,
+            "source": {"$in": ["shopify", "returns_manager"]},
             "created_at": {"$gte": thirty_days_ago}
         })
         
