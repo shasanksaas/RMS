@@ -62,15 +62,25 @@ async def get_shopify_integration_status(tenant_id: str = Depends(get_tenant_id)
             "created_at": {"$gte": thirty_days_ago}
         })
         
-        # Get webhook status
-        webhooks = [
-            {"topic": "orders/create", "status": "active"},
-            {"topic": "orders/updated", "status": "active"},
-            {"topic": "fulfillments/create", "status": "active"},
-            {"topic": "fulfillments/update", "status": "active"},
-            {"topic": "returns/create", "status": "active"},
-            {"topic": "returns/update", "status": "active"}
+        # Get webhook status from integration record (dynamic, not hardcoded)
+        webhooks = []
+        webhook_data = shopify_integration.get("webhooks", {})
+        
+        # Default webhook topics we expect
+        expected_webhooks = [
+            "orders/create", "orders/updated", 
+            "fulfillments/create", "fulfillments/update",
+            "app/uninstalled"
         ]
+        
+        for topic in expected_webhooks:
+            webhook_info = webhook_data.get(topic.replace('/', '_'), {})
+            webhooks.append({
+                "topic": topic,
+                "status": "active" if webhook_info.get("id") else "inactive",
+                "webhook_id": webhook_info.get("id"),
+                "created_at": webhook_info.get("created_at")
+            })
         
         # Get latest sync job
         latest_sync_job = await db.sync_jobs.find_one(
