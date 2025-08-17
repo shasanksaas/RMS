@@ -124,7 +124,6 @@ const App = () => {
               {/* Customer Portal Routes (Some Public, Some Protected) */}
               <Route path="/returns" element={<CustomerLayout />}>
                 <Route path="start" element={<CustomerStart />} />
-                <Route path="simple" element={<SimpleStart />} />
                 <Route path="create" element={<CustomerCreateReturn />} />
                 <Route path="confirmation/:returnId" element={<CustomerReturnConfirmation />} />
                 <Route path="select" element={<CustomerSelectItems />} />
@@ -132,7 +131,7 @@ const App = () => {
                 <Route path="confirm" element={<CustomerConfirm />} />
                 <Route path="status/:returnId" element={<CustomerStatus />} />
                 <Route path="status/:returnId" element={<CustomerStatus />} />
-                <Route index element={<Navigate to="/returns/simple" replace />} />
+                <Route index element={<Navigate to="/returns/start" replace />} />
               </Route>
 
               {/* Public Portal Routes */}
