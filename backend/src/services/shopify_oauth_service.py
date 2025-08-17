@@ -695,92 +695,141 @@ class ShopifyOAuthService:
             import traceback
             traceback.print_exc()
 
-    async def _sync_shopify_returns(self, tenant_id: str, shop: str, access_token: str):
-        """Sync returns/refunds from Shopify for the last 90 days"""
+    async def _sync_shopify_returns(self, tenant_id: str, shop: str, access_token: str) -> None:
+        """Sync Shopify returns using GraphQL API (works without protected data approval)"""  
         try:
             print(f"🔄 Syncing Shopify returns/refunds for {shop}...")
             
-            # Calculate 90 days ago
-            ninety_days_ago = datetime.utcnow() - timedelta(days=90)
-            created_at_min = ninety_days_ago.isoformat()
+            # GraphQL query for orders with refunds
+            graphql_query = """
+            query getOrdersWithRefunds($first: Int!) {
+                orders(first: $first) {
+                    edges {
+                        node {
+                            id
+                            legacyResourceId
+                            name
+                            email
+                            createdAt
+                            refunds {
+                                id
+                                createdAt
+                                note
+                                refundLineItems(first: 250) {
+                                    edges {
+                                        node {
+                                            id
+                                            quantity
+                                            restockType
+                                            lineItem {
+                                                id
+                                                title
+                                                variant {
+                                                    id
+                                                    title
+                                                    sku
+                                                }
+                                            }
+                                            priceSet {
+                                                shopMoney {
+                                                    amount
+                                                    currencyCode
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            """
             
-            # First, get orders to find refunds
-            orders_url = f"https://{shop}/admin/api/2023-04/orders.json"
-            headers = {"X-Shopify-Access-Token": access_token}
-            params = {
-                "created_at_min": created_at_min,
-                "status": "any",
-                "financial_status": "refunded,partially_refunded",
-                "limit": 250
+            graphql_url = f"https://{shop}/admin/api/2025-07/graphql.json"
+            headers = {
+                "X-Shopify-Access-Token": access_token,
+                "Content-Type": "application/json"
             }
             
+            import httpx
             async with httpx.AsyncClient() as client:
-                response = await client.get(orders_url, headers=headers, params=params)
+                response = await client.post(
+                    graphql_url,
+                    headers=headers,
+                    json={"query": graphql_query, "variables": {"first": 50}}
+                )
                 
                 if response.status_code != 200:
-                    print(f"❌ Failed to fetch refunded orders: {response.text}")
+                    print(f"❌ Returns GraphQL query failed: {response.status_code} - {response.text}")
                     return
                 
-                orders_with_refunds = response.json()["orders"]
-                print(f"🔄 Found {len(orders_with_refunds)} orders with refunds")
+                data = response.json()
                 
-                # Store returns in database
+                if "errors" in data:
+                    print(f"❌ Returns GraphQL errors: {data['errors']}")
+                    return
+                
+                orders = data.get("data", {}).get("orders", {}).get("edges", [])
+                
+                # Store returns in database  
                 db = await get_database()
                 returns_collection = db["returns"]
+                stored_count = 0
                 
-                for order in orders_with_refunds:
-                    # Get detailed refunds for each order
-                    refunds_url = f"https://{shop}/admin/api/2023-04/orders/{order['id']}/refunds.json"
-                    refunds_response = await client.get(refunds_url, headers=headers)
+                for order_edge in orders:
+                    order = order_edge["node"]
+                    refunds = order.get("refunds", [])
                     
-                    if refunds_response.status_code == 200:
-                        refunds_data = refunds_response.json()["refunds"]
+                    for refund in refunds:
+                        # Create return record for each refund
+                        return_data = {
+                            "id": f"return-{refund['id']}",
+                            "tenant_id": tenant_id,
+                            "order_id": order["legacyResourceId"],
+                            "order_number": order["name"],
+                            "customer_email": order.get("email", ""),
+                            "type": "refund",
+                            "status": "completed",
+                            "reason": refund.get("note", "Refund from Shopify"),
+                            "created_at": refund["createdAt"],
+                            "source": "shopify_live",
+                            "items": []
+                        }
                         
-                        for refund in refunds_data:
-                            # Transform Shopify refund to our return format
-                            return_doc = {
-                                "tenant_id": tenant_id,
-                                "return_id": f"shopify-refund-{refund['id']}",
-                                "order_id": str(order["id"]),
-                                "order_number": order.get("order_number") or order.get("name", ""),
-                                "shopify_refund_id": refund["id"],
-                                "customer": {
-                                    "email": order.get("customer", {}).get("email") or order.get("email"),
-                                    "first_name": order.get("customer", {}).get("first_name") or "",
-                                    "last_name": order.get("customer", {}).get("last_name") or "",
-                                    "phone": order.get("customer", {}).get("phone")
-                                },
-                                "items": [
-                                    {
-                                        "id": str(item["line_item"]["id"]),
-                                        "product_title": item["line_item"]["title"],
-                                        "quantity": item["quantity"],
-                                        "reason": "shopify_refund",
-                                        "condition": "unknown"
-                                    }
-                                    for item in refund.get("refund_line_items", [])
-                                ],
-                                "status": "approved",  # Shopify refunds are already processed
-                                "reason": "customer_request",
-                                "refund_amount": float(refund.get("subtotal", 0)),
-                                "currency": order.get("currency", "USD"),
-                                "created_at": datetime.fromisoformat(refund["created_at"].replace("Z", "+00:00")),
-                                "processed_at": datetime.fromisoformat(refund["processed_at"].replace("Z", "+00:00")) if refund.get("processed_at") else None,
-                                "source": "shopify",
-                                "synced_at": datetime.utcnow()
-                            }
+                        # Add refunded line items
+                        for refund_item_edge in refund.get("refundLineItems", {}).get("edges", []):
+                            refund_item = refund_item_edge["node"]
+                            line_item = refund_item.get("lineItem", {})
+                            variant = line_item.get("variant", {})
+                            price_set = refund_item.get("priceSet", {}).get("shopMoney", {})
                             
-                            # Upsert return
-                            await returns_collection.update_one(
-                                {"tenant_id": tenant_id, "shopify_refund_id": refund["id"]},
-                                {"$set": return_doc},
+                            item = {
+                                "id": refund_item.get("id"),
+                                "line_item_id": line_item.get("id"),
+                                "title": line_item.get("title", ""),
+                                "variant_id": variant.get("id"),
+                                "variant_title": variant.get("title", ""),
+                                "sku": variant.get("sku", ""),
+                                "quantity": refund_item.get("quantity", 1),
+                                "refund_amount": float(price_set.get("amount", 0)),
+                                "restock_type": refund_item.get("restockType", "")
+                            }
+                            return_data["items"].append(item)
+                        
+                        # Only store returns that have items
+                        if return_data["items"]:
+                            await returns_collection.replace_one(
+                                {"id": return_data["id"], "tenant_id": tenant_id},
+                                return_data,
                                 upsert=True
                             )
+                            stored_count += 1
                 
-                print(f"✅ Synced Shopify returns/refunds to database")
+                print(f"✅ Stored {stored_count} returns in database")
                 
         except Exception as e:
-            print(f"❌ Returns sync failed: {e}")
+            print(f"❌ Returns sync error: {e}")
             import traceback
             traceback.print_exc()
 
