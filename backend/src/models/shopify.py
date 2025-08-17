@@ -117,7 +117,7 @@ class ShopifyInstallRequest(BaseModel):
 class ShopifyCallbackRequest(BaseModel):
     """Request model for Shopify OAuth callback"""
     code: str
-    hmac: str
+    hmac: Optional[str] = ""  # HMAC is optional for OAuth callbacks
     shop: str
     state: str
     timestamp: str
