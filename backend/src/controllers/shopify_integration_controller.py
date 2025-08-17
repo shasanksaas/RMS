@@ -262,3 +262,48 @@ async def get_sync_jobs(
     except Exception as e:
         print(f"Error getting sync jobs: {e}")
         raise HTTPException(status_code=500, detail="Failed to get sync jobs")
+
+
+@router.post("/disconnect")
+async def disconnect_shopify_integration(tenant_id: str = Depends(get_tenant_id)):
+    """
+    Disconnect Shopify integration for the current tenant
+    
+    Removes integration data completely and allows seamless reconnection
+    """
+    try:
+        print(f"🔄 Disconnecting Shopify integration for tenant: {tenant_id}")
+        
+        # Remove integration record entirely (allows reconnection)
+        integration_result = await db.integrations_shopify.delete_one({"tenant_id": tenant_id})
+        
+        if integration_result.deleted_count > 0:
+            # Clean up sync jobs
+            sync_jobs_result = await db.sync_jobs.delete_many({"tenant_id": tenant_id})
+            
+            print(f"✅ Disconnection complete:")
+            print(f"   Integration removed: {integration_result.deleted_count > 0}")
+            print(f"   Sync jobs cleaned: {sync_jobs_result.deleted_count}")
+            
+            return {
+                "success": True,
+                "message": "Shopify integration disconnected successfully",
+                "tenant_id": tenant_id,
+                "details": {
+                    "integration_removed": integration_result.deleted_count > 0,
+                    "sync_jobs_cleaned": sync_jobs_result.deleted_count
+                }
+            }
+        else:
+            return {
+                "success": False,
+                "message": "No Shopify integration found to disconnect",
+                "tenant_id": tenant_id
+            }
+        
+    except Exception as e:
+        print(f"❌ Disconnect failed for {tenant_id}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to disconnect Shopify integration: {str(e)}"
+        )
