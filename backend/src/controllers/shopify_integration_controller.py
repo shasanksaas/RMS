@@ -191,14 +191,50 @@ async def test_shopify_connection(tenant_id: str = Depends(get_tenant_id)):
         if not encrypted_token:
             return {"error": "No access token", "integration_keys": list(integration.keys())}
         
-        return {
-            "status": "debug_info",
-            "integration_found": True,
-            "shop_domain": shop_domain,
-            "has_token": encrypted_token is not None,
-            "integration_status": integration.get("status"),
-            "integration_keys": list(integration.keys())
-        }
+        # Decrypt token and test API
+        from src.services.shopify_oauth_service import ShopifyOAuthService
+        oauth_service = ShopifyOAuthService()
+        access_token = oauth_service.decrypt_token(encrypted_token)
+        
+        print(f"🔍 Token decrypted successfully")
+        
+        # Test Shopify API connection
+        import httpx
+        async with httpx.AsyncClient() as client:
+            # Test shop info
+            shop_response = await client.get(
+                f"https://{shop_domain}/admin/api/2025-07/shop.json",
+                headers={"X-Shopify-Access-Token": access_token}
+            )
+            
+            print(f"🔍 Shop API response: {shop_response.status_code}")
+            
+            if shop_response.status_code != 200:
+                return {
+                    "error": f"Shop API failed: {shop_response.status_code}",
+                    "response": shop_response.text
+                }
+            
+            # Test orders API
+            orders_response = await client.get(
+                f"https://{shop_domain}/admin/api/2025-07/orders.json?limit=5&status=any",
+                headers={"X-Shopify-Access-Token": access_token}
+            )
+            
+            print(f"🔍 Orders API response: {orders_response.status_code}")
+            
+            shop_data = shop_response.json()
+            orders_data = orders_response.json() if orders_response.status_code == 200 else None
+            
+            return {
+                "success": True,
+                "shop_name": shop_data["shop"]["name"],
+                "shop_domain": shop_domain,
+                "orders_api_status": orders_response.status_code,
+                "orders_count": len(orders_data.get("orders", [])) if orders_data else 0,
+                "orders_error": orders_response.text if orders_response.status_code != 200 else None,
+                "sample_order": orders_data.get("orders", [{}])[0].get("id") if orders_data and orders_data.get("orders") else None
+            }
         
     except Exception as e:
         print(f"❌ Connection test error: {e}")
