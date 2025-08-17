@@ -515,6 +515,42 @@ async def get_shopify_integration_status(
             "message": f"Error checking connection status: {str(e)}"
         }
 
+@integration_router.post("/disconnect")
+async def disconnect_shopify_integration(request: Request):
+    """
+    Disconnect Shopify integration for the current tenant
+    
+    Removes integration data and allows reconnection
+    """
+    # Get tenant from X-Tenant-Id header
+    current_tenant = request.headers.get("X-Tenant-Id")
+    if not current_tenant:
+        raise HTTPException(status_code=400, detail="X-Tenant-Id header required")
+    
+    try:
+        # Use the shopify oauth service to disconnect
+        success = await shopify_oauth.disconnect_shop(current_tenant)
+        
+        if success:
+            return {
+                "success": True,
+                "message": "Shopify integration disconnected successfully",
+                "tenant_id": current_tenant
+            }
+        else:
+            return {
+                "success": False,
+                "message": "No Shopify integration found to disconnect",
+                "tenant_id": current_tenant
+            }
+        
+    except Exception as e:
+        print(f"❌ Disconnect failed for {current_tenant}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to disconnect Shopify integration: {str(e)}"
+        )
+
 @integration_router.post("/resync")
 async def trigger_shopify_resync(
     request: Request
