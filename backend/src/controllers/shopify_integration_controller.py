@@ -159,9 +159,13 @@ async def trigger_shopify_resync(tenant_id: str = Depends(get_tenant_id)):
         
         await db.sync_jobs.insert_one(sync_job)
         
-        # Start background sync immediately
-        shop = tenant.get("shopify_store")
-        encrypted_token = tenant["shopify_integration"]["access_token_encrypted"]
+        # Get integration data for sync
+        integration = await db.integrations_shopify.find_one({"tenant_id": tenant_id})
+        if not integration:
+            raise HTTPException(status_code=400, detail="Shopify integration not found")
+        
+        shop = integration.get("shop_domain")
+        encrypted_token = integration.get("access_token_encrypted")
         
         # Decrypt token for sync
         from cryptography.fernet import Fernet
