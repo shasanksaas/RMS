@@ -390,6 +390,7 @@ async def disconnect_shopify_integration(tenant_id: str = Depends(get_tenant_id)
     Disconnect Shopify integration for the current tenant
     
     Removes integration data completely and allows seamless reconnection
+    Optionally cleans up orders/returns data for immediate count reset
     """
     try:
         print(f"🔄 Disconnecting Shopify integration for tenant: {tenant_id}")
@@ -401,9 +402,22 @@ async def disconnect_shopify_integration(tenant_id: str = Depends(get_tenant_id)
             # Clean up sync jobs
             sync_jobs_result = await db.sync_jobs.delete_many({"tenant_id": tenant_id})
             
+            # Clean up Shopify-sourced data for immediate count reset
+            orders_result = await db.orders.delete_many({
+                "tenant_id": tenant_id,
+                "source": "shopify"
+            })
+            
+            returns_result = await db.returns.delete_many({
+                "tenant_id": tenant_id,
+                "source": {"$in": ["shopify", "returns_manager"]}
+            })
+            
             print(f"✅ Disconnection complete:")
             print(f"   Integration removed: {integration_result.deleted_count > 0}")
             print(f"   Sync jobs cleaned: {sync_jobs_result.deleted_count}")
+            print(f"   Orders cleaned: {orders_result.deleted_count}")
+            print(f"   Returns cleaned: {returns_result.deleted_count}")
             
             return {
                 "success": True,
@@ -411,7 +425,9 @@ async def disconnect_shopify_integration(tenant_id: str = Depends(get_tenant_id)
                 "tenant_id": tenant_id,
                 "details": {
                     "integration_removed": integration_result.deleted_count > 0,
-                    "sync_jobs_cleaned": sync_jobs_result.deleted_count
+                    "sync_jobs_cleaned": sync_jobs_result.deleted_count,
+                    "orders_cleaned": orders_result.deleted_count,
+                    "returns_cleaned": returns_result.deleted_count
                 }
             }
         else:
