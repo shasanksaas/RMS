@@ -19,6 +19,10 @@ database_name = os.environ['DB_NAME']
 client = AsyncIOMotorClient(mongo_url)
 db = client[database_name]
 
+# Synchronous client for legacy code
+sync_client = MongoClient(mongo_url)
+sync_db = sync_client[database_name]
+
 async def get_database():
     """Get database instance"""
     return db
