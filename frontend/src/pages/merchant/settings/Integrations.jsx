@@ -208,9 +208,9 @@ const Integrations = () => {
       // Add .myshopify.com
       const shopDomain = `${shop}.myshopify.com`;
 
-      // Redirect to OAuth install endpoint (use install-redirect for direct redirect)
+      // Redirect to OAuth install endpoint (include tenant in URL)
       const apiUrl = getApiUrl();
-      const installUrl = `${apiUrl}/api/auth/shopify/install-redirect?shop=${encodeURIComponent(shopDomain)}`;
+      const installUrl = `${apiUrl}/api/auth/shopify/install-redirect?shop=${encodeURIComponent(shopDomain)}&tenant_id=${encodeURIComponent(tenantId)}`;
       
       console.log('🚀 Redirecting to Shopify OAuth via:', installUrl);
       
