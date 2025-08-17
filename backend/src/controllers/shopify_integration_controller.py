@@ -405,6 +405,64 @@ async def sync_existing_shopify_installation(
         )
 
 
+@router.post("/force-cleanup")
+async def force_cleanup_shopify_data(tenant_id: str = Depends(get_tenant_id)):
+    """
+    Force cleanup of all Shopify-related data for tenant
+    
+    Use when disconnect didn't work properly or data is stuck
+    """
+    try:
+        print(f"🧹 Force cleaning up Shopify data for tenant: {tenant_id}")
+        
+        # Remove any integration records
+        integration_result = await db.integrations_shopify.delete_many({"tenant_id": tenant_id})
+        
+        # Clean up sync jobs
+        sync_jobs_result = await db.sync_jobs.delete_many({"tenant_id": tenant_id})
+        
+        # Clean up orders (all Shopify source variations)
+        orders_result = await db.orders.delete_many({
+            "tenant_id": tenant_id,
+            "source": {"$in": ["shopify", "shopify_live"]}
+        })
+        
+        # Clean up returns (all variations)
+        returns_result = await db.returns.delete_many({
+            "tenant_id": tenant_id,
+            "$or": [
+                {"source": {"$in": ["shopify", "returns_manager"]}},
+                {"source": None},
+                {"source": {"$exists": False}}
+            ]
+        })
+        
+        print(f"✅ Force cleanup complete:")
+        print(f"   Integrations cleaned: {integration_result.deleted_count}")
+        print(f"   Sync jobs cleaned: {sync_jobs_result.deleted_count}")
+        print(f"   Orders cleaned: {orders_result.deleted_count}")
+        print(f"   Returns cleaned: {returns_result.deleted_count}")
+        
+        return {
+            "success": True,
+            "message": "Force cleanup completed successfully",
+            "tenant_id": tenant_id,
+            "details": {
+                "integrations_cleaned": integration_result.deleted_count,
+                "sync_jobs_cleaned": sync_jobs_result.deleted_count,
+                "orders_cleaned": orders_result.deleted_count,
+                "returns_cleaned": returns_result.deleted_count
+            }
+        }
+        
+    except Exception as e:
+        print(f"❌ Force cleanup failed for {tenant_id}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to force cleanup: {str(e)}"
+        )
+
+
 @router.post("/disconnect")
 async def disconnect_shopify_integration(tenant_id: str = Depends(get_tenant_id)):
     """
