@@ -34,6 +34,7 @@ def get_sync_database():
 async def close_database_connection():
     """Close database connection"""
     client.close()
+    sync_client.close()
 
 # Collections
 COLLECTIONS = {
