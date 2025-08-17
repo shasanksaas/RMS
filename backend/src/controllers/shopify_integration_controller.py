@@ -411,42 +411,46 @@ async def trigger_shopify_resync(tenant_id: str = Depends(get_tenant_id)):
         encrypted_token = integration.get("access_token_encrypted")
         
         # Decrypt token for sync
-        from cryptography.fernet import Fernet
-        import base64
-        import os
+        from src.services.shopify_oauth_service import ShopifyOAuthService
         
-        encryption_key = os.environ.get('ENCRYPTION_KEY')
-        if encryption_key:
-            cipher = Fernet(encryption_key.encode())
-            access_token = cipher.decrypt(encrypted_token.encode()).decode()
+        oauth_service = ShopifyOAuthService()
+        access_token = oauth_service.decrypt_token(encrypted_token)
+        
+        # Process sync immediately using GraphQL
+        try:
+            # Update job status to running
+            await db.sync_jobs.update_one(
+                {"id": job_id},
+                {"$set": {"status": "running", "started_at": datetime.utcnow()}}
+            )
             
-            # Process sync immediately instead of background task
-            try:
-                await auth_service._sync_orders(tenant_id, shop, access_token, days_back=30)
-                
-                # Update job status to completed
-                await db.sync_jobs.update_one(
-                    {"id": job_id},
-                    {
-                        "$set": {
-                            "status": "completed",
-                            "completed_at": datetime.utcnow(),
-                            "progress": 100,
-                            "message": "Manual resync completed successfully"
-                        }
+            # Trigger GraphQL-based data sync
+            await oauth_service._sync_shopify_orders(tenant_id, shop, access_token)
+            await oauth_service._sync_shopify_returns(tenant_id, shop, access_token)
+            
+            # Update job status to completed
+            await db.sync_jobs.update_one(
+                {"id": job_id},
+                {
+                    "$set": {
+                        "status": "completed",
+                        "completed_at": datetime.utcnow(),
+                        "progress": 100,
+                        "message": "GraphQL resync completed successfully"
                     }
-                )
-            except Exception as e:
-                await db.sync_jobs.update_one(
-                    {"id": job_id},
-                    {
-                        "$set": {
-                            "status": "failed",
-                            "completed_at": datetime.utcnow(),
-                            "error": str(e)
-                        }
+                }
+            )
+        except Exception as e:
+            await db.sync_jobs.update_one(
+                {"id": job_id},
+                {
+                    "$set": {
+                        "status": "failed",
+                        "completed_at": datetime.utcnow(),
+                        "error": str(e)
                     }
-                )
+                }
+            )
         
         return {
             "job_id": job_id,
