@@ -630,15 +630,12 @@ class ShopifyOAuthService:
                 # Store orders in database
                 from ..config.database import get_database
                 db = await get_database()
-                print(f"🔍 Database connection successful")
-                
                 orders_collection = db["orders"]
                 stored_count = 0
                 
                 for order_edge in orders:
                     try:
                         order = order_edge["node"]
-                        print(f"🔍 Processing order: {order.get('name', 'UNKNOWN')}")
                         
                         # Convert GraphQL order to our format
                         order_data = {
@@ -697,12 +694,9 @@ class ShopifyOAuthService:
                             upsert=True
                         )
                         stored_count += 1
-                        print(f"✅ Stored order: {order_data.get('order_number')}")
                         
                     except Exception as e:
                         print(f"❌ Error processing order: {e}")
-                        import traceback
-                        traceback.print_exc()
                         continue
                 
                 print(f"✅ Stored {stored_count} orders in database")
