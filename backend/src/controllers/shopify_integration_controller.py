@@ -405,6 +405,66 @@ async def sync_existing_shopify_installation(
         )
 
 
+@router.post("/resync")
+async def resync_shopify_data(tenant_id: str = Depends(get_tenant_id)):
+    """
+    Trigger manual Shopify data resync for current tenant
+    """
+    try:
+        print(f"🔄 Manual resync triggered for tenant: {tenant_id}")
+        
+        # Check if integration exists
+        integration = await db.integrations_shopify.find_one({"tenant_id": tenant_id})
+        
+        if not integration:
+            raise HTTPException(status_code=400, detail="Shopify integration not found")
+        
+        if integration.get("status") != "connected":
+            raise HTTPException(status_code=400, detail="Shopify not connected")
+        
+        shop_domain = integration.get("shop_domain")
+        if not shop_domain:
+            raise HTTPException(status_code=400, detail="Shop domain not found")
+        
+        # Get access token
+        encrypted_token = integration.get("access_token_encrypted")
+        if not encrypted_token:
+            raise HTTPException(status_code=400, detail="Access token not found")
+        
+        # Decrypt token
+        from src.services.shopify_oauth_service import ShopifyOAuthService
+        oauth_service = ShopifyOAuthService()
+        access_token = oauth_service.decrypt_token(encrypted_token)
+        
+        # Trigger data sync
+        await oauth_service._sync_shopify_orders(tenant_id, shop_domain, access_token)
+        await oauth_service._sync_shopify_returns(tenant_id, shop_domain, access_token)
+        
+        # Update last sync timestamp
+        await db.integrations_shopify.update_one(
+            {"tenant_id": tenant_id},
+            {"$set": {"last_sync_at": datetime.utcnow()}}
+        )
+        
+        print(f"✅ Manual resync completed for tenant: {tenant_id}")
+        
+        return {
+            "success": True,
+            "message": "Data resync completed successfully",
+            "tenant_id": tenant_id,
+            "synced_at": datetime.utcnow().isoformat()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Resync failed for {tenant_id}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to resync data: {str(e)}"
+        )
+
+
 @router.post("/force-cleanup")
 async def force_cleanup_shopify_data(tenant_id: str = Depends(get_tenant_id)):
     """
