@@ -224,6 +224,9 @@ async def test_shopify_connection(tenant_id: str = Depends(get_tenant_id)):
             }
         
     except Exception as e:
+        print(f"❌ Connection test error: {e}")
+        import traceback
+        traceback.print_exc()
         return {"error": f"Connection test failed: {str(e)}"}
 
 
