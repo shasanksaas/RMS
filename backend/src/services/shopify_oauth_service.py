@@ -687,7 +687,7 @@ class ShopifyOAuthService:
         
         return ShopifyConnectionResponse(
             connected=integration["status"] == ShopifyConnectionStatus.CONNECTED,
-            shop=integration["shop"],
+            shop=integration.get("shop_domain"),
             tenant_id=tenant_id,
             last_sync_at=integration.get("last_sync_at"),
             status=integration["status"],
