@@ -100,8 +100,8 @@ async def handle_shopify_callback(
     code: str = Query(...),
     shop: str = Query(...), 
     state: str = Query(...),
-    timestamp: str = Query(...),
-    hmac: Optional[str] = Query(None)
+    timestamp: Optional[str] = Query(""),
+    hmac: Optional[str] = Query("")
 ):
     """
     Handle Shopify OAuth callback
