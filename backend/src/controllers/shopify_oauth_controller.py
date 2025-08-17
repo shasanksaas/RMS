@@ -479,49 +479,8 @@ async def get_tenant_shopify_details(tenant_id: str):
 # Integration endpoints that the frontend Integrations screen expects
 integration_router = APIRouter(prefix="/integrations/shopify", tags=["shopify-integration"])
 
-@integration_router.get("/connection-status")
-async def get_shopify_connection_status_legacy(
-    request: Request
-):
-    """
-    Legacy endpoint - Get Shopify integration connection status for the current tenant
-    (Renamed to avoid conflicts with main status endpoint)
-    
-    Used by the frontend Integrations screen to show connection status
-    """
-    # Get tenant from X-Tenant-Id header (sent by frontend)
-    current_tenant = request.headers.get("X-Tenant-Id")
-    if not current_tenant:
-        raise HTTPException(status_code=400, detail="X-Tenant-Id header required")
-    
-    # Check feature flag
-    shopify_oauth_enabled = os.getenv('SHOPIFY_OAUTH_ENABLED', 'true').lower() == 'true'
-    if not shopify_oauth_enabled:
-        return {
-            "connected": False,
-            "status": "disabled",
-            "message": "Shopify integration is currently disabled"
-        }
-    
-    try:
-        # Get connection status for current tenant
-        status = await shopify_oauth.get_connection_status(current_tenant)
-        
-        return {
-            "connected": status.connected,
-            "shop": status.shop if status.connected else None,
-            "status": "connected" if status.connected else "not_connected",
-            "last_sync": status.last_sync if hasattr(status, 'last_sync') else None,
-            "message": "Connected to Shopify" if status.connected else "Not connected to Shopify"
-        }
-        
-    except Exception as e:
-        print(f"❌ Integration status check failed: {e}")
-        return {
-            "connected": False,
-            "status": "error",
-            "message": f"Error checking connection status: {str(e)}"
-        }
+# Status endpoint moved to shopify_integration_controller.py for comprehensive status
+# This avoids route conflicts and provides better integration status info
 
 @integration_router.post("/disconnect")
 async def disconnect_shopify_integration(request: Request):
