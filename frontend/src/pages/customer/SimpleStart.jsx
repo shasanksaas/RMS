@@ -42,7 +42,8 @@ const SimpleStart = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const orders = await response.json();
+      const data = await response.json();
+      const orders = data.items || [];
       console.log('Available orders:', orders);
 
       // Find matching order by order number (flexible matching)
