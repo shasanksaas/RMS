@@ -130,7 +130,7 @@ async def handle_shopify_callback(
             hmac=hmac or "",
             shop=shop,
             state=state,
-            timestamp=timestamp
+            timestamp=timestamp or ""
         )
         
         # Handle OAuth callback and get connection result
