@@ -426,13 +426,23 @@ class ShopifyOAuthService:
         }
         
         if existing_user:
-            # Update existing user
-            user_data["id"] = existing_user["id"]  # Keep existing ID
+            # Update existing user - handle different ID field names
+            user_id = existing_user.get("id") or existing_user.get("_id") or existing_user.get("user_id")
+            if user_id:
+                user_data["id"] = str(user_id)  # Ensure string format
             user_data["created_at"] = existing_user.get("created_at", datetime.utcnow())
-            await users_collection.replace_one(
-                {"id": existing_user["id"]},
-                user_data
-            )
+            
+            # Update by whatever ID field exists
+            if existing_user.get("id"):
+                await users_collection.replace_one({"id": existing_user["id"]}, user_data)
+            elif existing_user.get("_id"):
+                await users_collection.replace_one({"_id": existing_user["_id"]}, user_data)
+            else:
+                # Fallback: update by email and tenant
+                await users_collection.replace_one(
+                    {"tenant_id": tenant_id, "email": user_email}, 
+                    user_data
+                )
             print(f"✅ Updated existing user: {user_email}")
         else:
             # Create new user with UUID
