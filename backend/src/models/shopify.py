@@ -120,7 +120,7 @@ class ShopifyCallbackRequest(BaseModel):
     hmac: Optional[str] = ""  # HMAC is optional for OAuth callbacks
     shop: str
     state: str
-    timestamp: str
+    timestamp: Optional[str] = ""  # Timestamp is optional
 
 # === Response Models ===
 
