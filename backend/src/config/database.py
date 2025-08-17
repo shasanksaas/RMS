@@ -27,6 +27,10 @@ async def get_database():
     """Get database instance"""
     return db
 
+def get_sync_database():
+    """Get synchronous database instance"""
+    return sync_db
+
 async def close_database_connection():
     """Close database connection"""
     client.close()
