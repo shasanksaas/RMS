@@ -59,7 +59,7 @@ async def initiate_shopify_install(
 @router.get("/install-redirect")
 async def redirect_to_shopify_install(
     shop: str = Query(..., description="Shop domain"),
-    request: Request = None
+    tenant_id: Optional[str] = Query(None, description="Current user's tenant ID")
 ):
     """
     Redirect endpoint that immediately sends user to Shopify OAuth
@@ -75,16 +75,13 @@ async def redirect_to_shopify_install(
             detail={"error": "Shopify OAuth disabled", "message": "Shopify OAuth is currently disabled"}
         )
     
-    try:
-        # Get current tenant from header (if user is authenticated)
-        current_tenant = request.headers.get("X-Tenant-Id") if request else None
-        
-        print(f"🔍 Install redirect - Shop: {shop}, Current Tenant: {current_tenant}")
+    try:        
+        print(f"🔍 Install redirect - Shop: {shop}, Current Tenant: {tenant_id}")
         
         install_request = ShopifyInstallRequest(shop=shop)
         
         # Pass current tenant to OAuth service so it can be preserved in state
-        install_response = await shopify_oauth.build_install_url(install_request, current_tenant_id=current_tenant)
+        install_response = await shopify_oauth.build_install_url(install_request, current_tenant_id=tenant_id)
         
         # Redirect user directly to Shopify OAuth page
         return RedirectResponse(
