@@ -750,7 +750,7 @@ async def disconnect_shopify_integration(tenant_id: str = Depends(get_tenant_id)
             returns_result = await db.returns.delete_many({
                 "tenant_id": tenant_id,
                 "$or": [
-                    {"source": {"$in": ["shopify", "returns_manager"]}},
+                    {"source": {"$in": ["shopify", "shopify_live", "returns_manager"]}},
                     {"source": None}  # Handle returns with no source set
                 ]
             })
