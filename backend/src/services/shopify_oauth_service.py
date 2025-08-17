@@ -473,14 +473,14 @@ class ShopifyOAuthService:
             
             # Get stored access token
             db = await get_database()
-            integration = await db["integrations_shopify"].find_one({"tenant_id": tenant_id, "shop": shop})
+            integration = await db["integrations_shopify"].find_one({"tenant_id": tenant_id, "shop_domain": shop})
             
-            if not integration or not integration.get("access_token"):
+            if not integration or not integration.get("access_token_encrypted"):
                 print(f"❌ No access token found for {shop}")
                 return
             
             # Decrypt access token
-            access_token = self.decrypt_token(integration["access_token"])
+            access_token = self.decrypt_token(integration["access_token_encrypted"])
             
             # Sync orders from last 90 days
             await self._sync_shopify_orders(tenant_id, shop, access_token)
