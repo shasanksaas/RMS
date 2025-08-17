@@ -141,7 +141,7 @@ const CustomerStart = () => {
                   disabled={loading}
                 />
                 <p className="text-xs md:text-sm text-gray-500 mt-1">
-                  Check your email confirmation or receipt for your order number
+                  Try: #1001, #1002, #1003, #1004, #1005, or #1006
                 </p>
               </div>
 
