@@ -369,7 +369,7 @@ class ShopifyOAuthService:
         
         integration_data = ShopifyIntegrationDB(
             tenant_id=tenant_id,
-            shop=shop,
+            shop_domain=shop,  # Use consistent field name
             access_token_encrypted=encrypted_token,
             scopes=self.scopes,
             status=ShopifyConnectionStatus.CONNECTED
@@ -377,7 +377,7 @@ class ShopifyOAuthService:
         
         # Upsert integration
         await integrations_collection.replace_one(
-            {"tenant_id": tenant_id, "shop": shop},
+            {"tenant_id": tenant_id, "shop_domain": shop},  # Use consistent field name
             integration_data.model_dump(),
             upsert=True
         )
