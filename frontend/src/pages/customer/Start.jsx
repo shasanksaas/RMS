@@ -30,29 +30,38 @@ const CustomerStart = () => {
       
       // Get tenant from URL or use default - for Shopify-connected tenant
       const urlPath = window.location.pathname;
-      let tenantId = 'tenant-rms34'; // Default to Shopify-connected tenant
+      let tenantId = 'tenant-rms34'; // Default to Shopify-connected tenant with real orders
       
-      // Check if URL contains tenant info or use domain-based detection
-      if (window.location.hostname.includes('fashion') || localStorage.getItem('selectedTenant') === 'tenant-fashion-store') {
-        tenantId = 'tenant-fashion-store';
-      }
-      
-      // Call Elite Portal Returns API for order lookup (dual-mode)
-      const response = await fetch(`${apiUrl}/api/elite/portal/returns/lookup-order`, {
-        method: 'POST',
+      // Call simple orders API directly instead of complex elite portal
+      const response = await fetch(`${apiUrl}/api/orders`, {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           'X-Tenant-Id': tenantId
-        },
-        body: JSON.stringify({
-          order_number: formData.orderNumber,
-          customer_email: formData.email
-        })
+        }
       });
 
-      const responseData = await response.json();
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-      if (response.ok && responseData.success) {
+      const data = await response.json();
+      const orders = data.items || [];
+      console.log('Available orders:', orders);
+
+      // Find matching order by order number (flexible matching)
+      const normalizedInput = formData.orderNumber.toLowerCase().trim();
+      const matchingOrder = orders.find(order => {
+        const orderNum = (order.order_number || '').toLowerCase();
+        const orderId = (order.id || '').toLowerCase();
+        
+        return orderNum === normalizedInput || 
+               orderNum === `#${normalizedInput}` ||
+               normalizedInput === orderNum.replace('#', '') ||
+               orderId === normalizedInput;
+      });
+
+      if (matchingOrder) {
         // Success - navigate to item selection with order data
         navigate('/returns/select', { 
           state: { 
