@@ -691,7 +691,7 @@ async def force_cleanup_shopify_data(tenant_id: str = Depends(get_tenant_id)):
         returns_result = await db.returns.delete_many({
             "tenant_id": tenant_id,
             "$or": [
-                {"source": {"$in": ["shopify", "returns_manager"]}},
+                {"source": {"$in": ["shopify", "shopify_live", "returns_manager"]}},
                 {"source": None},
                 {"source": {"$exists": False}}
             ]
