@@ -339,13 +339,14 @@ async def test_shopify_connection(tenant_id: str = Depends(get_tenant_id)):
                 "success": True,
                 "shop_name": shop_data["shop"]["name"],
                 "shop_domain": shop_domain,
-                "orders_api_status": orders_response.status_code,
-                "orders_error": orders_error,
+                "connection_status": "connected",
+                "api_type": "GraphQL",
                 "accessible_features": accessible_features,
                 "protected_data_blocked": protected_data_blocked,
                 "products_count": products_count,
+                "orders_error": orders_error,
                 "app_scopes": app_scopes,
-                "api_type": "GraphQL"
+                "recommendation": "Products API accessible. Orders require protected customer data approval in Shopify Partner Dashboard." if protected_data_blocked else "All APIs accessible"
             }
         
     except Exception as e:
