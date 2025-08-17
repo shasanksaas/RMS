@@ -65,22 +65,17 @@ const CustomerStart = () => {
         // Success - navigate to item selection with order data
         navigate('/returns/select', { 
           state: { 
-            order: responseData.order,
+            order: matchingOrder,
             orderNumber: formData.orderNumber, 
             email: formData.email,
-            mode: responseData.mode, // Shopify, local, or fallback
+            mode: 'shopify_direct', // Direct API access
             tenantId: tenantId
           } 
         });
       } else {
-        // Handle different response modes
-        if (responseData.mode === 'fallback') {
-          // Order not found - offer fallback mode
-          setError('Order not found. You can still submit a return request for manual review.');
-          // Could navigate to fallback form or show alternative options
-        } else {
-          setError(responseData.message || 'Unable to find your order. Please check your order number and email address.');
-        }
+        // Show available orders for testing
+        const availableOrders = orders.slice(0, 5).map(o => o.order_number).join(', ');
+        setError(`Order not found. Available test orders: ${availableOrders}`);
       }
     } catch (err) {
       console.error('Order lookup error:', err);
