@@ -180,9 +180,9 @@ const App = () => {
               </Route>
 
               {/* Default Routes */}
-              <Route path="/" element={<TestHome />} />
+              <Route path="/" element={<Navigate to="/returns/start" replace />} />
               <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
+              <Route path="*" element={<Navigate to="/returns/start" replace />} />
             </Routes>
           </BrowserRouter>
         </AuthProvider>
