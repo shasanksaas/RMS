@@ -472,12 +472,13 @@ async def get_tenant_shopify_details(tenant_id: str):
 # Integration endpoints that the frontend Integrations screen expects
 integration_router = APIRouter(prefix="/integrations/shopify", tags=["shopify-integration"])
 
-@integration_router.get("/status")
-async def get_shopify_integration_status(
+@integration_router.get("/connection-status")
+async def get_shopify_connection_status_legacy(
     request: Request
 ):
     """
-    Get Shopify integration connection status for the current tenant
+    Legacy endpoint - Get Shopify integration connection status for the current tenant
+    (Renamed to avoid conflicts with main status endpoint)
     
     Used by the frontend Integrations screen to show connection status
     """
