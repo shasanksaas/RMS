@@ -214,11 +214,11 @@ const Integrations = () => {
     }
   };
 
-  const handleDisconnect = async (tenantId) => {
+  const handleDisconnect = async (storeId) => {
     try {
       const apiUrl = getApiUrl();
       
-      const response = await fetch(`${apiUrl}/api/auth/stores/${tenantId}/disconnect`, {
+      const response = await fetch(`${apiUrl}/api/integrations/shopify/disconnect`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -227,12 +227,19 @@ const Integrations = () => {
       });
 
       if (response.ok) {
+        const result = await response.json();
         await loadConnectedStores();
-        setMessage({ type: 'success', text: 'Store disconnected successfully' });
+        setMessage({ type: 'success', text: 'Shopify integration disconnected successfully. You can reconnect anytime.' });
+        // Clear any connection form data
+        setConnectionForm({ shop: '' });
+        setShowConnectionForm(false);
+      } else {
+        const error = await response.json();
+        setMessage({ type: 'error', text: error.detail || 'Failed to disconnect integration' });
       }
     } catch (error) {
-      console.error('Failed to disconnect store:', error);
-      setMessage({ type: 'error', text: 'Failed to disconnect store' });
+      console.error('Failed to disconnect integration:', error);
+      setMessage({ type: 'error', text: 'Failed to disconnect integration. Please try again.' });
     }
   };
 
