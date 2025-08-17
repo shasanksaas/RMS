@@ -476,8 +476,8 @@ async def get_tenant_shopify_details(tenant_id: str):
         print(f"❌ Admin tenant details failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to get tenant details")
 
-# Integration endpoints that the frontend Integrations screen expects
-integration_router = APIRouter(prefix="/integrations/shopify", tags=["shopify-integration"])
+# Integration endpoints that the frontend Integrations screen expects - MOVED TO shopify_integration_controller.py
+integration_router = APIRouter(prefix="/integrations/shopify-oauth", tags=["shopify-oauth-integration"])
 
 # Status endpoint moved to shopify_integration_controller.py for comprehensive status
 # This avoids route conflicts and provides better integration status info
