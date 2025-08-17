@@ -184,19 +184,29 @@ const Integrations = () => {
     setMessage({ type: '', text: '' });
 
     try {
-      // Validate shop domain format
-      const shop = connectionForm.shop.trim();
+      // Validate and normalize shop domain format
+      let shop = connectionForm.shop.trim();
       if (!shop) {
         setMessage({ type: 'error', text: 'Please enter your shop domain' });
         setConnecting(false);
         return;
       }
       
-      // Normalize shop domain
-      let shopDomain = shop;
-      if (!shopDomain.endsWith('.myshopify.com')) {
-        shopDomain = `${shopDomain}.myshopify.com`;
+      // Remove protocol if present
+      if (shop.startsWith('http://') || shop.startsWith('https://')) {
+        shop = shop.replace(/^https?:\/\//, '');
       }
+      
+      // Remove trailing slash
+      shop = shop.replace(/\/$/, '');
+      
+      // Remove .myshopify.com if already present to avoid duplication
+      if (shop.endsWith('.myshopify.com')) {
+        shop = shop.replace('.myshopify.com', '');
+      }
+      
+      // Add .myshopify.com
+      const shopDomain = `${shop}.myshopify.com`;
 
       // Redirect to OAuth install endpoint (use install-redirect for direct redirect)
       const apiUrl = getApiUrl();
