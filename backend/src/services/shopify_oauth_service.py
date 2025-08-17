@@ -531,7 +531,7 @@ class ShopifyOAuthService:
             
             # Update last sync timestamp
             await db["integrations_shopify"].update_one(
-                {"tenant_id": tenant_id, "shop": shop},
+                {"tenant_id": tenant_id, "shop_domain": shop},  # Use correct field name
                 {"$set": {"last_sync_at": datetime.utcnow()}}
             )
             
