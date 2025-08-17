@@ -5,7 +5,6 @@ Real tenant CRUD operations with admin-only access and impersonation functionali
 
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
 from fastapi.responses import RedirectResponse
-from pymongo import MongoClient
 from pymongo.errors import DuplicateKeyError
 from datetime import datetime, timedelta
 import jwt
