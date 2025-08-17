@@ -503,7 +503,7 @@ class ShopifyOAuthService:
         db = await get_database()
         integrations_collection = db["integrations_shopify"]
         await integrations_collection.update_one(
-            {"tenant_id": tenant_id, "shop": shop},
+            {"tenant_id": tenant_id, "shop_domain": shop},  # Use correct field name
             {"$set": {"webhook_ids": webhook_ids}}
         )
 
