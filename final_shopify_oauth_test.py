@@ -16,7 +16,7 @@ from urllib.parse import urlparse, parse_qs
 from typing import Dict, Any, Optional
 
 # Configuration from environment
-BACKEND_URL = "https://ecom-return-manager.preview.emergentagent.com"
+BACKEND_URL = "https://shopify-sync-fix.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 # Shopify OAuth Configuration (from .env)

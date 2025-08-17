@@ -4,7 +4,7 @@
 # Last updated: 2025-01-11
 
 ### Variables
-@baseUrl = https://ecom-return-manager.preview.emergentagent.com
+@baseUrl = https://shopify-sync-fix.preview.emergentagent.com
 @tenantId = tenant-rms34
 
 ### Health Check

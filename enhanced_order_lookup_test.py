@@ -14,7 +14,7 @@ from typing import Dict, List, Any, Optional
 import uuid
 
 # Configuration
-BACKEND_URL = "https://ecom-return-manager.preview.emergentagent.com/api"
+BACKEND_URL = "https://shopify-sync-fix.preview.emergentagent.com/api"
 
 # Test tenants - one with Shopify integration, one without
 SHOPIFY_TENANT_ID = "tenant-rms34"  # Has Shopify integration

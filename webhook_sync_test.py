@@ -16,7 +16,7 @@ import uuid
 import time
 
 # Configuration
-BACKEND_URL = "https://ecom-return-manager.preview.emergentagent.com/api"
+BACKEND_URL = "https://shopify-sync-fix.preview.emergentagent.com/api"
 TEST_TENANT_ID = "rms34.myshopify.com"  # Using the real tenant with Shopify integration
 TEST_HEADERS = {
     "Content-Type": "application/json",

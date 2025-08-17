@@ -15,9 +15,9 @@ The white screen after login is caused by an infinite re-render loop in the Auth
 
 1. **Login with credentials above**
 2. **If you get white screen after login, manually navigate to:**
-   - **Admin:** https://ecom-return-manager.preview.emergentagent.com/admin/dashboard
-   - **Merchant:** https://ecom-return-manager.preview.emergentagent.com/app/dashboard
-   - **Customer:** https://ecom-return-manager.preview.emergentagent.com/returns/start
+   - **Admin:** https://shopify-sync-fix.preview.emergentagent.com/admin/dashboard
+   - **Merchant:** https://shopify-sync-fix.preview.emergentagent.com/app/dashboard
+   - **Customer:** https://shopify-sync-fix.preview.emergentagent.com/returns/start
 
 3. **After manual navigation, the authentication should work properly**
 

@@ -12,7 +12,7 @@ from datetime import datetime
 from typing import Dict, Any, Optional
 
 # Configuration from environment
-BACKEND_URL = "https://ecom-return-manager.preview.emergentagent.com/api"
+BACKEND_URL = "https://shopify-sync-fix.preview.emergentagent.com/api"
 EXPECTED_ADMIN_EMAIL = "admin@returns-manager.com"
 EXPECTED_ADMIN_PASSWORD = "AdminPassword123!"
 EXPECTED_TENANT_ID = "tenant-rms34"

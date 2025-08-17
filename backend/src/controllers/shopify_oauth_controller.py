@@ -177,7 +177,7 @@ async def handle_shopify_callback(
         
         # Redirect to dashboard with connection success and authentication token
         # Instead of using the complex redirect_url, redirect directly to frontend dashboard
-        dashboard_url = f"https://ecom-return-manager.preview.emergentagent.com/app/dashboard?connected=1&shop={connect_result.shop}&tenant_id={connect_result.tenant_id}"
+        dashboard_url = f"https://shopify-sync-fix.preview.emergentagent.com/app/dashboard?connected=1&shop={connect_result.shop}&tenant_id={connect_result.tenant_id}"
         
         if user:
             # Add token to URL for frontend to handle (temporary solution)

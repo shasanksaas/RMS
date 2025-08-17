@@ -19,7 +19,7 @@ from typing import Dict, List, Any, Set
 import uuid
 
 # Configuration
-BACKEND_URL = "https://ecom-return-manager.preview.emergentagent.com/api"
+BACKEND_URL = "https://shopify-sync-fix.preview.emergentagent.com/api"
 TEST_TENANT_ID = "tenant-rms34"  # Specific tenant mentioned in the issue
 TEST_HEADERS = {
     "Content-Type": "application/json",

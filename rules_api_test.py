@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Any
 
 # Use the external backend URL from frontend/.env for real testing
-BACKEND_URL = "https://ecom-return-manager.preview.emergentagent.com"
+BACKEND_URL = "https://shopify-sync-fix.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 class RulesAPITester:
