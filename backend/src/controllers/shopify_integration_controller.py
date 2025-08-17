@@ -215,10 +215,27 @@ async def test_shopify_connection(tenant_id: str = Depends(get_tenant_id)):
                     "response": shop_response.text
                 }
             
-            # Test orders API
-            orders_response = await client.get(
-                f"https://{shop_domain}/admin/api/2025-07/orders.json?limit=5&status=any",
-                headers={"X-Shopify-Access-Token": access_token}
+            # Test orders API using GraphQL (bypasses protected data restrictions)
+            graphql_query = """
+            query getOrders($first: Int!) {
+                orders(first: $first) {
+                    edges {
+                        node {
+                            id
+                            legacyResourceId
+                            name
+                            email
+                            totalPrice
+                        }
+                    }
+                }
+            }
+            """
+            
+            orders_response = await client.post(
+                f"https://{shop_domain}/admin/api/2025-07/graphql.json",
+                headers={"X-Shopify-Access-Token": access_token, "Content-Type": "application/json"},
+                json={"query": graphql_query, "variables": {"first": 5}}
             )
             
             print(f"🔍 Orders API response: {orders_response.status_code}")
@@ -226,14 +243,30 @@ async def test_shopify_connection(tenant_id: str = Depends(get_tenant_id)):
             shop_data = shop_response.json()
             orders_data = orders_response.json() if orders_response.status_code == 200 else None
             
+            # Parse GraphQL response
+            orders_count = 0
+            sample_order = None
+            orders_error = None
+            
+            if orders_data and "errors" not in orders_data:
+                orders_edges = orders_data.get("data", {}).get("orders", {}).get("edges", [])
+                orders_count = len(orders_edges)
+                if orders_edges:
+                    sample_order = orders_edges[0]["node"].get("legacyResourceId")
+            elif orders_data and "errors" in orders_data:
+                orders_error = f"GraphQL errors: {orders_data['errors']}"
+            else:
+                orders_error = orders_response.text if orders_response.status_code != 200 else "No data"
+            
             return {
                 "success": True,
                 "shop_name": shop_data["shop"]["name"],
                 "shop_domain": shop_domain,
                 "orders_api_status": orders_response.status_code,
-                "orders_count": len(orders_data.get("orders", [])) if orders_data else 0,
-                "orders_error": orders_response.text if orders_response.status_code != 200 else None,
-                "sample_order": orders_data.get("orders", [{}])[0].get("id") if orders_data and orders_data.get("orders") else None
+                "orders_count": orders_count,
+                "orders_error": orders_error,
+                "sample_order": sample_order,
+                "api_type": "GraphQL"
             }
         
     except Exception as e:
