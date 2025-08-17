@@ -183,9 +183,9 @@ const App = () => {
               </Route>
 
               {/* Default Routes */}
-              <Route path="/" element={<Navigate to="/auth/login" replace />} />
+              <Route path="/" element={<TestHome />} />
               <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
-              <Route path="*" element={<Navigate to="/auth/login" replace />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </BrowserRouter>
         </AuthProvider>
