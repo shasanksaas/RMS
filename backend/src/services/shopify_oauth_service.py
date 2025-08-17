@@ -261,11 +261,19 @@ class ShopifyOAuthService:
             shop_info = await self._get_shop_info(shop, access_token)
             print(f"✅ Got shop info: {shop_info.get('name', 'Unknown')}")
             
-            # Auto-provision or find existing tenant
-            print(f"🔄 Auto-provisioning tenant for shop: {shop}")
+            # Use existing tenant if provided in state, otherwise create new one
             db = await get_database()
-            tenant = await self._provision_tenant(db, shop, shop_info)
-            print(f"✅ Tenant provisioned: {tenant['tenant_id']}")
+            
+            if state_data.current_tenant_id:
+                # Use the authenticated user's existing tenant
+                print(f"🔄 Using existing tenant: {state_data.current_tenant_id}")
+                tenant = {"tenant_id": state_data.current_tenant_id}
+            else:
+                # Fallback: Auto-provision new tenant (for standalone installs)
+                print(f"🔄 Auto-provisioning new tenant for shop: {shop}")
+                tenant = await self._provision_tenant(db, shop, shop_info)
+            
+            print(f"✅ Using tenant: {tenant['tenant_id']}")
             
             # Store encrypted token
             print(f"🔄 Storing encrypted Shopify token...")
