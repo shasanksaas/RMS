@@ -695,13 +695,28 @@ class ShopifyOAuthService:
         )
 
     async def disconnect_shop(self, tenant_id: str) -> bool:
-        """Disconnect Shopify integration"""
+        """Disconnect Shopify integration and clean up all related data"""
         db = await get_database()
         
-        # Update status to disconnected
-        result = await db["integrations_shopify"].update_one(
-            {"tenant_id": tenant_id},
-            {"$set": {"status": ShopifyConnectionStatus.DISCONNECTED}}
-        )
-        
-        return result.modified_count > 0
+        try:
+            print(f"🔄 Disconnecting Shopify integration for tenant: {tenant_id}")
+            
+            # Remove integration record entirely (allows reconnection)
+            integration_result = await db["integrations_shopify"].delete_one({"tenant_id": tenant_id})
+            
+            # Clean up sync jobs
+            sync_jobs_result = await db["sync_jobs"].delete_many({"tenant_id": tenant_id})
+            
+            # Optionally clean up orders and returns data (commented out to preserve data)
+            # orders_result = await db["orders"].delete_many({"tenant_id": tenant_id})
+            # returns_result = await db["returns"].delete_many({"tenant_id": tenant_id})
+            
+            print(f"✅ Disconnection complete:")
+            print(f"   Integration removed: {integration_result.deleted_count > 0}")
+            print(f"   Sync jobs cleaned: {sync_jobs_result.deleted_count}")
+            
+            return integration_result.deleted_count > 0
+            
+        except Exception as e:
+            print(f"❌ Error disconnecting shop for {tenant_id}: {e}")
+            return False
