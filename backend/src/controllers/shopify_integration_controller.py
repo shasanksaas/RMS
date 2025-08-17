@@ -215,8 +215,38 @@ async def test_shopify_connection(tenant_id: str = Depends(get_tenant_id)):
                     "response": shop_response.text
                 }
             
-            # Test orders API using GraphQL (bypasses protected data restrictions)
-            graphql_query = """
+            # Test what data we CAN access without protected customer data approval
+            
+            # Test 1: Products (should work)
+            products_query = """
+            query getProducts($first: Int!) {
+                products(first: $first) {
+                    edges {
+                        node {
+                            id
+                            title
+                            handle
+                            status
+                            variants(first: 3) {
+                                edges {
+                                    node {
+                                        id
+                                        title
+                                        sku
+                                        price
+                                        inventoryQuantity
+                                        availableForSale
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            """
+            
+            # Test 2: Orders (protected - will likely fail)
+            orders_query = """
             query getOrders($first: Int!) {
                 orders(first: $first) {
                     edges {
@@ -232,40 +262,89 @@ async def test_shopify_connection(tenant_id: str = Depends(get_tenant_id)):
             }
             """
             
+            # Test 3: App Installation (should work)
+            app_query = """
+            query getCurrentAppInstallation {
+                currentAppInstallation {
+                    id
+                    accessScopes {
+                        handle
+                    }
+                }
+            }
+            """
+            
+            # Run all tests
+            products_response = await client.post(
+                f"https://{shop_domain}/admin/api/2025-07/graphql.json",
+                headers={"X-Shopify-Access-Token": access_token, "Content-Type": "application/json"},
+                json={"query": products_query, "variables": {"first": 5}}
+            )
+            
             orders_response = await client.post(
                 f"https://{shop_domain}/admin/api/2025-07/graphql.json",
                 headers={"X-Shopify-Access-Token": access_token, "Content-Type": "application/json"},
-                json={"query": graphql_query, "variables": {"first": 5}}
+                json={"query": orders_query, "variables": {"first": 5}}
             )
             
+            app_response = await client.post(
+                f"https://{shop_domain}/admin/api/2025-07/graphql.json",
+                headers={"X-Shopify-Access-Token": access_token, "Content-Type": "application/json"},
+                json={"query": app_query}
+            )
+            
+            print(f"🔍 Products API response: {products_response.status_code}")
             print(f"🔍 Orders API response: {orders_response.status_code}")
+            print(f"🔍 App API response: {app_response.status_code}")
             
             shop_data = shop_response.json()
-            orders_data = orders_response.json() if orders_response.status_code == 200 else None
             
-            # Parse GraphQL response
-            orders_count = 0
-            sample_order = None
+            # Parse responses
+            accessible_features = []
+            protected_data_blocked = False
+            products_count = 0
             orders_error = None
+            app_scopes = []
             
-            if orders_data and "errors" not in orders_data:
-                orders_edges = orders_data.get("data", {}).get("orders", {}).get("edges", [])
-                orders_count = len(orders_edges)
-                if orders_edges:
-                    sample_order = orders_edges[0]["node"].get("legacyResourceId")
-            elif orders_data and "errors" in orders_data:
-                orders_error = f"GraphQL errors: {orders_data['errors']}"
-            else:
-                orders_error = orders_response.text if orders_response.status_code != 200 else "No data"
+            # Check products access
+            if products_response.status_code == 200:
+                products_data = products_response.json()
+                if "errors" not in products_data:
+                    accessible_features.append("products")
+                    products_edges = products_data.get("data", {}).get("products", {}).get("edges", [])
+                    products_count = len(products_edges)
+            
+            # Check orders access (expected to fail)
+            if orders_response.status_code == 200:
+                orders_data = orders_response.json()
+                if "errors" in orders_data:
+                    for error in orders_data["errors"]:
+                        if "ACCESS_DENIED" in error.get("extensions", {}).get("code", ""):
+                            protected_data_blocked = True
+                            orders_error = "Protected customer data approval required"
+                        else:
+                            orders_error = error.get("message", "Unknown error")
+                else:
+                    accessible_features.append("orders")
+            
+            # Check app installation access
+            if app_response.status_code == 200:
+                app_data = app_response.json()
+                if "errors" not in app_data:
+                    accessible_features.append("app_installation")
+                    installation = app_data.get("data", {}).get("currentAppInstallation", {})
+                    app_scopes = [scope["handle"] for scope in installation.get("accessScopes", [])]
             
             return {
                 "success": True,
                 "shop_name": shop_data["shop"]["name"],
                 "shop_domain": shop_domain,
                 "orders_api_status": orders_response.status_code,
-                "orders_count": orders_count,
                 "orders_error": orders_error,
-                "sample_order": sample_order,
+                "accessible_features": accessible_features,
+                "protected_data_blocked": protected_data_blocked,
+                "products_count": products_count,
+                "app_scopes": app_scopes,
                 "api_type": "GraphQL"
             }
         
