@@ -152,7 +152,7 @@ const CustomerStart = () => {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="Enter the email used for your order"
+                  placeholder="Enter any email for testing"
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
                   required
