@@ -103,13 +103,15 @@ async def get_shopify_integration_status(tenant_id: str = Depends(get_tenant_id)
         }
         
     except Exception as e:
-        print(f"Error getting Shopify integration status: {e}")
+        print(f"❌ Integration status check failed: {str(e)}")
         import traceback
+        print("📊 Full traceback:")
         traceback.print_exc()
         return {
             "connected": False,
             "status": "error",
-            "message": f"Error checking connection status: {str(e)}"
+            "message": f"Error checking connection status: {str(e)}",
+            "error_type": type(e).__name__
         }
 
 
