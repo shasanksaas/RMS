@@ -23,6 +23,7 @@ async def get_shopify_integration_status(tenant_id: str = Depends(get_tenant_id)
     Returns connection status, sync status, and data counts
     """
     try:
+        print(f"🔍 STATUS CHECK: Getting Shopify integration status for tenant: {tenant_id}")
         # First check integrations_shopify collection
         integration = await db.integrations_shopify.find_one({"tenant_id": tenant_id})
         
