@@ -292,8 +292,13 @@ class ShopifyOAuthService:
             
             # Queue 90-day backfill (placeholder for now)
             print(f"🔄 Queuing data backfill...")
-            await self._queue_data_backfill(tenant["tenant_id"], shop)
-            print(f"✅ Backfill queued")
+            try:
+                await self._queue_data_backfill(tenant["tenant_id"], shop)
+                print(f"✅ Backfill completed successfully")
+            except Exception as backfill_error:
+                print(f"⚠️ Backfill failed but continuing: {backfill_error}")
+                # Don't fail the entire OAuth process if backfill fails
+                # The user can manually sync later
             
             print(f"🎉 OAuth callback completed successfully!")
             
