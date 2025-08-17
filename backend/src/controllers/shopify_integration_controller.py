@@ -416,11 +416,17 @@ async def resync_shopify_data(tenant_id: str = Depends(get_tenant_id)):
         # Check if integration exists
         integration = await db.integrations_shopify.find_one({"tenant_id": tenant_id})
         
+        print(f"🔍 Integration found: {integration is not None}")
+        if integration:
+            print(f"🔍 Shop domain: {integration.get('shop_domain')}")
+            print(f"🔍 Status: {integration.get('status')}")
+            print(f"🔍 Has token: {'access_token_encrypted' in integration}")
+        
         if not integration:
             raise HTTPException(status_code=400, detail="Shopify integration not found")
         
         if integration.get("status") != "connected":
-            raise HTTPException(status_code=400, detail="Shopify not connected")
+            raise HTTPException(status_code=400, detail=f"Shopify not connected (status: {integration.get('status')})")
         
         shop_domain = integration.get("shop_domain")
         if not shop_domain:
