@@ -87,13 +87,14 @@ class ShopifyOAuthService:
         """Generate secure nonce for OAuth state"""
         return base64.urlsafe_b64encode(os.urandom(32)).decode().rstrip('=')
 
-    def create_oauth_state(self, shop: str, redirect_after: str = None) -> str:
-        """Create signed OAuth state parameter"""
+    def create_oauth_state(self, shop: str, redirect_after: str = None, current_tenant_id: str = None) -> str:
+        """Create signed OAuth state parameter with optional current tenant"""
         state_data = ShopifyOAuthState(
             shop=shop,
             nonce=self.generate_nonce(),
             timestamp=datetime.utcnow().timestamp(),
-            redirect_after=redirect_after or "/app/dashboard?connected=1"
+            redirect_after=redirect_after or "/app/dashboard?connected=1",
+            current_tenant_id=current_tenant_id  # Preserve authenticated user's tenant
         )
         
         # Sign the state with HMAC
