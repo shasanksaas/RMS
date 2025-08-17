@@ -636,59 +636,74 @@ class ShopifyOAuthService:
                 stored_count = 0
                 
                 for order_edge in orders:
-                    order = order_edge["node"]
-                    
-                    # Convert GraphQL order to our format
-                    order_data = {
-                        "id": order["legacyResourceId"],
-                        "shopify_order_id": order["legacyResourceId"],
-                        "tenant_id": tenant_id,
-                        "order_number": order["name"],
-                        "email": order.get("email", ""),
-                        "customer_email": order.get("email", ""),
-                        "total_price": float(order.get("totalPrice", 0)),
-                        "currency_code": order.get("currencyCode", "USD"),
-                        "fulfillment_status": order.get("displayFulfillmentStatus", "unfulfilled"),
-                        "created_at": order["createdAt"],
-                        "updated_at": order["updatedAt"],
-                        "source": "shopify_live",  # Mark as live Shopify data
-                        "line_items": []
-                    }
-                    
-                    # Add customer data
-                    if order.get("customer"):
-                        customer = order["customer"]
-                        order_data.update({
-                            "customer_id": customer.get("id"),
-                            "customer_first_name": customer.get("firstName", ""),
-                            "customer_last_name": customer.get("lastName", "")
-                        })
-                    
-                    # Add line items
-                    for item_edge in order.get("lineItems", {}).get("edges", []):
-                        item = item_edge["node"]
-                        variant = item.get("variant", {})
-                        price_set = item.get("originalUnitPriceSet", {}).get("shopMoney", {})
+                    try:
+                        order = order_edge["node"]
+                        print(f"🔍 Processing order: {order.get('name', 'UNKNOWN')}")
                         
-                        line_item = {
-                            "id": item.get("id"),
-                            "title": item.get("title", ""),
-                            "quantity": item.get("quantity", 1),
-                            "variant_id": variant.get("id"),
-                            "variant_title": variant.get("title", ""),
-                            "sku": variant.get("sku", ""),
-                            "price": float(price_set.get("amount", 0)),
-                            "unit_price": float(price_set.get("amount", 0))
+                        # Convert GraphQL order to our format
+                        order_data = {
+                            "id": order["legacyResourceId"],
+                            "shopify_order_id": order["legacyResourceId"],
+                            "tenant_id": tenant_id,
+                            "order_number": order["name"],
+                            "email": order.get("email", ""),
+                            "customer_email": order.get("email", ""),
+                            "total_price": float(order.get("totalPrice", 0)),
+                            "currency_code": order.get("currencyCode", "USD"),
+                            "fulfillment_status": order.get("displayFulfillmentStatus", "unfulfilled"),
+                            "created_at": order["createdAt"],
+                            "updated_at": order["updatedAt"],
+                            "source": "shopify_live",  # Mark as live Shopify data
+                            "line_items": []
                         }
-                        order_data["line_items"].append(line_item)
-                    
-                    # Upsert order (avoid duplicates)
-                    await orders_collection.replace_one(
-                        {"id": order_data["id"], "tenant_id": tenant_id},
-                        order_data,
-                        upsert=True
-                    )
-                    stored_count += 1
+                        
+                        # Add customer data
+                        if order.get("customer"):
+                            customer = order["customer"]
+                            order_data.update({
+                                "customer_id": customer.get("id"),
+                                "customer_first_name": customer.get("firstName", ""),
+                                "customer_last_name": customer.get("lastName", "")
+                            })
+                        
+                        # Add line items
+                        line_items = order.get("lineItems", {})
+                        if line_items:
+                            for item_edge in line_items.get("edges", []):
+                                item = item_edge["node"]
+                                variant = item.get("variant", {}) or {}  # Handle None variant
+                                price_set = item.get("originalUnitPriceSet", {})
+                                if price_set:
+                                    shop_money = price_set.get("shopMoney", {}) or {}
+                                else:
+                                    shop_money = {}
+                                
+                                line_item = {
+                                    "id": item.get("id"),
+                                    "title": item.get("title", ""),
+                                    "quantity": item.get("quantity", 1),
+                                    "variant_id": variant.get("id") if variant else None,
+                                    "variant_title": variant.get("title", "") if variant else "",
+                                    "sku": variant.get("sku", "") if variant else "",
+                                    "price": float(shop_money.get("amount", 0)),
+                                    "unit_price": float(shop_money.get("amount", 0))
+                                }
+                                order_data["line_items"].append(line_item)
+                        
+                        # Upsert order (avoid duplicates)
+                        await orders_collection.replace_one(
+                            {"id": order_data["id"], "tenant_id": tenant_id},
+                            order_data,
+                            upsert=True
+                        )
+                        stored_count += 1
+                        print(f"✅ Stored order: {order_data.get('order_number')}")
+                        
+                    except Exception as e:
+                        print(f"❌ Error processing order: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        continue
                 
                 print(f"✅ Stored {stored_count} orders in database")
                 
