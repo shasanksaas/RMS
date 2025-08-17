@@ -119,7 +119,8 @@ async def get_returns(
         all_unique_returns_map = {}
         for ret in all_documents:
             order_id = ret.get("order_id", "")
-            customer_email = ret.get("customer_email", "").lower()
+            customer_email = ret.get("customer_email") or ""  # Handle None values
+            customer_email = customer_email.lower()
             combination_key = f"{order_id}:{customer_email}"
             
             if combination_key not in all_unique_returns_map:
