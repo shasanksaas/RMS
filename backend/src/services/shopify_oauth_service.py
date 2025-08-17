@@ -547,7 +547,7 @@ class ShopifyOAuthService:
         try:
             print(f"🔄 Syncing Shopify orders for {shop}...")
             
-            # Use GraphQL API instead of REST API to bypass protected data restrictions
+            # Use GraphQL API - fixed query without invalid fields
             graphql_query = """
             query getOrders($first: Int!) {
                 orders(first: $first) {
@@ -561,7 +561,6 @@ class ShopifyOAuthService:
                             updatedAt
                             totalPrice
                             currencyCode
-                            fulfillmentStatus
                             displayFulfillmentStatus
                             customer {
                                 id
