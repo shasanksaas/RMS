@@ -363,10 +363,10 @@ async def trigger_shopify_resync(tenant_id: str = Depends(get_tenant_id)):
     Returns job ID for tracking progress
     """
     try:
-        # Get tenant record
-        tenant = await db.tenants.find_one({"id": tenant_id})
+        # Check if Shopify integration exists
+        integration = await db.integrations_shopify.find_one({"tenant_id": tenant_id})
         
-        if not tenant or not tenant.get("shopify_integration"):
+        if not integration or integration.get("status") != "connected":
             raise HTTPException(status_code=400, detail="Shopify not connected")
         
         # Check for existing running sync jobs
