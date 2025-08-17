@@ -78,22 +78,28 @@ async def get_shopify_integration_status(tenant_id: str = Depends(get_tenant_id)
         
         total_orders = await db.orders.count_documents({
             "tenant_id": tenant_id,
-            "source": "shopify"  # Only count Shopify orders
+            "source": {"$in": ["shopify", "shopify_live"]}  # Handle both source types
         })
         recent_orders = await db.orders.count_documents({
             "tenant_id": tenant_id,
-            "source": "shopify",  # Only count Shopify orders
+            "source": {"$in": ["shopify", "shopify_live"]},  # Handle both source types
             "created_at": {"$gte": thirty_days_ago.isoformat()}
         })
         
         # Get return counts from correct 'returns' collection (only Shopify-related)
         total_returns = await db.returns.count_documents({
             "tenant_id": tenant_id,
-            "source": {"$in": ["shopify", "returns_manager"]}  # Returns can be created by our system for Shopify orders
+            "$or": [
+                {"source": {"$in": ["shopify", "returns_manager"]}},
+                {"source": None}  # Include returns with no source (likely from our system)
+            ]
         })
         recent_returns = await db.returns.count_documents({
             "tenant_id": tenant_id,
-            "source": {"$in": ["shopify", "returns_manager"]},
+            "$or": [
+                {"source": {"$in": ["shopify", "returns_manager"]}},
+                {"source": None}
+            ],
             "created_at": {"$gte": thirty_days_ago}
         })
         
