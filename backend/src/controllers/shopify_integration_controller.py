@@ -6,6 +6,7 @@ from fastapi import APIRouter, HTTPException, Depends, Query, Body
 from typing import Optional, Dict, Any, List
 from datetime import datetime, timedelta
 import uuid
+import httpx
 
 from src.middleware.security import get_tenant_id
 from src.config.database import db
