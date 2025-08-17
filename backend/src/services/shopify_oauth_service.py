@@ -784,58 +784,73 @@ class ShopifyOAuthService:
                 orders = data.get("data", {}).get("orders", {}).get("edges", [])
                 
                 # Store returns in database  
+                from ..config.database import get_database
                 db = await get_database()
                 returns_collection = db["returns"]
                 stored_count = 0
                 
                 for order_edge in orders:
-                    order = order_edge["node"]
-                    refunds = order.get("refunds", [])
-                    
-                    for refund in refunds:
-                        # Create return record for each refund
-                        return_data = {
-                            "id": f"return-{refund['id']}",
-                            "tenant_id": tenant_id,
-                            "order_id": order["legacyResourceId"],
-                            "order_number": order["name"],
-                            "customer_email": order.get("email", ""),
-                            "type": "refund",
-                            "status": "completed",
-                            "reason": refund.get("note", "Refund from Shopify"),
-                            "created_at": refund["createdAt"],
-                            "source": "shopify_live",
-                            "items": []
-                        }
+                    try:
+                        order = order_edge["node"]
+                        refunds = order.get("refunds", [])
                         
-                        # Add refunded line items
-                        for refund_item_edge in refund.get("refundLineItems", {}).get("edges", []):
-                            refund_item = refund_item_edge["node"]
-                            line_item = refund_item.get("lineItem", {})
-                            variant = line_item.get("variant", {})
-                            price_set = refund_item.get("priceSet", {}).get("shopMoney", {})
-                            
-                            item = {
-                                "id": refund_item.get("id"),
-                                "line_item_id": line_item.get("id"),
-                                "title": line_item.get("title", ""),
-                                "variant_id": variant.get("id"),
-                                "variant_title": variant.get("title", ""),
-                                "sku": variant.get("sku", ""),
-                                "quantity": refund_item.get("quantity", 1),
-                                "refund_amount": float(price_set.get("amount", 0)),
-                                "restock_type": refund_item.get("restockType", "")
-                            }
-                            return_data["items"].append(item)
-                        
-                        # Only store returns that have items
-                        if return_data["items"]:
-                            await returns_collection.replace_one(
-                                {"id": return_data["id"], "tenant_id": tenant_id},
-                                return_data,
-                                upsert=True
-                            )
-                            stored_count += 1
+                        for refund in refunds:
+                            try:
+                                # Create return record for each refund
+                                return_data = {
+                                    "id": f"return-{refund['id']}",
+                                    "tenant_id": tenant_id,
+                                    "order_id": order["legacyResourceId"],
+                                    "order_number": order["name"],
+                                    "customer_email": order.get("email", ""),
+                                    "type": "refund",
+                                    "status": "completed",
+                                    "reason": refund.get("note", "Refund from Shopify"),
+                                    "created_at": refund["createdAt"],
+                                    "source": "shopify_live",
+                                    "items": []
+                                }
+                                
+                                # Add refunded line items
+                                refund_line_items = refund.get("refundLineItems", {})
+                                if refund_line_items:
+                                    for refund_item_edge in refund_line_items.get("edges", []):
+                                        refund_item = refund_item_edge["node"]
+                                        line_item = refund_item.get("lineItem", {}) or {}
+                                        variant = line_item.get("variant", {}) or {}
+                                        price_set = refund_item.get("priceSet", {})
+                                        if price_set:
+                                            shop_money = price_set.get("shopMoney", {}) or {}
+                                        else:
+                                            shop_money = {}
+                                        
+                                        item = {
+                                            "id": refund_item.get("id"),
+                                            "line_item_id": line_item.get("id"),
+                                            "title": line_item.get("title", ""),
+                                            "variant_id": variant.get("id") if variant else None,
+                                            "variant_title": variant.get("title", "") if variant else "",
+                                            "sku": variant.get("sku", "") if variant else "",
+                                            "quantity": refund_item.get("quantity", 1),
+                                            "refund_amount": float(shop_money.get("amount", 0)),
+                                            "restock_type": refund_item.get("restockType", "")
+                                        }
+                                        return_data["items"].append(item)
+                                
+                                # Only store returns that have items
+                                if return_data["items"]:
+                                    await returns_collection.replace_one(
+                                        {"id": return_data["id"], "tenant_id": tenant_id},
+                                        return_data,
+                                        upsert=True
+                                    )
+                                    stored_count += 1
+                            except Exception as e:
+                                print(f"❌ Error processing refund: {e}")
+                                continue
+                    except Exception as e:
+                        print(f"❌ Error processing order for returns: {e}")
+                        continue
                 
                 print(f"✅ Stored {stored_count} returns in database")
                 
