@@ -91,6 +91,9 @@ const CustomerStart = () => {
         
         console.log('🎯 FINAL DETECTED TENANT:', tenantId);
         
+        // Store detected tenant in state for later use
+        setDetectedTenant(tenantId);
+        
         // Fetch tenant-specific form configuration (public endpoint)
         const response = await fetch(`${backendUrl}/public/forms/${tenantId}/config`);
         
