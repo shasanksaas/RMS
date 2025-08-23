@@ -107,6 +107,7 @@ const TenantReturnForm = () => {
     };
 
     if (tenantId) {
+      console.log(`Loading config for tenant: ${tenantId}`);
       loadTenantConfig();
     }
   }, [tenantId]);
