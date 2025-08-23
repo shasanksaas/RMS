@@ -52,6 +52,7 @@ import OnboardingWizard from './pages/merchant/Onboarding';
 
 // Customer Portal Pages
 import CustomerStart from './pages/customer/Start';
+import TenantReturnForm from './pages/customer/TenantReturnForm';
 import CustomerCreateReturn from './pages/customer/CreateReturn';
 import CustomerReturnConfirmation from './pages/customer/ReturnConfirmation';
 import CustomerSelectItems from './pages/customer/SelectItems';
