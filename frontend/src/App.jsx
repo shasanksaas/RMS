@@ -189,6 +189,9 @@ const App = () => {
                 <Route index element={<Navigate to="/admin/tenants" replace />} />
               </Route>
 
+              {/* Form Generator */}
+              <Route path="/forms" element={<FormGenerator />} />
+
               {/* Default Routes */}
               <Route path="/" element={<Navigate to="/returns/start" replace />} />
               <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
