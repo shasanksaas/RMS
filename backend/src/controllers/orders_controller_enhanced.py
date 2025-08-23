@@ -191,6 +191,13 @@ async def get_order_detail(
             order = await db.orders.find_one(q)
             if order:
                 break
+        # If still not found and we have a numeric id, try regex match for GID values
+        if not order and numeric_id is not None:
+            gid_pattern = str(numeric_id)
+            order = await db.orders.find_one({
+                "tenant_id": tenant_id,
+                "shopify_order_id": {"$regex": gid_pattern}
+            })
         
         if not order:
             raise HTTPException(status_code=404, detail="Order not found")
