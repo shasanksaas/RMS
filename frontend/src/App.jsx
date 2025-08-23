@@ -171,6 +171,7 @@ const App = () => {
                 <Route path="settings/email" element={<EmailSettings />} />
                 <Route path="settings/integrations" element={<IntegrationsSettings />} />
                 <Route path="settings/policies" element={<PolicyManagement />} />
+                <Route path="settings/forms" element={<FormCustomization />} />
                 <Route path="settings/team" element={<TeamSettings />} />
                 <Route path="onboarding" element={<OnboardingWizard />} />
                 <Route index element={<Navigate to="/app/dashboard" replace />} />
