@@ -27,32 +27,72 @@ const TenantReturnForm = () => {
       try {
         const backendUrl = process.env.REACT_APP_BACKEND_URL;
         
-        // Fetch tenant-specific configuration
-        const response = await fetch(`${backendUrl}/api/tenants/${tenantId}/config`, {
-          headers: { 'X-Tenant-Id': tenantId }
+        // Fetch tenant-specific form configuration
+        const response = await fetch(`${backendUrl}/api/tenants/tenant-${tenantId}/form-config`, {
+          headers: { 'X-Tenant-Id': `tenant-${tenantId}` }
         });
         
         if (response.ok) {
-          const config = await response.json();
-          setTenantConfig(config);
+          const data = await response.json();
+          const config = data.config;
+          
+          // Set tenant configuration from form config
+          setTenantConfig({
+            name: tenantId.toUpperCase(),
+            primaryColor: config.branding?.primary_color || '#3B82F6',
+            secondaryColor: config.branding?.secondary_color || '#1F2937',
+            backgroundColor: config.branding?.background_color || '#FFFFFF',
+            textColor: config.branding?.text_color || '#111827',
+            fontFamily: config.branding?.font_family || 'Inter',
+            logoUrl: config.branding?.logo_url || null,
+            faviconUrl: config.branding?.favicon_url || null,
+            supportEmail: 'support@example.com',
+            returnPolicy: config.form?.policy_text || 'Standard 30-day return policy applies.',
+            layoutPreset: config.layout?.preset || 'wizard',
+            cornerRadius: config.layout?.corner_radius || 'medium',
+            spacingDensity: config.layout?.spacing_density || 'comfortable',
+            customCSS: config.layout?.custom_css || '',
+            formConfig: config.form || {}
+          });
         } else {
           // Fallback configuration
           setTenantConfig({
-            name: tenantId.replace('tenant-', '').toUpperCase(),
+            name: tenantId.toUpperCase(),
             primaryColor: '#3B82F6',
+            secondaryColor: '#1F2937',
+            backgroundColor: '#FFFFFF',
+            textColor: '#111827',
+            fontFamily: 'Inter',
             logoUrl: null,
+            faviconUrl: null,
             supportEmail: 'support@example.com',
-            returnPolicy: 'Standard 30-day return policy applies.'
+            returnPolicy: 'Standard 30-day return policy applies.',
+            layoutPreset: 'wizard',
+            cornerRadius: 'medium',
+            spacingDensity: 'comfortable',
+            customCSS: '',
+            formConfig: {}
           });
         }
       } catch (err) {
         console.error('Failed to load tenant config:', err);
+        // Set fallback configuration
         setTenantConfig({
-          name: 'Store',
+          name: tenantId.toUpperCase(),
           primaryColor: '#3B82F6',
+          secondaryColor: '#1F2937',
+          backgroundColor: '#FFFFFF',
+          textColor: '#111827',
+          fontFamily: 'Inter',
           logoUrl: null,
+          faviconUrl: null,
           supportEmail: 'support@example.com',
-          returnPolicy: 'Standard 30-day return policy applies.'
+          returnPolicy: 'Standard 30-day return policy applies.',
+          layoutPreset: 'wizard',
+          cornerRadius: 'medium',
+          spacingDensity: 'comfortable',
+          customCSS: '',
+          formConfig: {}
         });
       }
     };
