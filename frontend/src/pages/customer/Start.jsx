@@ -242,7 +242,7 @@ const CustomerStart = () => {
         });
       } else {
         // Show available orders for testing
-        const availableOrders = orders.slice(0, 5).map(o => o.order_number).join(', ');
+        const availableOrders = tenantOrders.slice(0, 5).map(o => o.order_number).join(', ');
         setError(`Order not found. Available test orders: ${availableOrders}`);
       }
     } catch (err) {
