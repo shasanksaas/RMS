@@ -28,9 +28,36 @@ const CustomerStart = () => {
       // Always use the configured backend URL for production
       let apiUrl = backendUrl || 'http://localhost:8001';
       
-      // Get tenant from URL or use default - for Shopify-connected tenant
-      const urlPath = window.location.pathname;
-      let tenantId = 'tenant-rms34'; // Default to Shopify-connected tenant with real orders
+      // DYNAMIC TENANT DETECTION - Multiple Methods
+      let tenantId = 'tenant-rms34'; // Default fallback
+      
+      // Method 1: Subdomain detection (store1.yourapp.com)
+      const hostname = window.location.hostname;
+      const subdomainMatch = hostname.match(/^([^.]+)\./);
+      if (subdomainMatch && subdomainMatch[1] !== 'www') {
+        tenantId = `tenant-${subdomainMatch[1]}`;
+      }
+      
+      // Method 2: URL path detection (/returns/store1/start)
+      const pathParts = window.location.pathname.split('/');
+      if (pathParts.length >= 3 && pathParts[1] === 'returns' && pathParts[2] !== 'start') {
+        tenantId = `tenant-${pathParts[2]}`;
+      }
+      
+      // Method 3: Query parameter (?tenant=store1)
+      const urlParams = new URLSearchParams(window.location.search);
+      const tenantParam = urlParams.get('tenant');
+      if (tenantParam) {
+        tenantId = `tenant-${tenantParam}`;
+      }
+      
+      // Method 4: localStorage (for testing)
+      const storedTenant = localStorage.getItem('selectedTenant');
+      if (storedTenant) {
+        tenantId = storedTenant;
+      }
+      
+      console.log(`Using tenant: ${tenantId} for return form`);
       
       // Call simple orders API directly instead of complex elite portal
       const response = await fetch(`${apiUrl}/api/orders`, {
