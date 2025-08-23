@@ -126,19 +126,6 @@ const CustomerStart = () => {
       };
     }
   }, [tenantConfig?.customCSS, tenantConfig?.tenantId]);
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
-import { Alert, AlertDescription } from '../../components/ui/alert';
-
-const CustomerStart = () => {
-  const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    orderNumber: '',
-    email: ''
-  });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
