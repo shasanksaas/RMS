@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from typing import Dict, Any, Optional
 import logging
 
-from ..middleware.tenant_isolation import get_tenant_id
+from ..middleware.tenant_isolation import get_tenant_from_request
 from ..config.database import db
 
 logger = logging.getLogger(__name__)
@@ -17,7 +17,7 @@ router = APIRouter(prefix="/tenants", tags=["Tenant Configuration"])
 @router.get("/{tenant_id}/config")
 async def get_tenant_config(
     tenant_id: str,
-    current_tenant_id: str = Depends(get_tenant_id)
+    current_tenant_id: str = Depends(get_tenant_from_request)
 ):
     """Get tenant-specific configuration for return forms"""
     try:
@@ -67,7 +67,7 @@ async def get_tenant_config(
 async def update_tenant_config(
     tenant_id: str,
     config_data: Dict[str, Any],
-    current_tenant_id: str = Depends(get_tenant_id)
+    current_tenant_id: str = Depends(get_tenant_from_request)
 ):
     """Update tenant-specific configuration"""
     try:
