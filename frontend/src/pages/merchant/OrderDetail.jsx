@@ -20,8 +20,7 @@ const OrderDetail = () => {
 
   useEffect(() => {
     loadOrder();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orderId, tenantId]);
+  }, [loadOrder]);
 
   const getApiUrl = () => {
     // Always use the configured backend URL
