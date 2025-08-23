@@ -13,7 +13,7 @@ from datetime import datetime
 import json
 import re
 
-from ..middleware.tenant_isolation import get_tenant_id
+from ..middleware.tenant_isolation import get_tenant_from_request
 from ..config.database import db
 
 logger = logging.getLogger(__name__)
@@ -51,7 +51,7 @@ def sanitize_css(css_content: str, max_size: int = 2048) -> str:
 @router.get("/{tenant_id}/form-config")
 async def get_form_config(
     tenant_id: str,
-    current_tenant_id: str = Depends(get_tenant_id)
+    current_tenant_id: str = Depends(get_tenant_from_request)
 ):
     """Get tenant's form configuration"""
     try:
@@ -133,7 +133,7 @@ async def get_form_config(
 async def save_draft_config(
     tenant_id: str,
     config_data: Dict[str, Any],
-    current_tenant_id: str = Depends(get_tenant_id)
+    current_tenant_id: str = Depends(get_tenant_from_request)
 ):
     """Save form configuration as draft"""
     try:
@@ -177,7 +177,7 @@ async def save_draft_config(
 async def publish_config(
     tenant_id: str,
     config_data: Dict[str, Any],
-    current_tenant_id: str = Depends(get_tenant_id)
+    current_tenant_id: str = Depends(get_tenant_from_request)
 ):
     """Publish form configuration"""
     try:
@@ -244,7 +244,7 @@ async def upload_asset(
     tenant_id: str,
     file: UploadFile = File(...),
     asset_type: str = Form(...),
-    current_tenant_id: str = Depends(get_tenant_id)
+    current_tenant_id: str = Depends(get_tenant_from_request)
 ):
     """Upload logo, favicon, or other assets"""
     try:
@@ -301,7 +301,7 @@ async def upload_asset(
 @router.get("/{tenant_id}/form-config/versions")
 async def get_config_versions(
     tenant_id: str,
-    current_tenant_id: str = Depends(get_tenant_id)
+    current_tenant_id: str = Depends(get_tenant_from_request)
 ):
     """Get all configuration versions for rollback"""
     try:
@@ -333,7 +333,7 @@ async def get_config_versions(
 async def rollback_config(
     tenant_id: str,
     version: int,
-    current_tenant_id: str = Depends(get_tenant_id)
+    current_tenant_id: str = Depends(get_tenant_from_request)
 ):
     """Rollback to a previous configuration version"""
     try:
