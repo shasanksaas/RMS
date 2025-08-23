@@ -64,6 +64,8 @@ const OrderDetail = () => {
   const getStatusBadge = (status, type = 'financial') => {
     if (type === 'financial') {
       const config = {
+  }, [orderId, tenantId, backendUrl]);
+
         paid: { color: 'bg-green-100 text-green-800', label: 'Paid' },
         pending: { color: 'bg-yellow-100 text-yellow-800', label: 'Pending' },
         cancelled: { color: 'bg-red-100 text-red-800', label: 'Cancelled' },
