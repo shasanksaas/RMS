@@ -59,7 +59,7 @@ const OrderDetail = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [orderId, tenantId, backendUrl]);
 
   const getStatusBadge = (status, type = 'financial') => {
     if (type === 'financial') {
