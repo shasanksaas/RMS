@@ -205,7 +205,7 @@ const CustomerStart = () => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'X-Tenant-Id': tenantId
+          'X-Tenant-Id': detectedTenantId
         }
       });
 
