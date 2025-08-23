@@ -17,6 +17,7 @@ const CustomerStart = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [tenantConfig, setTenantConfig] = useState(null);
+  const [detectedTenant, setDetectedTenant] = useState(null); // Store detected tenant separately
 
   // Load tenant configuration for styling
   useEffect(() => {
