@@ -170,11 +170,42 @@ const TenantReturnForm = () => {
     );
   }
 
-  // Apply tenant branding
+  // Apply tenant branding and inject custom CSS
   const brandingStyles = {
     '--primary-color': tenantConfig.primaryColor,
-    '--primary-rgb': tenantConfig.primaryColor?.replace('#', '').match(/.{2}/g)?.map(x => parseInt(x, 16)).join(',') || '59,130,246'
+    '--secondary-color': tenantConfig.secondaryColor,
+    '--background-color': tenantConfig.backgroundColor,
+    '--text-color': tenantConfig.textColor,
+    '--font-family': tenantConfig.fontFamily,
+    '--corner-radius': tenantConfig.cornerRadius === 'small' ? '4px' : 
+                       tenantConfig.cornerRadius === 'large' ? '12px' : '8px',
+    '--spacing-density': tenantConfig.spacingDensity === 'compact' ? '0.5rem' : 
+                        tenantConfig.spacingDensity === 'spacious' ? '1.5rem' : '1rem'
   };
+
+  // Inject custom CSS if available
+  useEffect(() => {
+    if (tenantConfig.customCSS) {
+      const styleId = `tenant-${tenantId}-custom-styles`;
+      let styleElement = document.getElementById(styleId);
+      
+      if (!styleElement) {
+        styleElement = document.createElement('style');
+        styleElement.id = styleId;
+        document.head.appendChild(styleElement);
+      }
+      
+      styleElement.textContent = tenantConfig.customCSS;
+      
+      return () => {
+        // Cleanup on unmount
+        const element = document.getElementById(styleId);
+        if (element) {
+          element.remove();
+        }
+      };
+    }
+  }, [tenantConfig.customCSS, tenantId]);
 
   return (
     <div 
