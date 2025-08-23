@@ -759,7 +759,8 @@ api_router.include_router(public_form_config_router)  # Public form configuratio
 # api_router.include_router(unified_returns_router)  # OLD - conflicts with returns_enhanced_router
 
 # Then include the api_router in the main app
-app.include_router(api_router)
+app.include_router(public_form_config_router, prefix="")  # Public form config (no /api prefix)
+app.include_router(api_router, prefix="/api")  # Main API with tenant isolation
 
 # Add CORS middleware FIRST (before tenant isolation)
 app.add_middleware(
