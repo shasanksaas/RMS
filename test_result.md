@@ -126,3 +126,16 @@ frontend:
       - working: true
         agent: "main"
         comment: "Fetch public form config from /api/public/forms/{tenant}/config instead of non-/api path; removed hardcoded localhost fallback."
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Test backend GET /api/orders/{order_id} lookup with fallbacks for tenant-rms34"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
