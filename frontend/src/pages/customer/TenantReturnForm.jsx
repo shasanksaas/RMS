@@ -195,7 +195,7 @@ const TenantReturnForm = () => {
 
   // Inject custom CSS if available
   useEffect(() => {
-    if (tenantConfig.customCSS) {
+    if (tenantConfig?.customCSS) {
       const styleId = `tenant-${tenantId}-custom-styles`;
       let styleElement = document.getElementById(styleId);
       
@@ -215,7 +215,16 @@ const TenantReturnForm = () => {
         }
       };
     }
-  }, [tenantConfig.customCSS, tenantId]);
+  }, [tenantConfig?.customCSS, tenantId]);
+
+  // Show loading state while config loads
+  if (!tenantConfig) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div 
