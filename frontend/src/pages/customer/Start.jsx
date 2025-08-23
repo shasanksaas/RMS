@@ -42,10 +42,10 @@ const CustomerStart = () => {
           console.log('❌ Method 1 - No URL parameter found');
           
           // Method 2: Get from logged-in user's current tenant (localStorage/session)
-          const currentTenantId = localStorage.getItem('currentTenantId');
-          if (currentTenantId) {
-            detectedTenantId = currentTenantId;
-            console.log('✅ Method 2 - localStorage currentTenantId:', detectedTenantId);
+          const currentTenant = localStorage.getItem('currentTenant');
+          if (currentTenant) {
+            detectedTenantId = currentTenant;
+            console.log('✅ Method 2 - localStorage currentTenant:', detectedTenantId);
           }
           
           // Method 3: Query parameter (?tenant=store1)
@@ -97,7 +97,7 @@ const CustomerStart = () => {
         setDetectedTenant(detectedTenantId);
         
         // Fetch tenant-specific form configuration (public endpoint)
-        const response = await fetch(`${backendUrl}/public/forms/${detectedTenantId}/config`);
+        const response = await fetch(`${backendUrl}/api/public/forms/${detectedTenantId}/config`);
         
         if (response.ok) {
           const data = await response.json();
@@ -177,7 +177,7 @@ const CustomerStart = () => {
 
     try {
       const backendUrl = process.env.REACT_APP_BACKEND_URL;
-      let apiUrl = backendUrl || 'http://localhost:8001';
+      const apiUrl = backendUrl; // Always use env-configured backend URL
       
       // Use the detected tenant ID from URL/detection (not from config fallback)
       const detectedTenantId = tenantConfig?.tenantId || detectedTenant; // Use the original detected tenantId, not fallback

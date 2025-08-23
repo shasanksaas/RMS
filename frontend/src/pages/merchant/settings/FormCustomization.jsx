@@ -81,16 +81,36 @@ const FormCustomization = () => {
     { value: 'spacious', label: 'Spacious' }
   ];
 
+  const getTenantId = () => {
+    // Prefer explicit currentTenant key used by AuthContext/authService
+    const fromStorage = localStorage.getItem('currentTenant');
+    if (fromStorage) return fromStorage;
+
+    // Fallback: user_info payload
+    try {
+      const userInfo = JSON.parse(localStorage.getItem('user_info') || 'null');
+      if (userInfo?.tenant_id) return userInfo.tenant_id;
+    } catch (e) {
+      // ignore
+    }
+
+    // Last resort fallback (demo)
+    return 'tenant-rms34';
+  };
+
+  const getAuthToken = () => localStorage.getItem('auth_token');
+
   // Load existing configuration
   useEffect(() => {
     const loadConfig = async () => {
       try {
         const backendUrl = process.env.REACT_APP_BACKEND_URL;
-        const tenantId = localStorage.getItem('currentTenantId') || 'tenant-rms34';
-        
+        const tenantId = getTenantId();
+        const token = getAuthToken();
+
         const response = await fetch(`${backendUrl}/api/tenants/${tenantId}/form-config`, {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Authorization': token ? `Bearer ${token}` : '',
             'X-Tenant-Id': tenantId
           }
         });
@@ -142,16 +162,18 @@ const FormCustomization = () => {
   const handleFileUpload = async (type, file) => {
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('type', type);
+    // Backend expects field name asset_type
+    formData.append('asset_type', type);
 
     try {
       const backendUrl = process.env.REACT_APP_BACKEND_URL;
-      const tenantId = localStorage.getItem('currentTenantId') || 'tenant-rms34';
-      
+      const tenantId = getTenantId();
+      const token = getAuthToken();
+
       const response = await fetch(`${backendUrl}/api/tenants/${tenantId}/upload-asset`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': token ? `Bearer ${token}` : '',
           'X-Tenant-Id': tenantId
         },
         body: formData
@@ -170,13 +192,14 @@ const FormCustomization = () => {
     setSaving(true);
     try {
       const backendUrl = process.env.REACT_APP_BACKEND_URL;
-      const tenantId = localStorage.getItem('currentTenantId') || 'tenant-rms34';
-      
+      const tenantId = getTenantId();
+      const token = getAuthToken();
+
       const response = await fetch(`${backendUrl}/api/tenants/${tenantId}/form-config/draft`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': token ? `Bearer ${token}` : '',
           'X-Tenant-Id': tenantId
         },
         body: JSON.stringify({ config })
@@ -184,7 +207,7 @@ const FormCustomization = () => {
 
       if (response.ok) {
         setIsDraft(true);
-        // Show success message
+        // Optionally show success toast
       }
     } catch (error) {
       console.error('Save draft failed:', error);
@@ -197,13 +220,14 @@ const FormCustomization = () => {
     setSaving(true);
     try {
       const backendUrl = process.env.REACT_APP_BACKEND_URL;
-      const tenantId = localStorage.getItem('currentTenantId') || 'tenant-rms34';
-      
+      const tenantId = getTenantId();
+      const token = getAuthToken();
+
       const response = await fetch(`${backendUrl}/api/tenants/${tenantId}/form-config/publish`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': token ? `Bearer ${token}` : '',
           'X-Tenant-Id': tenantId
         },
         body: JSON.stringify({ config })
@@ -213,7 +237,7 @@ const FormCustomization = () => {
         const data = await response.json();
         setPublishedVersion(data.version);
         setIsDraft(false);
-        // Show success message
+        // Optionally show success toast
       }
     } catch (error) {
       console.error('Publish failed:', error);
@@ -227,7 +251,7 @@ const FormCustomization = () => {
   };
 
   const generateEmbedCode = () => {
-    const tenantId = localStorage.getItem('currentTenantId') || 'tenant-rms34';
+    const tenantId = getTenantId();
     const baseUrl = window.location.origin;
     return `<iframe src="${baseUrl}/returns/${tenantId.replace('tenant-', '')}/start" width="100%" height="600" frameborder="0"></iframe>`;
   };
@@ -375,7 +399,7 @@ const FormCustomization = () => {
             <TabsContent value="layout" className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Layout & Theme</CardTitle>
+                  <CardTitle>Layout &amp; Theme</CardTitle>
                   <CardDescription>Configure the appearance and layout of your form</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -527,7 +551,7 @@ const FormCustomization = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {(() => {
-                    const tenantId = localStorage.getItem('currentTenantId') || 'tenant-rms34';
+                    const tenantId = getTenantId();
                     const baseUrl = window.location.origin;
                     const tenantSlug = tenantId.replace('tenant-', '');
                     
