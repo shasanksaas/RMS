@@ -755,7 +755,6 @@ api_router.include_router(policy_management_router)  # Comprehensive policy mana
 api_router.include_router(exchange_router)  # Exchange feature for customer returns
 api_router.include_router(tenant_config_router)  # Tenant configuration management
 api_router.include_router(form_config_router)  # Form customization and branding
-api_router.include_router(public_form_config_router)  # Public form configuration access
 # api_router.include_router(unified_returns_router)  # OLD - conflicts with returns_enhanced_router
 
 # Then include the api_router in the main app
