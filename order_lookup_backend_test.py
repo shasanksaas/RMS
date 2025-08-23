@@ -368,10 +368,10 @@ class OrderLookupTestSuite:
         
         if not success and status in [400, 401, 403]:
             self.log_test("Tenant Isolation: No tenant header", True, 
-                         "Correctly rejected request without tenant header")
+                         f"Correctly rejected request without tenant header (status: {status})")
         else:
             self.log_test("Tenant Isolation: No tenant header", False, 
-                         "Should require tenant header")
+                         f"Should require tenant header (got status: {status}, success: {success})")
     
     async def run_all_tests(self):
         """Run all order lookup tests"""
