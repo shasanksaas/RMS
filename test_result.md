@@ -71,6 +71,8 @@
 agent_communication:
   - agent: "main"
     message: "Added public form config under /api/public and updated middleware to bypass tenant isolation for these routes. Fixed merchant FormCustomization to read tenant_id from currentTenant and auth token from auth_token; updated file upload param to asset_type. Updated customer Start.jsx to fetch /api/public/forms config and removed any hardcoded URL fallbacks per ingress rules."
+  - agent: "testing"
+    message: "Backend testing completed successfully. Public form config endpoint at /api/public/forms/{tenant_id}/config is working correctly - returns proper JSON structure with config.branding, layout, and form keys without requiring authentication or tenant headers. Tenant isolation middleware properly bypasses /api/public paths while still enforcing tenant requirements for other /api routes. Fixed missing /api/public/ path in server.py security middleware skip list. CORS is working correctly with proper headers when Origin is present. All regression tests passed - no route conflicts detected."
 
 backend:
   - task: "Move public form config under /api/public and allow through middleware"
