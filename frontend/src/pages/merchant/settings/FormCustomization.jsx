@@ -102,9 +102,10 @@ const FormCustomization = () => {
           setIsDraft(data.has_draft);
         }
 
-        // Set preview URL
+        // Set preview URL based on current tenant
         const baseUrl = window.location.origin;
-        setPreviewUrl(`${baseUrl}/returns/${tenantId.replace('tenant-', '')}/start?preview=true`);
+        const currentTenant = tenantId.replace('tenant-', '');
+        setPreviewUrl(`${baseUrl}/returns/${currentTenant}/start?preview=true`);
       } catch (error) {
         console.error('Failed to load form configuration:', error);
       }
