@@ -290,7 +290,7 @@ const Orders = () => {
 
                     <div className="flex items-center justify-between pt-2 border-t">
                       <Button variant="ghost" size="sm" asChild className="touch-manipulation">
-                        <Link to={`/app/orders/${order.id}`}>
+                        <Link to={`/app/orders/${encodeURIComponent(order.order_number || order.shopify_order_id || order.id)}`}>
                           <Eye className="h-4 w-4 mr-1" />
                           View
                         </Link>
