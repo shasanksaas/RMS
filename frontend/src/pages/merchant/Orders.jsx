@@ -355,7 +355,7 @@ const Orders = () => {
                         <td className="py-4 px-4">
                           <div className="flex items-center space-x-2">
                             <Button variant="ghost" size="sm" asChild>
-                              <Link to={`/app/orders/${order.id}`}>
+                              <Link to={`/app/orders/${encodeURIComponent(order.order_number || order.shopify_order_id || order.id)}`}>
                                 <Eye className="h-4 w-4" />
                               </Link>
                             </Button>
