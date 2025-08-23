@@ -14,6 +14,7 @@ const TenantReturnForm = () => {
   const { tenantId } = useParams(); // From URL: /returns/:tenantId/start
   const navigate = useNavigate();
   const [tenantConfig, setTenantConfig] = useState(null);
+  const [isPreview, setIsPreview] = useState(false);
   const [formData, setFormData] = useState({
     orderNumber: '',
     email: ''
