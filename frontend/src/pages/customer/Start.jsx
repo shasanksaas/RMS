@@ -24,17 +24,25 @@ const CustomerStart = () => {
       try {
         const backendUrl = process.env.REACT_APP_BACKEND_URL;
         
+        console.log('=== DETAILED TENANT DETECTION DEBUG ===');
+        console.log('urlTenantId from useParams():', urlTenantId);
+        console.log('window.location.pathname:', window.location.pathname);
+        
         // DYNAMIC TENANT DETECTION - Multiple Methods
         let tenantId = null; // No default fallback initially
         
         // Method 1: URL parameter (from /returns/:tenantId/start)
         if (urlTenantId) {
           tenantId = `tenant-${urlTenantId}`;
+          console.log('✅ Method 1 - URL parameter detected:', tenantId);
         } else {
+          console.log('❌ Method 1 - No URL parameter found');
+          
           // Method 2: Get from logged-in user's current tenant (localStorage/session)
           const currentTenantId = localStorage.getItem('currentTenantId');
           if (currentTenantId) {
             tenantId = currentTenantId;
+            console.log('✅ Method 2 - localStorage currentTenantId:', tenantId);
           }
           
           // Method 3: Query parameter (?tenant=store1)
@@ -42,6 +50,7 @@ const CustomerStart = () => {
           const tenantParam = urlParams.get('tenant');
           if (tenantParam && !tenantId) {
             tenantId = `tenant-${tenantParam}`;
+            console.log('✅ Method 3 - Query parameter detected:', tenantId);
           }
           
           // Method 4: Subdomain detection (store1.yourapp.com)
@@ -50,6 +59,7 @@ const CustomerStart = () => {
             const subdomainMatch = hostname.match(/^([^.]+)\./);
             if (subdomainMatch && subdomainMatch[1] !== 'www') {
               tenantId = `tenant-${subdomainMatch[1]}`;
+              console.log('✅ Method 4 - Subdomain detected:', tenantId);
             }
           }
           
@@ -58,6 +68,7 @@ const CustomerStart = () => {
             const pathParts = window.location.pathname.split('/');
             if (pathParts.length >= 3 && pathParts[1] === 'returns' && pathParts[2] !== 'start') {
               tenantId = `tenant-${pathParts[2]}`;
+              console.log('✅ Method 5 - URL path detected:', tenantId);
             }
           }
           
@@ -66,6 +77,7 @@ const CustomerStart = () => {
             const storedTenant = localStorage.getItem('selectedTenant');
             if (storedTenant) {
               tenantId = storedTenant;
+              console.log('✅ Method 6 - localStorage selectedTenant:', tenantId);
             }
           }
         }
@@ -73,9 +85,10 @@ const CustomerStart = () => {
         // Final fallback only if no tenant detected
         if (!tenantId) {
           tenantId = 'tenant-rms34'; // Last resort fallback
+          console.log('⚠️  Using final fallback:', tenantId);
         }
         
-        console.log(`Detected tenant: ${tenantId} for return form`);
+        console.log('🎯 FINAL DETECTED TENANT:', tenantId);
         
         // Fetch tenant-specific form configuration (public endpoint)
         const response = await fetch(`${backendUrl}/public/forms/${tenantId}/config`);
