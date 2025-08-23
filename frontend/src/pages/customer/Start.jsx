@@ -125,10 +125,11 @@ const CustomerStart = () => {
             formConfig: {}
           });
         }
-      } catch (error) {
-        console.error('Failed to load tenant config:', error);
+      } catch (apiError) {
+        console.warn(`Failed to load config from API: ${apiError.message}, using fallback`);
+        // Fallback configuration but keep detected tenant
         setTenantConfig({
-          tenantId, // Keep the correctly detected tenant ID
+          tenantId: detectedTenant || 'tenant-rms34', // Use stored detected tenant or fallback
           primaryColor: '#3B82F6',
           secondaryColor: '#1F2937',
           backgroundColor: '#FFFFFF',
