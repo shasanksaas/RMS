@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from '../../components/ui/alert';
 
 const CustomerStart = () => {
   const navigate = useNavigate();
+  const { tenantId: urlTenantId } = useParams(); // Get tenant from URL params
   const [formData, setFormData] = useState({
     orderNumber: '',
     email: ''
