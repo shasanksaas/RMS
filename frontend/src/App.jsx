@@ -71,6 +71,7 @@ import TenantManager from './pages/admin/TenantManager';
 
 // Public Pages
 import MerchantSignup from './pages/public/MerchantSignup';
+import FormGenerator from './pages/FormGenerator';
 
 import './App.css';
 
