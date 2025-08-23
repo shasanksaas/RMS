@@ -216,7 +216,7 @@ const CustomerStart = () => {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 md:space-y-8 px-4 sm:px-0" style={dynamicStyles}
+    <div className="max-w-2xl mx-auto space-y-6 md:space-y-8 px-4 sm:px-0" style={dynamicStyles}>
       {/* Hero Section */}
       <div className="text-center space-y-4">
         <div className="w-12 h-12 md:w-16 md:h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
