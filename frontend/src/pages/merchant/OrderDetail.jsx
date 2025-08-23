@@ -27,7 +27,7 @@ const OrderDetail = () => {
     return backendUrl;
   };
 
-  const loadOrder = async () => {
+  const loadOrder = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
