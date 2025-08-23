@@ -55,7 +55,11 @@ class OrderLookupTestSuite:
         """Make HTTP request and return (success, response_data, status_code)"""
         try:
             url = f"{BACKEND_URL}{endpoint}"
-            request_headers = {**TEST_HEADERS, **(headers or {})}
+            # If headers is explicitly provided, use it as-is, otherwise use TEST_HEADERS
+            if headers is not None:
+                request_headers = headers
+            else:
+                request_headers = TEST_HEADERS
             
             if method.upper() == "GET":
                 async with self.session.get(url, headers=request_headers) as response:
