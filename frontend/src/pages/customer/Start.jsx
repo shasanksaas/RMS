@@ -237,7 +237,7 @@ const CustomerStart = () => {
             orderNumber: formData.orderNumber, 
             email: formData.email,
             mode: 'shopify_direct', // Direct API access
-            tenantId: tenantId
+            tenantId: detectedTenantId
           } 
         });
       } else {
