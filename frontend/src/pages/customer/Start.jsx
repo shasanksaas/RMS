@@ -124,7 +124,7 @@ const CustomerStart = () => {
       } catch (error) {
         console.error('Failed to load tenant config:', error);
         setTenantConfig({
-          tenantId: 'tenant-rms34',
+          tenantId, // Keep the correctly detected tenant ID
           primaryColor: '#3B82F6',
           secondaryColor: '#1F2937',
           backgroundColor: '#FFFFFF',
