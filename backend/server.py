@@ -737,6 +737,7 @@ api_router.include_router(returns_enhanced_router)  # Main returns API - ACTIVE
 
 # Specialized Returns Routes (disabled to prevent routing conflicts)
 # api_router.include_router(portal_returns_router)   # Customer portal returns - DISABLED
+api_router.include_router(portal_returns_router)   # Customer portal returns - ENABLED FOR TESTING
 # api_router.include_router(admin_returns_router)    # Admin returns management - DISABLED
 
 # Legacy/Conflicting Routes (disabled to prevent conflicts)
