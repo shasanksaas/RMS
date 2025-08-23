@@ -53,7 +53,7 @@ const CustomerStart = () => {
         }
         
         // Fetch tenant-specific form configuration (public endpoint)
-        const response = await fetch(`${backendUrl}/api/tenants/${tenantId}/form-config/public`);
+        const response = await fetch(`${backendUrl}/api/public/forms/${tenantId}/config`);
         
         if (response.ok) {
           const data = await response.json();
