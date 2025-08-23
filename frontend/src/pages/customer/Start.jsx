@@ -191,9 +191,9 @@ const CustomerStart = () => {
       }
 
       const ordersData = await ordersResponse.json();
-      const orders = ordersData.items || [];
-      console.log('📦 API RESPONSE - Orders found:', orders.length);
-      console.log('📦 First few orders:', orders.slice(0, 3).map(o => ({
+      const tenantOrders = ordersData.items || [];
+      console.log('📦 API RESPONSE - Orders found:', tenantOrders.length);
+      console.log('📦 First few orders:', tenantOrders.slice(0, 3).map(o => ({
         id: o.id, 
         order_number: o.order_number, 
         tenant_id: o.tenant_id,
