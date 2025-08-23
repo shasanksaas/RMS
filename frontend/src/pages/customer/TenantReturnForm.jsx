@@ -26,6 +26,11 @@ const TenantReturnForm = () => {
   useEffect(() => {
     const loadTenantConfig = async () => {
       try {
+        // Check if this is a preview mode
+        const urlParams = new URLSearchParams(window.location.search);
+        const previewMode = urlParams.get('preview') === 'true';
+        setIsPreview(previewMode);
+        
         const backendUrl = process.env.REACT_APP_BACKEND_URL;
         
         // Fetch tenant-specific form configuration (public endpoint)
