@@ -34,31 +34,36 @@ const TenantReturnForm = () => {
         const backendUrl = process.env.REACT_APP_BACKEND_URL;
         
         // Fetch tenant-specific form configuration (public endpoint)
-        const response = await fetch(`${backendUrl}/public/forms/tenant-${tenantId}/config`);
-        
-        if (response.ok) {
-          const data = await response.json();
-          const config = data.config;
+        try {
+          const response = await fetch(`${backendUrl}/public/forms/tenant-${tenantId}/config`);
           
-          // Set tenant configuration from form config
-          setTenantConfig({
-            name: tenantId.toUpperCase(),
-            primaryColor: config.branding?.primary_color || '#3B82F6',
-            secondaryColor: config.branding?.secondary_color || '#1F2937',
-            backgroundColor: config.branding?.background_color || '#FFFFFF',
-            textColor: config.branding?.text_color || '#111827',
-            fontFamily: config.branding?.font_family || 'Inter',
-            logoUrl: config.branding?.logo_url || null,
-            faviconUrl: config.branding?.favicon_url || null,
-            supportEmail: 'support@example.com',
-            returnPolicy: config.form?.policy_text || 'Standard 30-day return policy applies.',
-            layoutPreset: config.layout?.preset || 'wizard',
-            cornerRadius: config.layout?.corner_radius || 'medium',
-            spacingDensity: config.layout?.spacing_density || 'comfortable',
-            customCSS: config.layout?.custom_css || '',
-            formConfig: config.form || {}
-          });
-        } else {
+          if (response.ok) {
+            const data = await response.json();
+            const config = data.config;
+            
+            // Set tenant configuration from form config
+            setTenantConfig({
+              name: tenantId.toUpperCase(),
+              primaryColor: config.branding?.primary_color || '#3B82F6',
+              secondaryColor: config.branding?.secondary_color || '#1F2937',
+              backgroundColor: config.branding?.background_color || '#FFFFFF',
+              textColor: config.branding?.text_color || '#111827',
+              fontFamily: config.branding?.font_family || 'Inter',
+              logoUrl: config.branding?.logo_url || null,
+              faviconUrl: config.branding?.favicon_url || null,
+              supportEmail: 'support@example.com',
+              returnPolicy: config.form?.policy_text || 'Standard 30-day return policy applies.',
+              layoutPreset: config.layout?.preset || 'wizard',
+              cornerRadius: config.layout?.corner_radius || 'medium',
+              spacingDensity: config.layout?.spacing_density || 'comfortable',
+              customCSS: config.layout?.custom_css || '',
+              formConfig: config.form || {}
+            });
+          } else {
+            throw new Error(`HTTP ${response.status}`);
+          }
+        } catch (apiError) {
+          console.warn(`Failed to load config from API: ${apiError.message}, using fallback`);
           // Fallback configuration
           setTenantConfig({
             name: tenantId.toUpperCase(),
