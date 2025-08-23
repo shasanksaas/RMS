@@ -25,37 +25,54 @@ const CustomerStart = () => {
         const backendUrl = process.env.REACT_APP_BACKEND_URL;
         
         // DYNAMIC TENANT DETECTION - Multiple Methods
-        let tenantId = 'tenant-rms34'; // Default fallback
+        let tenantId = null; // No default fallback initially
         
         // Method 1: URL parameter (from /returns/:tenantId/start)
         if (urlTenantId) {
           tenantId = `tenant-${urlTenantId}`;
         } else {
-          // Method 2: Subdomain detection (store1.yourapp.com)
-          const hostname = window.location.hostname;
-          const subdomainMatch = hostname.match(/^([^.]+)\./);
-          if (subdomainMatch && subdomainMatch[1] !== 'www') {
-            tenantId = `tenant-${subdomainMatch[1]}`;
+          // Method 2: Get from logged-in user's current tenant (localStorage/session)
+          const currentTenantId = localStorage.getItem('currentTenantId');
+          if (currentTenantId) {
+            tenantId = currentTenantId;
           }
           
-          // Method 3: URL path detection (/returns/store1/start)
-          const pathParts = window.location.pathname.split('/');
-          if (pathParts.length >= 3 && pathParts[1] === 'returns' && pathParts[2] !== 'start') {
-            tenantId = `tenant-${pathParts[2]}`;
-          }
-          
-          // Method 4: Query parameter (?tenant=store1)
+          // Method 3: Query parameter (?tenant=store1)
           const urlParams = new URLSearchParams(window.location.search);
           const tenantParam = urlParams.get('tenant');
-          if (tenantParam) {
+          if (tenantParam && !tenantId) {
             tenantId = `tenant-${tenantParam}`;
           }
           
-          // Method 5: localStorage (for testing)
-          const storedTenant = localStorage.getItem('selectedTenant');
-          if (storedTenant) {
-            tenantId = storedTenant;
+          // Method 4: Subdomain detection (store1.yourapp.com)
+          if (!tenantId) {
+            const hostname = window.location.hostname;
+            const subdomainMatch = hostname.match(/^([^.]+)\./);
+            if (subdomainMatch && subdomainMatch[1] !== 'www') {
+              tenantId = `tenant-${subdomainMatch[1]}`;
+            }
           }
+          
+          // Method 5: URL path detection (/returns/store1/start)
+          if (!tenantId) {
+            const pathParts = window.location.pathname.split('/');
+            if (pathParts.length >= 3 && pathParts[1] === 'returns' && pathParts[2] !== 'start') {
+              tenantId = `tenant-${pathParts[2]}`;
+            }
+          }
+          
+          // Method 6: localStorage fallback (for testing)
+          if (!tenantId) {
+            const storedTenant = localStorage.getItem('selectedTenant');
+            if (storedTenant) {
+              tenantId = storedTenant;
+            }
+          }
+        }
+        
+        // Final fallback only if no tenant detected
+        if (!tenantId) {
+          tenantId = 'tenant-rms34'; // Last resort fallback
         }
         
         console.log(`Detected tenant: ${tenantId} for return form`);
