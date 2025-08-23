@@ -759,7 +759,7 @@ api_router.include_router(form_config_router)  # Form customization and branding
 
 # Then include the api_router in the main app
 app.include_router(public_form_config_router, prefix="")  # Public form config (no /api prefix)
-app.include_router(api_router, prefix="/api")  # Main API with tenant isolation
+app.include_router(api_router)  # Main API with tenant isolation (already has /api prefix)
 
 # Add CORS middleware FIRST (before tenant isolation)
 app.add_middleware(
