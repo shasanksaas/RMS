@@ -27,10 +27,8 @@ const TenantReturnForm = () => {
       try {
         const backendUrl = process.env.REACT_APP_BACKEND_URL;
         
-        // Fetch tenant-specific form configuration
-        const response = await fetch(`${backendUrl}/api/tenants/tenant-${tenantId}/form-config`, {
-          headers: { 'X-Tenant-Id': `tenant-${tenantId}` }
-        });
+        // Fetch tenant-specific form configuration (public endpoint)
+        const response = await fetch(`${backendUrl}/api/tenants/tenant-${tenantId}/form-config/public`);
         
         if (response.ok) {
           const data = await response.json();
