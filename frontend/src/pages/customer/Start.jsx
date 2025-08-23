@@ -172,8 +172,8 @@ const CustomerStart = () => {
       const backendUrl = process.env.REACT_APP_BACKEND_URL;
       let apiUrl = backendUrl || 'http://localhost:8001';
       
-      // Use the detected tenant ID from configuration
-      const detectedTenantId = tenantConfig?.tenantId || 'tenant-rms34';
+      // Use the detected tenant ID from URL/detection (not from config fallback)
+      const detectedTenantId = tenantConfig?.tenantId || tenantId; // Use the original detected tenantId, not fallback
       console.log('🚀 MAKING API CALL WITH TENANT:', detectedTenantId);
       
       // Call tenant-specific orders API
