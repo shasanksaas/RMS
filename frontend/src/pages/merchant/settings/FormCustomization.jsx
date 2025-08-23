@@ -534,12 +534,12 @@ const FormCustomization = () => {
                     return (
                       <>
                         <div className="space-y-2">
-                          <Label>Tenant-Specific URL</Label>
+                          <Label>Your Customer Return Form URL</Label>
                           <div className="flex items-center space-x-2">
                             <Input
                               readOnly
                               value={`${baseUrl}/returns/${tenantSlug}/start`}
-                              className="flex-1 font-mono text-sm"
+                              className="flex-1 font-mono text-sm bg-blue-50 border-blue-200"
                             />
                             <Button
                               size="sm"
@@ -556,10 +556,13 @@ const FormCustomization = () => {
                               <ExternalLink className="h-3 w-3" />
                             </Button>
                           </div>
+                          <p className="text-xs text-blue-600">
+                            ✅ This URL is specifically for your customers and will show your branding
+                          </p>
                         </div>
 
                         <div className="space-y-2">
-                          <Label>Universal URL with Tenant Parameter</Label>
+                          <Label>Universal URL (Alternative)</Label>
                           <div className="flex items-center space-x-2">
                             <Input
                               readOnly
@@ -572,13 +575,6 @@ const FormCustomization = () => {
                               onClick={() => copyToClipboard(`${baseUrl}/returns/start?tenant=${tenantSlug}`)}
                             >
                               <Copy className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => window.open(`${baseUrl}/returns/start?tenant=${tenantSlug}`, '_blank')}
-                            >
-                              <ExternalLink className="h-3 w-3" />
                             </Button>
                           </div>
                         </div>
