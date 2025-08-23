@@ -47,6 +47,7 @@ import BrandingSettings from './pages/merchant/settings/Branding';
 import EmailSettings from './pages/merchant/settings/Email';
 import IntegrationsSettings from './pages/merchant/settings/Integrations';
 import PolicyManagement from './pages/merchant/settings/PolicyManagement';
+import FormCustomization from './pages/merchant/settings/FormCustomization';
 import TeamSettings from './pages/merchant/settings/Team';
 import OnboardingWizard from './pages/merchant/Onboarding';
 
