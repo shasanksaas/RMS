@@ -36,69 +36,43 @@ const Confirm = () => {
         }
       }
 
-      // Prepare return request data using the real order ID
-      let returnRequestData;
-      
-      // Handle exchange requests differently
+      // Prepare return request data for the portal returns API
+      const returnRequestData = {
+        order_id: String(order.id),
+        items: Object.values(selectedItems).map(item => ({
+          id: String(item.line_item_id || item.id),
+          sku: item.sku || 'N/A',
+          title: item.title || item.name,
+          variant_title: item.variant_title || null,
+          quantity: parseInt(item.quantity) || 1,
+          unit_price: parseFloat(item.unit_price || item.price) || 0,
+          reason: item.reason || 'defective',
+          reason_description: item.notes || `Customer selected: ${item.reason?.replace('_', ' ') || 'Not specified'}`,
+          condition: item.condition || 'used'
+        })),
+        preferred_outcome: resolution.id === 'exchange' ? 'EXCHANGE' : 
+                          resolution.id === 'store_credit' ? 'STORE_CREDIT' : 'REFUND',
+        return_method: 'PREPAID_LABEL',
+        customer_email: email,
+        customer_note: resolution.id === 'exchange' && resolution.exchange ? 
+          `Exchange request for ${resolution.exchange.product.title} - ${resolution.exchange.variant.title}` :
+          `Customer requested ${resolution.title}`
+      };
+
+      // Add exchange-specific data if applicable
       if (resolution.id === 'exchange' && resolution.exchange) {
-        returnRequestData = {
-          order_id: String(order.id),
-          customer_email: email,
-          return_method: 'prepaid_label',
-          items: Object.values(selectedItems).map(item => ({
-            line_item_id: String(item.line_item_id || item.id),
-            sku: item.sku || 'N/A',
-            title: item.title || item.name,
-            variant_title: item.variant_title || null,
-            quantity: parseInt(item.quantity) || 1,
-            unit_price: parseFloat(item.unit_price || item.price) || 0,
-            reason: item.reason || 'exchange',
-            reason_description: 'Customer requested exchange',
-            condition: item.condition || 'used',
-            photos: item.photos || [],
-            notes: item.notes || ''
-          })),
-          exchange_items: [{
-            product_id: resolution.exchange.product.id,
-            variant_id: resolution.exchange.variant.id,
-            quantity: 1,
-            price: parseFloat(resolution.exchange.variant.price)
-          }],
-          customer_note: `Exchange request for ${resolution.exchange.product.title} - ${resolution.exchange.variant.title}`,
-          resolution_type: 'exchange'
-        };
-      } else {
-        // Regular return request
-        returnRequestData = {
-          order_id: String(order.id),
-          customer_email: email,
-          return_method: 'prepaid_label',
-          items: Object.values(selectedItems).map(item => ({
-            line_item_id: String(item.line_item_id || item.id),
-            sku: item.sku || 'N/A',
-            title: item.title || item.name,
-            variant_title: item.variant_title || null,
-            quantity: parseInt(item.quantity) || 1,
-            unit_price: parseFloat(item.unit_price || item.price) || 0,
-            reason: item.reason || 'wrong_size',
-            reason_description: item.reason_description || '',
-            condition: item.condition || 'used',
-            photos: item.photos || [],
-            notes: item.notes || ''
-          })),
-          customer_note: `Selected resolution: ${resolution.title || resolution.id}`
-        };
+        returnRequestData.exchange_items = [{
+          product_id: resolution.exchange.product.id,
+          variant_id: resolution.exchange.variant.id,
+          quantity: 1,
+          price: parseFloat(resolution.exchange.variant.price)
+        }];
       }
 
       console.log('Sending return request data:', JSON.stringify(returnRequestData, null, 2));
 
-      // Choose API endpoint based on request type
-      const apiEndpoint = returnRequestData.resolution_type === 'exchange' 
-        ? '/api/exchange/create' 
-        : '/api/elite/portal/returns/create';
-
-      // Call appropriate API to create return/exchange
-      const response = await fetch(`${backendUrl}${apiEndpoint}`, {
+      // Use the portal returns create endpoint
+      const response = await fetch(`${backendUrl}/api/portal/returns/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -109,7 +83,7 @@ const Confirm = () => {
 
       const responseData = await response.json();
 
-      if (response.ok && (responseData.success || responseData.exchange_request)) {
+      if (response.ok && responseData.success) {
         // Handle different response formats
         let returnId, status, estimatedRefund;
         
