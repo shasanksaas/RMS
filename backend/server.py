@@ -13,6 +13,7 @@ from src.controllers.enhanced_features_controller import router as enhanced_rout
 from src.controllers.exchange_controller import router as exchange_router  # Exchange feature
 from src.controllers.tenant_config_controller import router as tenant_config_router  # Tenant config
 from src.controllers.form_config_controller import router as form_config_router  # Form customization
+from src.controllers.public_form_config_controller import router as public_form_config_router  # Public form config
 from src.modules.auth.controller import router as auth_router
 from src.controllers.webhook_controller import router as webhook_router
 from src.controllers.testing_controller import router as testing_router
