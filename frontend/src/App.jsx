@@ -136,7 +136,7 @@ const App = () => {
 
               {/* Tenant-Specific Return Forms */}
               <Route path="/returns/:tenantId" element={<CustomerLayout />}>
-                <Route path="start" element={<TenantReturnForm />} />
+                <Route path="start" element={<CustomerStart />} />
                 <Route path="select" element={<CustomerSelectItems />} />
                 <Route path="resolution" element={<CustomerResolution />} />
                 <Route path="confirm" element={<CustomerConfirm />} />
