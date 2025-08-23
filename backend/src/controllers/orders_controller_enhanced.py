@@ -161,6 +161,14 @@ async def get_order_detail(
         # Normalize possible order number formats
         normalized = order_id.lstrip('#') if isinstance(order_id, str) else order_id
 
+        # Prepare numeric variants for lookups (Shopify IDs often numeric)
+        numeric_id = None
+        try:
+            if isinstance(order_id, str) and order_id.isdigit():
+                numeric_id = int(order_id)
+        except Exception:
+            numeric_id = None
+
         # Try multiple lookup strategies for resiliency
         lookup_queries = [
             {"id": order_id, "tenant_id": tenant_id},
@@ -170,6 +178,12 @@ async def get_order_detail(
             {"order_number": f"#{normalized}", "tenant_id": tenant_id},
             {"order_number": normalized, "tenant_id": tenant_id},
         ]
+        # Add numeric lookups if applicable
+        if numeric_id is not None:
+            lookup_queries.extend([
+                {"order_id": numeric_id, "tenant_id": tenant_id},
+                {"shopify_order_id": numeric_id, "tenant_id": tenant_id},
+            ])
 
         order = None
         for q in lookup_queries:
