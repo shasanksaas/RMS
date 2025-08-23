@@ -181,6 +181,7 @@ async def get_order_detail(
         # Add numeric lookups if applicable
         if numeric_id is not None:
             lookup_queries.extend([
+                {"id": numeric_id, "tenant_id": tenant_id},
                 {"order_id": numeric_id, "tenant_id": tenant_id},
                 {"shopify_order_id": numeric_id, "tenant_id": tenant_id},
             ])
