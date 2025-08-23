@@ -73,6 +73,8 @@ agent_communication:
     message: "Added public form config under /api/public and updated middleware to bypass tenant isolation for these routes. Fixed merchant FormCustomization to read tenant_id from currentTenant and auth token from auth_token; updated file upload param to asset_type. Updated customer Start.jsx to fetch /api/public/forms config and removed any hardcoded URL fallbacks per ingress rules."
   - agent: "testing"
     message: "Backend testing completed successfully. Public form config endpoint at /api/public/forms/{tenant_id}/config is working correctly - returns proper JSON structure with config.branding, layout, and form keys without requiring authentication or tenant headers. Tenant isolation middleware properly bypasses /api/public paths while still enforcing tenant requirements for other /api routes. Fixed missing /api/public/ path in server.py security middleware skip list. CORS is working correctly with proper headers when Origin is present. All regression tests passed - no route conflicts detected."
+  - agent: "testing"
+    message: "Order lookup testing completed successfully for tenant-rms34. GET /api/orders/{order_id} endpoint working perfectly with comprehensive fallback mechanisms (id, order_id, shopify_order_id, order_number). Sample numeric ID 6375150223682 correctly returns 404 with proper error detail. All required UI response keys validated. Tenant isolation and security working correctly - requires X-Tenant-Id header and blocks unauthorized access. Orders list endpoint regression passed. Created comprehensive test suite in order_lookup_backend_test.py with 100% success rate (36/36 tests passed)."
 
 backend:
   - task: "Move public form config under /api/public and allow through middleware"
