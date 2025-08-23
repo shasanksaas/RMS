@@ -129,7 +129,7 @@ const CustomerStart = () => {
         console.warn(`Failed to load config from API: ${apiError.message}, using fallback`);
         // Fallback configuration but keep detected tenant
         setTenantConfig({
-          tenantId: detectedTenant || 'tenant-rms34', // Use stored detected tenant or fallback
+          tenantId: tenantId, // Use the current detected tenant directly
           primaryColor: '#3B82F6',
           secondaryColor: '#1F2937',
           backgroundColor: '#FFFFFF',
