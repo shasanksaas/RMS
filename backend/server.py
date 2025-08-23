@@ -118,6 +118,7 @@ async def security_and_audit_middleware(request: Request, call_next):
         "/api/shopify/",   # Shopify endpoints
         "/api/shopify-test/",  # Shopify connectivity test endpoints
         "/api/elite/",   # Elite controllers
+        "/api/public/",  # Public endpoints (no tenant required)
         "/api/rules/field-types/options"  # Rules field types endpoint (no tenant needed)
     ]
     
