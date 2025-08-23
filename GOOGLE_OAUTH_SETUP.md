@@ -23,7 +23,7 @@ Add these redirect URIs to your OAuth client:
 
 **REQUIRED REDIRECT URIs:**
 ```
-https://shopify-sync-fix.preview.emergentagent.com/auth/google/callback
+https://returnflow-4.preview.emergentagent.com/auth/google/callback
 http://localhost:3000/auth/google/callback
 https://localhost:3000/auth/google/callback
 ```
@@ -31,7 +31,7 @@ https://localhost:3000/auth/google/callback
 ### Step 3: Authorized Origins (if needed)
 Add these origins:
 ```
-https://shopify-sync-fix.preview.emergentagent.com
+https://returnflow-4.preview.emergentagent.com
 http://localhost:3000
 https://localhost:3000
 ```
@@ -43,7 +43,7 @@ https://localhost:3000
 ## 🧪 TESTING INSTRUCTIONS
 
 ### Test Admin Access:
-1. Go to: https://shopify-sync-fix.preview.emergentagent.com/auth/login
+1. Go to: https://returnflow-4.preview.emergentagent.com/auth/login
 2. Use credentials:
    - **Email:** admin@returns-manager.com
    - **Password:** AdminPassword123!

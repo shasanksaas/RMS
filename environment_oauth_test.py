@@ -10,7 +10,7 @@ import json
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://shopify-sync-fix.preview.emergentagent.com"
+BACKEND_URL = "https://returnflow-4.preview.emergentagent.com"
 TEST_SHOP = "rms34"
 
 class EnvironmentAgnosticOAuthTest:

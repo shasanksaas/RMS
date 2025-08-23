@@ -7,7 +7,7 @@ import asyncio
 import aiohttp
 import json
 
-BACKEND_URL = "https://shopify-sync-fix.preview.emergentagent.com/api"
+BACKEND_URL = "https://returnflow-4.preview.emergentagent.com/api"
 
 async def test_order_lookup_endpoints():
     """Test the specific endpoints requested in the review"""

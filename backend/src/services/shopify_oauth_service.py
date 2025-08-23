@@ -28,7 +28,7 @@ class ShopifyOAuthService:
         self.api_key = os.getenv("SHOPIFY_API_KEY")
         self.api_secret = os.getenv("SHOPIFY_API_SECRET") 
         self.api_version = os.getenv("SHOPIFY_API_VERSION", "2025-07")
-        self.app_url = os.getenv("APP_URL", "https://shopify-sync-fix.preview.emergentagent.com")
+        self.app_url = os.getenv("APP_URL", "https://returnflow-4.preview.emergentagent.com")
         self.auto_provision = os.getenv("AUTO_PROVISION_TENANT", "true").lower() == "true"
         
         # Initialize encryption key

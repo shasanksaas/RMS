@@ -30,7 +30,7 @@ import uuid
 from urllib.parse import urlparse, parse_qs
 
 # Configuration
-BACKEND_URL = "https://shopify-sync-fix.preview.emergentagent.com/api"
+BACKEND_URL = "https://returnflow-4.preview.emergentagent.com/api"
 TEST_TENANT_ID = "tenant-rms34"
 TEST_SHOP = "rms34"
 TEST_SHOP_DOMAIN = "rms34.myshopify.com"
@@ -101,7 +101,7 @@ class ShopifyOAuthTestSuite:
         
         # Try root health endpoint first
         try:
-            url = "https://shopify-sync-fix.preview.emergentagent.com/health"
+            url = "https://returnflow-4.preview.emergentagent.com/health"
             async with self.session.get(url) as response:
                 if response.status == 200:
                     self.log_test("Backend Health Check", True, f"Backend is healthy (status: {response.status})")

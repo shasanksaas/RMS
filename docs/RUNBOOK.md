@@ -35,7 +35,7 @@ cd /app/backend
 cat .env | grep -E "SHOPIFY|APP_URL"
 
 # 2. Verify APP_URL matches Shopify app settings
-# Should be: https://shopify-sync-fix.preview.emergentagent.com
+# Should be: https://returnflow-4.preview.emergentagent.com
 
 # 3. Check Shopify app configuration at:
 # https://partners.shopify.com/organizations/your-org/apps/your-app/edit

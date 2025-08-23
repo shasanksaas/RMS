@@ -14,7 +14,7 @@ from typing import Dict, List, Any, Optional
 import uuid
 
 # Configuration
-BACKEND_URL = "https://shopify-sync-fix.preview.emergentagent.com/api"
+BACKEND_URL = "https://returnflow-4.preview.emergentagent.com/api"
 TEST_TENANT_ID = "tenant-laxmi12-m9zgom"
 TEST_HEADERS = {
     "Content-Type": "application/json",

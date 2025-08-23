@@ -40,7 +40,7 @@ const Integrations = () => {
   const [validationResults, setValidationResults] = useState(null);
 
   // Backend configuration
-  const backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://shopify-sync-fix.preview.emergentagent.com';
+  const backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://returnflow-4.preview.emergentagent.com';
   const tenantId = tenant?.tenant_id || user?.tenant_id; // Use authenticated user's tenant
   
   // Handle URL parameters for OAuth callback

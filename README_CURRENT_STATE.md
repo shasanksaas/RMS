@@ -165,8 +165,8 @@ query getOrderRefunds($first: Int!) {
 #### **OAuth Flow - COMPLETELY WORKING**
 ```bash
 # Shopify App Configuration Required:
-App URL: https://shopify-sync-fix.preview.emergentagent.com/app
-Redirect URI: https://shopify-sync-fix.preview.emergentagent.com/api/auth/shopify/callback
+App URL: https://returnflow-4.preview.emergentagent.com/app
+Redirect URI: https://returnflow-4.preview.emergentagent.com/api/auth/shopify/callback
 
 # Current Integration Test Results:
 ✅ OAuth initiation working
@@ -490,7 +490,7 @@ db.return_policies.createIndex({"tenant_id": 1, "is_active": 1})
 #### **Base Configuration**
 ```bash
 Base URL: http://localhost:8001/api (Development)
-Base URL: https://shopify-sync-fix.preview.emergentagent.com/api (Production)
+Base URL: https://returnflow-4.preview.emergentagent.com/api (Production)
 Authentication: X-Tenant-Id header for all requests
 Content-Type: application/json
 ```
@@ -645,18 +645,18 @@ ENCRYPTION_KEY=jGL-nUXhs3CcZ1PSpl1IPJNWyzrIuX8gvBwDQ_r_Hh8=
 SHOPIFY_API_KEY=81e556a66ac6d28a54e1ed972a3c43ad
 SHOPIFY_API_SECRET=db79f6174721b7acf332b69ef8f84374
 SHOPIFY_API_VERSION=2025-07
-SHOPIFY_REDIRECT_URI=https://shopify-sync-fix.preview.emergentagent.com/api/auth/shopify/callback
+SHOPIFY_REDIRECT_URI=https://returnflow-4.preview.emergentagent.com/api/auth/shopify/callback
 SHOPIFY_ENCRYPTION_KEY=jGL-nUXhs3CcZ1PSpl1IPJNWyzrIuX8gvBwDQ_r_Hh8=
 
 # Application URLs - Auto-detected
-APP_URL=https://shopify-sync-fix.preview.emergentagent.com
+APP_URL=https://returnflow-4.preview.emergentagent.com
 DEBUG=true
 ```
 
 #### **Frontend (.env)**
 ```bash
 # Backend API - Auto-configured 
-REACT_APP_BACKEND_URL=https://shopify-sync-fix.preview.emergentagent.com
+REACT_APP_BACKEND_URL=https://returnflow-4.preview.emergentagent.com
 WDS_SOCKET_PORT=443
 
 # Feature Flags
@@ -821,7 +821,7 @@ stderr_logfile=/var/log/supervisor/frontend.err.log
 #### ✅ **Production Monitoring**
 ```bash
 # Health checks passing
-GET https://shopify-sync-fix.preview.emergentagent.com/api/health
+GET https://returnflow-4.preview.emergentagent.com/api/health
 Response: {"status": "healthy", "timestamp": "2025-08-17T18:30:00Z"}
 
 # Performance metrics

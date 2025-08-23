@@ -418,7 +418,7 @@ from fastapi.middleware.cors import CORSMiddleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://shopify-sync-fix.preview.emergentagent.com",
+        "https://returnflow-4.preview.emergentagent.com",
         "https://your-custom-domain.com"
     ],
     allow_credentials=True,

@@ -15,7 +15,7 @@ import uuid
 import re
 
 # Configuration
-BACKEND_URL = "https://shopify-sync-fix.preview.emergentagent.com/api"
+BACKEND_URL = "https://returnflow-4.preview.emergentagent.com/api"
 
 # Admin credentials for testing
 ADMIN_CREDENTIALS = {

@@ -94,7 +94,7 @@ const Login: React.FC = () => {
 
     try {
       // Get backend URL from environment with fallback
-      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://shopify-sync-fix.preview.emergentagent.com';
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://returnflow-4.preview.emergentagent.com';
       
       console.log('🔍 Backend URL from env:', backendUrl);
       

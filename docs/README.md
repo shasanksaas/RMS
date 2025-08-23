@@ -25,8 +25,8 @@ yarn start
 ### On Emergent Platform
 ```bash
 # Already configured - just access your preview URL
-# Frontend: https://shopify-sync-fix.preview.emergentagent.com
-# Backend: https://shopify-sync-fix.preview.emergentagent.com/api
+# Frontend: https://returnflow-4.preview.emergentagent.com
+# Backend: https://returnflow-4.preview.emergentagent.com/api
 ```
 
 ## 📖 Table of Contents

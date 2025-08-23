@@ -10,7 +10,7 @@ import json
 async def debug_unified_returns():
     """Debug the unified returns endpoints"""
     
-    BACKEND_URL = "https://shopify-sync-fix.preview.emergentagent.com"
+    BACKEND_URL = "https://returnflow-4.preview.emergentagent.com"
     TEST_TENANT_ID = "tenant-fashion-store"
     
     headers = {

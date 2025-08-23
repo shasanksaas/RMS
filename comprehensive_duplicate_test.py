@@ -12,7 +12,7 @@ from typing import Dict, List, Any
 from collections import defaultdict
 
 # Configuration
-BACKEND_URL = "https://shopify-sync-fix.preview.emergentagent.com/api"
+BACKEND_URL = "https://returnflow-4.preview.emergentagent.com/api"
 TEST_TENANT_ID = "tenant-rms34"
 TEST_HEADERS = {
     "Content-Type": "application/json",

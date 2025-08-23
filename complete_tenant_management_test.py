@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 class CompleteTenantManagementTester:
     def __init__(self):
         # Use production URL from frontend/.env
-        self.base_url = "https://shopify-sync-fix.preview.emergentagent.com/api"
+        self.base_url = "https://returnflow-4.preview.emergentagent.com/api"
         self.admin_token = None
         self.merchant_token = None
         self.test_tenant_id = None

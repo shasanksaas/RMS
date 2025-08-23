@@ -12,7 +12,7 @@ from datetime import datetime
 from typing import Dict, List, Any, Optional
 
 # Configuration
-BACKEND_URL = "https://shopify-sync-fix.preview.emergentagent.com"
+BACKEND_URL = "https://returnflow-4.preview.emergentagent.com"
 TEST_TENANT_ID = "tenant-fashion-store"
 TEST_HEADERS = {
     "Content-Type": "application/json",

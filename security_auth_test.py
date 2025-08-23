@@ -16,7 +16,7 @@ import jwt
 import base64
 
 # Configuration
-BACKEND_URL = "https://shopify-sync-fix.preview.emergentagent.com/api"
+BACKEND_URL = "https://returnflow-4.preview.emergentagent.com/api"
 TEST_TENANT_ID = "tenant-rms34"
 
 # Test credentials from review request
