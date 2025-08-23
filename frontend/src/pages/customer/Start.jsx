@@ -52,10 +52,8 @@ const CustomerStart = () => {
           tenantId = storedTenant;
         }
         
-        // Fetch tenant-specific form configuration
-        const response = await fetch(`${backendUrl}/api/tenants/${tenantId}/form-config`, {
-          headers: { 'X-Tenant-Id': tenantId }
-        });
+        // Fetch tenant-specific form configuration (public endpoint)
+        const response = await fetch(`${backendUrl}/api/tenants/${tenantId}/form-config/public`);
         
         if (response.ok) {
           const data = await response.json();
