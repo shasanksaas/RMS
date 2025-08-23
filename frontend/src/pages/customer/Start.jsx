@@ -1,7 +1,127 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, ArrowRight, Package, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
+
+const CustomerStart = () => {
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    orderNumber: '',
+    email: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [tenantConfig, setTenantConfig] = useState(null);
+
+  // Load tenant configuration for styling
+  useEffect(() => {
+    const loadTenantConfig = async () => {
+      try {
+        const backendUrl = process.env.REACT_APP_BACKEND_URL;
+        
+        // DYNAMIC TENANT DETECTION - Multiple Methods
+        let tenantId = 'tenant-rms34'; // Default fallback
+        
+        // Method 1: Subdomain detection (store1.yourapp.com)
+        const hostname = window.location.hostname;
+        const subdomainMatch = hostname.match(/^([^.]+)\./);
+        if (subdomainMatch && subdomainMatch[1] !== 'www') {
+          tenantId = `tenant-${subdomainMatch[1]}`;
+        }
+        
+        // Method 2: URL path detection (/returns/store1/start)
+        const pathParts = window.location.pathname.split('/');
+        if (pathParts.length >= 3 && pathParts[1] === 'returns' && pathParts[2] !== 'start') {
+          tenantId = `tenant-${pathParts[2]}`;
+        }
+        
+        // Method 3: Query parameter (?tenant=store1)
+        const urlParams = new URLSearchParams(window.location.search);
+        const tenantParam = urlParams.get('tenant');
+        if (tenantParam) {
+          tenantId = `tenant-${tenantParam}`;
+        }
+        
+        // Method 4: localStorage (for testing)
+        const storedTenant = localStorage.getItem('selectedTenant');
+        if (storedTenant) {
+          tenantId = storedTenant;
+        }
+        
+        // Fetch tenant-specific form configuration
+        const response = await fetch(`${backendUrl}/api/tenants/${tenantId}/form-config`, {
+          headers: { 'X-Tenant-Id': tenantId }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          const config = data.config;
+          
+          setTenantConfig({
+            tenantId,
+            primaryColor: config.branding?.primary_color || '#3B82F6',
+            secondaryColor: config.branding?.secondary_color || '#1F2937',
+            backgroundColor: config.branding?.background_color || '#FFFFFF',
+            textColor: config.branding?.text_color || '#111827',
+            fontFamily: config.branding?.font_family || 'Inter',
+            logoUrl: config.branding?.logo_url || null,
+            customCSS: config.layout?.custom_css || '',
+            formConfig: config.form || {}
+          });
+        } else {
+          setTenantConfig({
+            tenantId,
+            primaryColor: '#3B82F6',
+            secondaryColor: '#1F2937',
+            backgroundColor: '#FFFFFF', 
+            textColor: '#111827',
+            fontFamily: 'Inter',
+            logoUrl: null,
+            customCSS: '',
+            formConfig: {}
+          });
+        }
+      } catch (error) {
+        console.error('Failed to load tenant config:', error);
+        setTenantConfig({
+          tenantId: 'tenant-rms34',
+          primaryColor: '#3B82F6',
+          secondaryColor: '#1F2937',
+          backgroundColor: '#FFFFFF',
+          textColor: '#111827',
+          fontFamily: 'Inter',
+          logoUrl: null,
+          customCSS: '',
+          formConfig: {}
+        });
+      }
+    };
+
+    loadTenantConfig();
+  }, []);
+
+  // Inject custom CSS
+  useEffect(() => {
+    if (tenantConfig?.customCSS) {
+      const styleId = `tenant-${tenantConfig.tenantId}-custom-styles`;
+      let styleElement = document.getElementById(styleId);
+      
+      if (!styleElement) {
+        styleElement = document.createElement('style');
+        styleElement.id = styleId;
+        document.head.appendChild(styleElement);
+      }
+      
+      styleElement.textContent = tenantConfig.customCSS;
+      
+      return () => {
+        const element = document.getElementById(styleId);
+        if (element) {
+          element.remove();
+        }
+      };
+    }
+  }, [tenantConfig?.customCSS, tenantConfig?.tenantId]);
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
