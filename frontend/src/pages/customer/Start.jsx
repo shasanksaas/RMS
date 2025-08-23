@@ -197,8 +197,26 @@ const CustomerStart = () => {
     if (error) setError(''); // Clear error when user types
   };
 
+  // Apply dynamic styling
+  const dynamicStyles = tenantConfig ? {
+    '--primary-color': tenantConfig.primaryColor,
+    '--secondary-color': tenantConfig.secondaryColor,
+    '--background-color': tenantConfig.backgroundColor,
+    '--text-color': tenantConfig.textColor,
+    '--font-family': tenantConfig.fontFamily
+  } : {};
+
+  // Show loading state while config loads
+  if (!tenantConfig) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-2xl mx-auto space-y-6 md:space-y-8 px-4 sm:px-0">
+    <div className="max-w-2xl mx-auto space-y-6 md:space-y-8 px-4 sm:px-0" style={dynamicStyles}
       {/* Hero Section */}
       <div className="text-center space-y-4">
         <div className="w-12 h-12 md:w-16 md:h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
