@@ -154,21 +154,38 @@ async def get_order_detail(
     tenant_id: str = Depends(get_tenant_id)
 ):
     """
-    Get detailed order information by ID
+    Get detailed order information by ID with robust lookup fallbacks.
+    Tries: id -> order_id -> shopify_order_id -> order_number (with and without leading #)
     """
     try:
-        # Find order
-        order = await db.orders.find_one({
-            "id": order_id,
-            "tenant_id": tenant_id
-        })
+        # Normalize possible order number formats
+        normalized = order_id.lstrip('#') if isinstance(order_id, str) else order_id
+
+        # Try multiple lookup strategies for resiliency
+        lookup_queries = [
+            {"id": order_id, "tenant_id": tenant_id},
+            {"order_id": order_id, "tenant_id": tenant_id},
+            {"shopify_order_id": order_id, "tenant_id": tenant_id},
+            {"order_number": order_id, "tenant_id": tenant_id},
+            {"order_number": f"#{normalized}", "tenant_id": tenant_id},
+            {"order_number": normalized, "tenant_id": tenant_id},
+        ]
+
+        order = None
+        for q in lookup_queries:
+            order = await db.orders.find_one(q)
+            if order:
+                break
         
         if not order:
             raise HTTPException(status_code=404, detail="Order not found")
         
+        # Use the resolved order id for downstream queries
+        resolved_order_id = order.get("id") or order.get("order_id") or str(order.get("shopify_order_id") or "")
+
         # Get related returns
         returns = await db.return_requests.find({
-            "order_id": order_id,
+            "order_id": resolved_order_id,
             "tenant_id": tenant_id
         }).to_list(100)
         
@@ -202,24 +219,22 @@ async def get_order_detail(
         shopify_admin_url = f"https://{shop_domain}/admin/orders/{order.get('shopify_order_id')}" if shop_domain else None
         
         return {
-            "id": order["id"],
+            "id": order.get("id") or resolved_order_id,
             "order_number": order.get("order_number", ""),
             "shopify_order_id": order.get("shopify_order_id"),
-            "customer": {
-                "name": order.get("customer_name", ""),
-                "email": order.get("customer_email", ""),
-            },
+            "customer_name": order.get("customer_name", ""),
+            "customer_email": order.get("customer_email", ""),
             "financial_status": order.get("financial_status", ""),
             "fulfillment_status": order.get("fulfillment_status", ""),
             "total_price": order.get("total_price", 0),
-            "currency": order.get("currency", "USD"),
+            "currency_code": order.get("currency_code", order.get("currency", "USD")),
             "created_at": order.get("created_at", ""),
             "updated_at": order.get("updated_at", ""),
             "line_items": line_items,
             "billing_address": order.get("billing_address", {}),
             "shipping_address": order.get("shipping_address", {}),
             "returns": formatted_returns,
-            "shopify_admin_url": shopify_admin_url,
+            "shopify_order_url": shopify_admin_url,
             "raw_order_data": order.get("raw_order_data", {}) if order.get("raw_order_data") else None
         }
         
