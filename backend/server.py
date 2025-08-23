@@ -10,7 +10,7 @@ import time
 # Import new controllers
 from src.controllers.shopify_controller import router as shopify_router
 from src.controllers.enhanced_features_controller import router as enhanced_router
-from src.controllers.exchange_controller import router as exchange_router  # Exchange feature
+from src.controllers.tenant_config_controller import router as tenant_config_router
 from src.modules.auth.controller import router as auth_router
 from src.controllers.webhook_controller import router as webhook_router
 from src.controllers.testing_controller import router as testing_router
