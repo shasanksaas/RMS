@@ -174,6 +174,31 @@ const CustomerStart = () => {
       
       // Use the detected tenant ID from configuration
       const tenantId = tenantConfig?.tenantId || 'tenant-rms34';
+      console.log('🚀 MAKING API CALL WITH TENANT:', tenantId);
+      
+      // Call tenant-specific orders API
+      const response = await fetch(`${apiUrl}/api/orders`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Tenant-Id': tenantId
+        }
+      });
+
+      if (!response.ok) {
+        console.error('❌ API Response Error:', response.status, response.statusText);
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const orders = data.items || [];
+      console.log('📦 API RESPONSE - Orders found:', orders.length);
+      console.log('📦 First few orders:', orders.slice(0, 3).map(o => ({
+        id: o.id, 
+        order_number: o.order_number, 
+        tenant_id: o.tenant_id,
+        source: o.source
+      })));
       
       // Call simple orders API directly instead of complex elite portal
       const response = await fetch(`${apiUrl}/api/orders`, {
