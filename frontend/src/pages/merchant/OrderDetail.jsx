@@ -5,28 +5,27 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Alert, AlertDescription } from '../../components/ui/alert';
+import { useAuth } from '../../contexts/AuthContext';
 
 const OrderDetail = () => {
   const { orderId } = useParams();
+  const { user, tenant } = useAuth();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Get backend URL and tenant from environment
+  // Get backend URL and tenant from environment/auth
   const backendUrl = process.env.REACT_APP_BACKEND_URL;
-  const tenantId = 'tenant-fashion-store.myshopify.com'; // TODO: Get from auth context
+  const tenantId = tenant?.tenant_id || user?.tenant_id || localStorage.getItem('currentTenant');
 
   useEffect(() => {
     loadOrder();
-  }, [orderId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderId, tenantId]);
 
   const getApiUrl = () => {
-    // Force HTTPS to prevent mixed content issues
-    let url = backendUrl;
-    if (url && url.startsWith('http://')) {
-      url = url.replace('http://', 'https://');
-    }
-    return url;
+    // Always use the configured backend URL
+    return backendUrl;
   };
 
   const loadOrder = async () => {
@@ -35,12 +34,7 @@ const OrderDetail = () => {
       setError('');
       
       const apiUrl = getApiUrl();
-      let fullUrl = `${apiUrl}/api/orders/${orderId}`;
-      
-      // Force HTTPS to prevent mixed content errors
-      if (fullUrl.startsWith('http://')) {
-        fullUrl = fullUrl.replace('http://', 'https://');
-      }
+      const fullUrl = `${apiUrl}/api/orders/${orderId}`;
       
       const response = await fetch(fullUrl, {
         headers: {
@@ -54,8 +48,10 @@ const OrderDetail = () => {
         setOrder(orderData);
       } else if (response.status === 404) {
         setError('Order not found');
+      } else if (response.status === 401 || response.status === 403) {
+        setError('Unauthorized to view this order for the current tenant.');
       } else {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({}));
         setError(errorData.detail || 'Failed to load order');
       }
     } catch (err) {
