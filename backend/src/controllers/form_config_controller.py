@@ -53,81 +53,95 @@ async def get_form_config(
     tenant_id: str,
     current_tenant_id: str = Depends(get_tenant_from_request)
 ):
-    """Get tenant's form configuration"""
+    """Get tenant's form configuration (Admin only)"""
     try:
         # Security check
         if tenant_id != current_tenant_id:
             raise HTTPException(status_code=403, detail="Access denied")
         
-        # Get current published config
-        published_config = await db.form_configs.find_one({
-            "tenant_id": tenant_id,
-            "status": "published"
-        }, sort=[("version", -1)])
-        
-        # Get draft config if any
-        draft_config = await db.form_configs.find_one({
-            "tenant_id": tenant_id,
-            "status": "draft"
-        })
-        
-        # Default configuration
-        default_config = {
-            "branding": {
-                "logo_url": "",
-                "favicon_url": "",
-                "primary_color": "#3B82F6",
-                "secondary_color": "#1F2937",
-                "background_color": "#FFFFFF",
-                "text_color": "#111827",
-                "font_family": "Inter"
-            },
-            "layout": {
-                "preset": "wizard",
-                "corner_radius": "medium",
-                "spacing_density": "comfortable",
-                "custom_css": ""
-            },
-            "form": {
-                "show_phone": True,
-                "show_photos": True,
-                "max_photos": 3,
-                "show_notes": True,
-                "custom_question": {
-                    "enabled": False,
-                    "label": "",
-                    "type": "text",
-                    "options": []
-                },
-                "return_reasons": [
-                    "Wrong size",
-                    "Defective",
-                    "Not as described",
-                    "Changed mind",
-                    "Damaged in shipping"
-                ],
-                "available_resolutions": ["refund", "exchange", "store_credit"],
-                "return_window_days": 30,
-                "policy_text": "Standard 30-day return policy applies. Items must be in original condition."
-            }
-        }
-        
-        # Use draft config if available, otherwise published, otherwise default
-        current_config = (draft_config or published_config or {}).get("config", default_config)
-        
-        return {
-            "config": current_config,
-            "published_version": published_config.get("version") if published_config else None,
-            "has_draft": draft_config is not None,
-            "last_updated": (published_config or {}).get("updated_at"),
-            "status": "success"
-        }
+        return await _get_tenant_form_config(tenant_id)
         
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Get form config error: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch form configuration")
+
+@router.get("/{tenant_id}/form-config/public")
+async def get_public_form_config(tenant_id: str):
+    """Get tenant's form configuration (Public access for customer forms)"""
+    try:
+        return await _get_tenant_form_config(tenant_id)
+        
+    except Exception as e:
+        logger.error(f"Get public form config error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch form configuration")
+
+async def _get_tenant_form_config(tenant_id: str):
+    """Internal function to get tenant form configuration"""
+    # Get current published config
+    published_config = await db.form_configs.find_one({
+        "tenant_id": tenant_id,
+        "status": "published"
+    }, sort=[("version", -1)])
+    
+    # Get draft config if any
+    draft_config = await db.form_configs.find_one({
+        "tenant_id": tenant_id,
+        "status": "draft"
+    })
+    
+    # Default configuration
+    default_config = {
+        "branding": {
+            "logo_url": "",
+            "favicon_url": "",
+            "primary_color": "#3B82F6",
+            "secondary_color": "#1F2937",
+            "background_color": "#FFFFFF",
+            "text_color": "#111827",
+            "font_family": "Inter"
+        },
+        "layout": {
+            "preset": "wizard",
+            "corner_radius": "medium",
+            "spacing_density": "comfortable",
+            "custom_css": ""
+        },
+        "form": {
+            "show_phone": True,
+            "show_photos": True,
+            "max_photos": 3,
+            "show_notes": True,
+            "custom_question": {
+                "enabled": False,
+                "label": "",
+                "type": "text",
+                "options": []
+            },
+            "return_reasons": [
+                "Wrong size",
+                "Defective",
+                "Not as described",
+                "Changed mind",
+                "Damaged in shipping"
+            ],
+            "available_resolutions": ["refund", "exchange", "store_credit"],
+            "return_window_days": 30,
+            "policy_text": "Standard 30-day return policy applies. Items must be in original condition."
+        }
+    }
+    
+    # Use draft config if available, otherwise published, otherwise default
+    current_config = (draft_config or published_config or {}).get("config", default_config)
+    
+    return {
+        "config": current_config,
+        "published_version": published_config.get("version") if published_config else None,
+        "has_draft": draft_config is not None,
+        "last_updated": (published_config or {}).get("updated_at"),
+        "status": "success"
+    }
 
 @router.post("/{tenant_id}/form-config/draft")
 async def save_draft_config(
