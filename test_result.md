@@ -79,11 +79,14 @@ backend:
     file: "server.py, src/middleware/tenant_isolation.py, src/controllers/public_form_config_controller.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Mounted public_form_config_router at /api/public/forms by including router with prefix /api and adding /api/public paths to TenantIsolationMiddleware public_paths."
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: Public form config endpoint at /api/public/forms/{tenant_id}/config works correctly. Returns JSON with config.branding, layout, form keys without requiring auth or X-Tenant-Id header. Tenant isolation middleware properly bypasses /api/public paths. Orders endpoint regression check passed - still requires X-Tenant-Id. CORS headers present with Origin header. Fixed missing /api/public/ in server.py skip_tenant_validation list. Minor: CORS OPTIONS method returns 405 as expected since endpoint only supports GET."
 
 frontend:
   - task: "Fix FormCustomization tenant context and token usage"
