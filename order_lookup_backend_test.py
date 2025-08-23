@@ -83,10 +83,17 @@ class OrderLookupTestSuite:
         """Setup test data and verify backend connectivity"""
         print("\n🔧 Setting up test data for tenant-rms34...")
         
-        # First check if backend is accessible
-        success, health_data, status = await self.make_request("GET", "/health", headers={})
-        if not success:
-            self.log_test("Setup: Backend health check", False, f"Backend not accessible: {status}")
+        # First check if backend is accessible (health endpoint doesn't need tenant header)
+        try:
+            url = f"{BACKEND_URL}/health"
+            async with self.session.get(url) as response:
+                if response.status == 200:
+                    self.log_test("Setup: Backend health check", True, "Backend is healthy")
+                else:
+                    self.log_test("Setup: Backend health check", False, f"Backend not accessible: {response.status}")
+                    return False
+        except Exception as e:
+            self.log_test("Setup: Backend health check", False, f"Backend not accessible: {str(e)}")
             return False
         
         self.log_test("Setup: Backend health check", True, "Backend is healthy")
