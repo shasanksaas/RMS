@@ -173,24 +173,24 @@ const CustomerStart = () => {
       let apiUrl = backendUrl || 'http://localhost:8001';
       
       // Use the detected tenant ID from configuration
-      const tenantId = tenantConfig?.tenantId || 'tenant-rms34';
-      console.log('🚀 MAKING API CALL WITH TENANT:', tenantId);
+      const detectedTenantId = tenantConfig?.tenantId || 'tenant-rms34';
+      console.log('🚀 MAKING API CALL WITH TENANT:', detectedTenantId);
       
       // Call tenant-specific orders API
-      const response = await fetch(`${apiUrl}/api/orders`, {
+      const ordersResponse = await fetch(`${apiUrl}/api/orders`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'X-Tenant-Id': tenantId
+          'X-Tenant-Id': detectedTenantId
         }
       });
 
-      if (!response.ok) {
-        console.error('❌ API Response Error:', response.status, response.statusText);
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (!ordersResponse.ok) {
+        console.error('❌ API Response Error:', ordersResponse.status, ordersResponse.statusText);
+        throw new Error(`HTTP error! status: ${ordersResponse.status}`);
       }
 
-      const data = await response.json();
+      const data = await ordersResponse.json();
       const orders = data.items || [];
       console.log('📦 API RESPONSE - Orders found:', orders.length);
       console.log('📦 First few orders:', orders.slice(0, 3).map(o => ({
