@@ -311,10 +311,10 @@ class OrderLookupTestSuite:
         
         if not success and status in [400, 401, 403]:
             self.log_test("Orders List Regression: Without X-Tenant-Id header", True, 
-                         "Correctly rejected request without tenant header")
+                         f"Correctly rejected request without tenant header (status: {status})")
         else:
             self.log_test("Orders List Regression: Without X-Tenant-Id header", False, 
-                         "Should require X-Tenant-Id header")
+                         f"Should require X-Tenant-Id header (got status: {status}, success: {success})")
         
         # Test 3: Orders list with wrong tenant header
         wrong_headers = {"Content-Type": "application/json", "X-Tenant-Id": "wrong-tenant"}
