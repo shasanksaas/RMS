@@ -27,31 +27,38 @@ const CustomerStart = () => {
         // DYNAMIC TENANT DETECTION - Multiple Methods
         let tenantId = 'tenant-rms34'; // Default fallback
         
-        // Method 1: Subdomain detection (store1.yourapp.com)
-        const hostname = window.location.hostname;
-        const subdomainMatch = hostname.match(/^([^.]+)\./);
-        if (subdomainMatch && subdomainMatch[1] !== 'www') {
-          tenantId = `tenant-${subdomainMatch[1]}`;
+        // Method 1: URL parameter (from /returns/:tenantId/start)
+        if (urlTenantId) {
+          tenantId = `tenant-${urlTenantId}`;
+        } else {
+          // Method 2: Subdomain detection (store1.yourapp.com)
+          const hostname = window.location.hostname;
+          const subdomainMatch = hostname.match(/^([^.]+)\./);
+          if (subdomainMatch && subdomainMatch[1] !== 'www') {
+            tenantId = `tenant-${subdomainMatch[1]}`;
+          }
+          
+          // Method 3: URL path detection (/returns/store1/start)
+          const pathParts = window.location.pathname.split('/');
+          if (pathParts.length >= 3 && pathParts[1] === 'returns' && pathParts[2] !== 'start') {
+            tenantId = `tenant-${pathParts[2]}`;
+          }
+          
+          // Method 4: Query parameter (?tenant=store1)
+          const urlParams = new URLSearchParams(window.location.search);
+          const tenantParam = urlParams.get('tenant');
+          if (tenantParam) {
+            tenantId = `tenant-${tenantParam}`;
+          }
+          
+          // Method 5: localStorage (for testing)
+          const storedTenant = localStorage.getItem('selectedTenant');
+          if (storedTenant) {
+            tenantId = storedTenant;
+          }
         }
         
-        // Method 2: URL path detection (/returns/store1/start)
-        const pathParts = window.location.pathname.split('/');
-        if (pathParts.length >= 3 && pathParts[1] === 'returns' && pathParts[2] !== 'start') {
-          tenantId = `tenant-${pathParts[2]}`;
-        }
-        
-        // Method 3: Query parameter (?tenant=store1)
-        const urlParams = new URLSearchParams(window.location.search);
-        const tenantParam = urlParams.get('tenant');
-        if (tenantParam) {
-          tenantId = `tenant-${tenantParam}`;
-        }
-        
-        // Method 4: localStorage (for testing)
-        const storedTenant = localStorage.getItem('selectedTenant');
-        if (storedTenant) {
-          tenantId = storedTenant;
-        }
+        console.log(`Detected tenant: ${tenantId} for return form`);
         
         // Fetch tenant-specific form configuration (public endpoint)
         const response = await fetch(`${backendUrl}/public/forms/${tenantId}/config`);
