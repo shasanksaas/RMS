@@ -97,14 +97,14 @@ const CustomerStart = () => {
         setDetectedTenant(detectedTenantId);
         
         // Fetch tenant-specific form configuration (public endpoint)
-        const response = await fetch(`${backendUrl}/public/forms/${tenantId}/config`);
+        const response = await fetch(`${backendUrl}/public/forms/${detectedTenantId}/config`);
         
         if (response.ok) {
           const data = await response.json();
           const config = data.config;
           
           setTenantConfig({
-            tenantId,
+            tenantId: detectedTenantId,
             primaryColor: config.branding?.primary_color || '#3B82F6',
             secondaryColor: config.branding?.secondary_color || '#1F2937',
             backgroundColor: config.branding?.background_color || '#FFFFFF',
@@ -116,7 +116,7 @@ const CustomerStart = () => {
           });
         } else {
           setTenantConfig({
-            tenantId,
+            tenantId: detectedTenantId,
             primaryColor: '#3B82F6',
             secondaryColor: '#1F2937',
             backgroundColor: '#FFFFFF', 
