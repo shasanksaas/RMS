@@ -178,7 +178,7 @@ const CustomerStart = () => {
       let apiUrl = backendUrl || 'http://localhost:8001';
       
       // Use the detected tenant ID from URL/detection (not from config fallback)
-      const detectedTenantId = tenantConfig?.tenantId || tenantId; // Use the original detected tenantId, not fallback
+      const detectedTenantId = tenantConfig?.tenantId || detectedTenant; // Use the original detected tenantId, not fallback
       console.log('🚀 MAKING API CALL WITH TENANT:', detectedTenantId);
       
       // Call tenant-specific orders API
