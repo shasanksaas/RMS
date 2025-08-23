@@ -14,27 +14,20 @@ const OrderDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Get backend URL and tenant from environment/auth
+  // Environment URL and tenant context
   const backendUrl = process.env.REACT_APP_BACKEND_URL;
   const tenantId = tenant?.tenant_id || user?.tenant_id || localStorage.getItem('currentTenant');
 
-  useEffect(() => {
-    loadOrder();
-  }, [loadOrder]);
-
-  const getApiUrl = () => {
-    // Always use the configured backend URL
-    return backendUrl;
-  };
+  const getApiUrl = () => backendUrl;
 
   const loadOrder = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
-      
+
       const apiUrl = getApiUrl();
       const fullUrl = `${apiUrl}/api/orders/${orderId}`;
-      
+
       const response = await fetch(fullUrl, {
         headers: {
           'Content-Type': 'application/json',
@@ -61,11 +54,13 @@ const OrderDetail = () => {
     }
   }, [orderId, tenantId, backendUrl]);
 
+  useEffect(() => {
+    loadOrder();
+  }, [loadOrder]);
+
   const getStatusBadge = (status, type = 'financial') => {
     if (type === 'financial') {
       const config = {
-  }, [orderId, tenantId, backendUrl]);
-
         paid: { color: 'bg-green-100 text-green-800', label: 'Paid' },
         pending: { color: 'bg-yellow-100 text-yellow-800', label: 'Pending' },
         cancelled: { color: 'bg-red-100 text-red-800', label: 'Cancelled' },
@@ -341,7 +336,6 @@ const OrderDetail = () => {
                 </div>
               </div>
             </div>
-            
             {order.processed_at && (
               <div className="flex items-start space-x-3">
                 <div className="w-2 h-2 bg-green-600 rounded-full mt-2" />
@@ -353,7 +347,6 @@ const OrderDetail = () => {
                 </div>
               </div>
             )}
-
             {order.updated_at && order.updated_at !== order.created_at && (
               <div className="flex items-start space-x-3">
                 <div className="w-2 h-2 bg-yellow-600 rounded-full mt-2" />
