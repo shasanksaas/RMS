@@ -28,6 +28,8 @@ class TenantIsolationMiddleware:
             "/api/auth/shopify/install",
             "/api/auth/shopify/install-redirect", 
             "/api/auth/shopify/callback",
+            # Public form configuration paths - for customer-facing return forms
+            "/public/forms",
             "/api/auth/shopify/session",
             "/api/auth/shopify/debug",  # Debug endpoints
             # Shopify webhook paths - Webhooks come from Shopify without tenant context
