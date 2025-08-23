@@ -129,8 +129,17 @@ const App = () => {
                 <Route path="resolution" element={<CustomerResolution />} />
                 <Route path="confirm" element={<CustomerConfirm />} />
                 <Route path="status/:returnId" element={<CustomerStatus />} />
-                <Route path="status/:returnId" element={<CustomerStatus />} />
                 <Route index element={<Navigate to="/returns/start" replace />} />
+              </Route>
+
+              {/* Tenant-Specific Return Forms */}
+              <Route path="/returns/:tenantId" element={<CustomerLayout />}>
+                <Route path="start" element={<TenantReturnForm />} />
+                <Route path="select" element={<CustomerSelectItems />} />
+                <Route path="resolution" element={<CustomerResolution />} />
+                <Route path="confirm" element={<CustomerConfirm />} />
+                <Route path="status/:returnId" element={<CustomerStatus />} />
+                <Route index element={<Navigate to="start" replace />} />
               </Route>
 
               {/* Public Portal Routes */}
