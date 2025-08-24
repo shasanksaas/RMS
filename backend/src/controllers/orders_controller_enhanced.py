@@ -148,6 +148,10 @@ async def get_orders(
         raise HTTPException(status_code=500, detail="Failed to get orders")
 
 
+from src.services.shopify_oauth_service import ShopifyOAuthService
+from src.services.shopify_graphql import ShopifyGraphQLService as CoreGraphQL
+from src.config.database import db
+
 @router.get("/{order_id}")
 async def get_order_detail(
     order_id: str,
