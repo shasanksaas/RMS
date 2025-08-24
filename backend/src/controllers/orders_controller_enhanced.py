@@ -204,6 +204,86 @@ async def get_order_detail(
             })
         
         if not order:
+            # Fallback: fetch from Shopify GraphQL on-demand if tenant is connected
+            try:
+                integration = await db.integrations_shopify.find_one({"tenant_id": tenant_id})
+                if integration and (integration.get("access_token_encrypted") or integration.get("access_token")):
+                    # Prepare GraphQL client
+                    oauth = ShopifyOAuthService()
+                    access_token = None
+                    if integration.get("access_token_encrypted"):
+                        try:
+                            access_token = oauth.decrypt_token(integration["access_token_encrypted"])
+                        except Exception:
+                            access_token = None
+                    if not access_token:
+                        access_token = integration.get("access_token")
+                    shop_domain = integration.get("shop") or integration.get("shop_domain") or integration.get("store_url", "").replace("https://", "").replace("http://", "").replace(".myshopify.com", "")
+                    if shop_domain:
+                        gql = CoreGraphQL(shop=shop_domain, access_token=access_token)
+                        # If the path param looks like a number or has #, try by order number/name
+                        order_name = str(order_id)
+                        try:
+                            data = await gql.execute_query(
+                                query="""
+                                query GetOrders($query: String!) {
+                                  orders(first: 5, query: $query) {
+                                    edges {
+                                      node {
+                                        id
+                                        name
+                                        createdAt
+                                        updatedAt
+                                        currencyCode
+                                        totalPriceSet { shopMoney { amount currencyCode } }
+                                        customer { email firstName lastName }
+                                        displayFinancialStatus
+                                        displayFulfillmentStatus
+                                        lineItems(first: 50) { edges { node { id title sku quantity price: originalTotalSet { shopMoney { amount } } } } }
+                                      }
+                                    }
+                                  }
+                                }
+                                """,
+                                variables={"query": f"name:{order_name.lstrip('#')}"}
+                            )
+                            edges = (((data or {}).get("orders") or {}).get("edges") or [])
+                            if edges:
+                                node = edges[0]["node"]
+                                # Map minimal fields
+                                order = {
+                                    "id": node.get("id"),
+                                    "order_number": node.get("name"),
+                                    "customer_name": f"{(node.get('customer') or {}).get('firstName') or ''} {(node.get('customer') or {}).get('lastName') or ''}".strip(),
+                                    "customer_email": (node.get("customer") or {}).get("email"),
+                                    "financial_status": node.get("displayFinancialStatus"),
+                                    "fulfillment_status": node.get("displayFulfillmentStatus"),
+                                    "total_price": float(((node.get("totalPriceSet") or {}).get("shopMoney") or {}).get("amount") or 0),
+                                    "currency_code": ((node.get("totalPriceSet") or {}).get("shopMoney") or {}).get("currencyCode") or node.get("currencyCode"),
+                                    "line_items": [
+                                        {
+                                            "id": (li.get("node") or {}).get("id"),
+                                            "title": (li.get("node") or {}).get("title"),
+                                            "sku": (li.get("node") or {}).get("sku"),
+                                            "quantity": (li.get("node") or {}).get("quantity"),
+                                            "price": float((((((li.get("node") or {}).get("price") or {}).get("shopMoney")) or {}).get("amount")) or 0)
+                                        } for li in (((node.get("lineItems") or {}).get("edges")) or [])
+                                    ],
+                                    "created_at": node.get("createdAt"),
+                                    "updated_at": node.get("updatedAt"),
+                                }
+                                # Upsert minimal order into Mongo for future loads
+                                await db.orders.update_one(
+                                    {"tenant_id": tenant_id, "order_number": order["order_number"]},
+                                    {"$set": {**order, "tenant_id": tenant_id}},
+                                    upsert=True
+                                )
+                        except Exception:
+                            pass
+            except Exception:
+                pass
+
+        if not order:
             raise HTTPException(status_code=404, detail="Order not found")
         
         # Use the resolved order id for downstream queries
